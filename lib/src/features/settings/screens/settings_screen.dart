@@ -18,7 +18,9 @@ import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/app_pane_modal_overlay.dart';
 import '../../../core/widgets/app_profile_picture.dart';
 import '../../../providers/account_provider.dart';
+import '../../../core/config/nightjar_config.dart';
 import '../../../core/config/zcash_explorer.dart';
+import '../../../providers/nightjar_config_provider.dart';
 import '../../../providers/rpc_endpoint_provider.dart';
 import '../../../providers/theme_mode_provider.dart';
 import '../../../providers/zcash_explorer_provider.dart';
@@ -191,6 +193,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ref.watch(zcashExplorerProvider),
       networkName: endpoint.networkName,
     );
+    final nightjarLabel = _nightjarLabel(ref.watch(nightjarConfigProvider));
     final updateState = defaultTargetPlatform == TargetPlatform.windows
         ? ref.watch(windowsUpdateProvider)
         : null;
@@ -219,6 +222,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 activeAccountIsHardware: activeAccountIsHardware,
                 endpointLabel: endpointLabel,
                 explorerLabel: explorerLabel,
+                nightjarLabel: nightjarLabel,
                 themeLabel: _themeLabel(themeMode),
                 updateLabel: updateState == null
                     ? null
@@ -229,6 +233,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     context.push('/settings/change-password'),
                 onEndpoint: () => context.push('/settings/endpoint'),
                 onExplorer: () => context.push('/settings/explorer'),
+                onNightjar: () => context.push('/settings/nightjar'),
                 onAccountName: hasActiveAccount
                     ? () => _showModal(_SettingsModalType.accountName)
                     : null,
@@ -308,6 +313,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  /// Row value for the Nightjar entry. A network with no channel says so
+  /// here rather than reading "Off", which would suggest a switch exists.
+  static String _nightjarLabel(NightjarConfig config) {
+    if (!config.hasChannel) return 'Not available';
+    return config.enabled ? 'On' : 'Off';
+  }
+
   static String _themeLabel(ThemeMode mode) {
     return switch (mode) {
       ThemeMode.system => 'System',
@@ -343,6 +355,7 @@ class _SettingsPane extends StatelessWidget {
     required this.activeAccountIsHardware,
     required this.endpointLabel,
     required this.explorerLabel,
+    required this.nightjarLabel,
     required this.themeLabel,
     required this.updateLabel,
     required this.onSeedPhrase,
@@ -350,6 +363,7 @@ class _SettingsPane extends StatelessWidget {
     required this.onChangePassword,
     required this.onEndpoint,
     required this.onExplorer,
+    required this.onNightjar,
     required this.onAccountName,
     required this.onProfilePicture,
     required this.onAddressBook,
@@ -368,6 +382,7 @@ class _SettingsPane extends StatelessWidget {
   final bool activeAccountIsHardware;
   final String endpointLabel;
   final String explorerLabel;
+  final String nightjarLabel;
   final String themeLabel;
   final String? updateLabel;
   final VoidCallback onSeedPhrase;
@@ -375,6 +390,7 @@ class _SettingsPane extends StatelessWidget {
   final VoidCallback onChangePassword;
   final VoidCallback onEndpoint;
   final VoidCallback onExplorer;
+  final VoidCallback onNightjar;
   final VoidCallback? onAccountName;
   final VoidCallback? onProfilePicture;
   final VoidCallback onAddressBook;
@@ -416,6 +432,7 @@ class _SettingsPane extends StatelessWidget {
                 activeAccountIsHardware: activeAccountIsHardware,
                 endpointLabel: endpointLabel,
                 explorerLabel: explorerLabel,
+                nightjarLabel: nightjarLabel,
                 themeLabel: themeLabel,
                 updateLabel: updateLabel,
                 onSeedPhrase: onSeedPhrase,
@@ -423,6 +440,7 @@ class _SettingsPane extends StatelessWidget {
                 onChangePassword: onChangePassword,
                 onEndpoint: onEndpoint,
                 onExplorer: onExplorer,
+                onNightjar: onNightjar,
                 onAccountName: onAccountName,
                 onProfilePicture: onProfilePicture,
                 onAddressBook: onAddressBook,
@@ -451,6 +469,7 @@ class _SettingsList extends StatelessWidget {
     required this.activeAccountIsHardware,
     required this.endpointLabel,
     required this.explorerLabel,
+    required this.nightjarLabel,
     required this.themeLabel,
     required this.updateLabel,
     required this.onSeedPhrase,
@@ -458,6 +477,7 @@ class _SettingsList extends StatelessWidget {
     required this.onChangePassword,
     required this.onEndpoint,
     required this.onExplorer,
+    required this.onNightjar,
     required this.onAccountName,
     required this.onProfilePicture,
     required this.onAddressBook,
@@ -476,6 +496,7 @@ class _SettingsList extends StatelessWidget {
   final bool activeAccountIsHardware;
   final String endpointLabel;
   final String explorerLabel;
+  final String nightjarLabel;
   final String themeLabel;
   final String? updateLabel;
   final VoidCallback onSeedPhrase;
@@ -483,6 +504,7 @@ class _SettingsList extends StatelessWidget {
   final VoidCallback onChangePassword;
   final VoidCallback onEndpoint;
   final VoidCallback onExplorer;
+  final VoidCallback onNightjar;
   final VoidCallback? onAccountName;
   final VoidCallback? onProfilePicture;
   final VoidCallback onAddressBook;
@@ -573,6 +595,13 @@ class _SettingsList extends StatelessWidget {
               label: 'Explorer',
               value: explorerLabel,
               onTap: onExplorer,
+            ),
+            _SettingsRow(
+              key: const ValueKey('settings_nightjar_row'),
+              iconName: AppIcons.coins,
+              label: 'Nightjar',
+              value: nightjarLabel,
+              onTap: onNightjar,
             ),
             _SettingsRow(
               iconName: AppIcons.theme,

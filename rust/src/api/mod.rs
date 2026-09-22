@@ -1,5 +1,6 @@
 pub mod keystone;
 pub mod ledger;
+pub mod nightjar;
 pub mod network_privacy;
 pub mod secret;
 pub mod simple;

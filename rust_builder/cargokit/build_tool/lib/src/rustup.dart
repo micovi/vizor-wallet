@@ -74,14 +74,25 @@ class Rustup {
         .map(extractToolchainName)
         .toList(growable: true);
 
-    return lines
-        .map(
-          (name) => _Toolchain(
-            name,
-            _getInstalledTargets(name),
-          ),
-        )
-        .toList(growable: true);
+    // A toolchain that matches the pattern is not necessarily one rustup will
+    // accept as a `--toolchain` argument. Custom toolchains linked into rustup
+    // by other SDKs (a Solana `1.89.0-sbpf-solana-v1.52`, for one) start with a
+    // version number and so pass the filter above, but `rustup target list
+    // --toolchain <that>` fails with "invalid toolchain name" — and because
+    // this enumeration runs for *every* installed toolchain, one unrelated
+    // entry in the user's rustup took the whole build down, long before
+    // anything here had chosen a toolchain to build with. Skip what cannot be
+    // described instead of failing; the toolchain actually selected is
+    // validated by `installedTargets` on its own.
+    final toolchains = <_Toolchain>[];
+    for (final name in lines) {
+      try {
+        toolchains.add(_Toolchain(name, _getInstalledTargets(name)));
+      } catch (error) {
+        log.fine('Ignoring rustup toolchain $name: $error');
+      }
+    }
+    return toolchains;
   }
 
   static List<String> _getInstalledTargets(String toolchain) {

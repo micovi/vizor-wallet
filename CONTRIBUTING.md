@@ -130,12 +130,16 @@ final history. Preserve `Co-Authored-By` trailers when applicable.
 - Keep platform-neutral Rust logic outside `rust/src/api/` when it should not be
   exposed through Flutter Rust Bridge.
 
-After changing any file under `rust/src/api/`, regenerate bindings from the
-repository root:
+After changing any file under `rust/src/api/`, regenerate bindings:
 
 ```bash
-flutter_rust_bridge_codegen generate
+./scripts/generate-rust-bridge.sh
 ```
+
+Use the script rather than `flutter_rust_bridge_codegen generate` directly. The
+bare command fails on this toolchain while parsing expanded Rust. The script
+works around it, and its header explains what it rewrites, why that is safe,
+and what would let it be deleted.
 
 Commit all resulting changes in `lib/src/rust/` and
 `rust/src/frb_generated.rs` with the API change. Do not manually patch generated

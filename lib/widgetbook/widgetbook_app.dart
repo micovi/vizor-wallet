@@ -19,6 +19,8 @@ import 'icon_use_cases.dart';
 import 'keystone_use_cases.dart';
 import 'ledger_use_cases.dart';
 import 'mobile_pay_use_cases.dart';
+import 'nightjar_activity_detail_use_cases.dart';
+import 'nightjar_use_cases.dart';
 import 'mobile_shell_use_cases.dart';
 import 'payment_request_use_cases.dart';
 import 'request_amount_use_cases.dart';
@@ -1933,6 +1935,136 @@ class WidgetbookApp extends StatelessWidget {
               ],
             ),
             WidgetbookFolder(
+              name: 'Nightjar',
+              children: [
+                WidgetbookComponent(
+                  name: 'Assets feed',
+                  useCases: [
+                    WidgetbookUseCase(
+                      name: 'Default',
+                      builder: buildNightjarAssetsFeedUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Loading',
+                      builder: buildNightjarAssetsFeedLoadingUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Empty',
+                      builder: buildNightjarAssetsFeedEmptyUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Not configured',
+                      builder: buildNightjarAssetsFeedNotConfiguredUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Indexer unreachable',
+                      builder: buildNightjarAssetsFeedUnreachableUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Indexer stale',
+                      builder: buildNightjarAssetsFeedStaleUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Pending notes notice',
+                      builder: buildNightjarPendingNoticeUseCase,
+                    ),
+                  ],
+                ),
+                WidgetbookComponent(
+                  name: 'Collections',
+                  useCases: [
+                    WidgetbookUseCase(
+                      name: 'Assets list with a collection',
+                      builder: buildNightjarCollectionsFeedUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Unique item rows',
+                      builder: buildNightjarUniqueItemRowUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Grid, nothing accepted',
+                      builder: buildNightjarCollectionGridUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Grid, artwork accepted',
+                      builder: buildNightjarCollectionGridArtworkUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Accept the collection',
+                      builder: buildNightjarCollectionAcceptUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Partly accepted',
+                      builder: buildNightjarCollectionPartialUseCase,
+                    ),
+                  ],
+                ),
+                WidgetbookComponent(
+                  name: 'Asset detail',
+                  useCases: [
+                    WidgetbookUseCase(
+                      name: 'Public named asset',
+                      builder: buildNightjarAssetDetailUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Unique item',
+                      builder: buildNightjarUniqueItemDetailUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Unnamed asset',
+                      builder: buildNightjarUnnamedAssetDetailUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Private asset',
+                      builder: buildNightjarPrivateAssetDetailUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Facts card',
+                      builder: buildNightjarFactsCardUseCase,
+                    ),
+                  ],
+                ),
+                WidgetbookComponent(
+                  name: 'Activity message receipt',
+                  useCases: [
+                    WidgetbookUseCase(
+                      name: 'Sent',
+                      builder: buildNightjarActivityDetailSentUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Received, unnamed asset',
+                      builder: buildNightjarActivityDetailReceivedUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Net change',
+                      builder: buildNightjarActivityDetailNetChangeUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'No message',
+                      builder: buildNightjarActivityDetailNoMessageUseCase,
+                    ),
+                  ],
+                ),
+                WidgetbookComponent(
+                  name: 'Receive',
+                  useCases: [
+                    WidgetbookUseCase(
+                      name: 'Default',
+                      builder: buildNightjarReceiveUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Not configured',
+                      builder: buildNightjarReceiveNotConfiguredUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Panel only',
+                      builder: buildNightjarReceivePanelUseCase,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            WidgetbookFolder(
               name: 'Activity',
               children: [
                 WidgetbookComponent(
@@ -1945,6 +2077,14 @@ class WidgetbookApp extends StatelessWidget {
                     WidgetbookUseCase(
                       name: 'Swap receive absorb',
                       builder: buildSwapReceiveAbsorbUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Nightjar notes',
+                      builder: buildNightjarActivityUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Nightjar notes with logo',
+                      builder: buildNightjarActivityLogoUseCase,
                     ),
                   ],
                 ),

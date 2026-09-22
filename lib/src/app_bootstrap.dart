@@ -8,12 +8,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart' show log;
 import 'core/profile_pictures.dart';
 import 'core/config/app_version_config.dart';
+import 'core/config/nightjar_config.dart';
 import 'core/config/rpc_endpoint_config.dart';
 import 'core/config/swap_remote_enable_config.dart';
 import 'core/config/zcash_explorer.dart';
 import 'core/storage/app_secure_store.dart';
 import 'core/storage/wallet_paths.dart';
 import 'core/storage/secure_storage_diagnostics.dart';
+// The only feature import in this file. The accepted-asset set is a Nightjar
+// model and belongs with the feature that enforces it; hydrating it here is
+// what keeps the first frame from drawing an asset row with no logo and then
+// popping one in a beat later.
+import 'features/nightjar_assets/models/nightjar_asset_acceptance.dart';
 import 'providers/account_models.dart';
 import 'rust/api/sync.dart' as rust_sync;
 import 'rust/api/wallet.dart' as rust_wallet;
@@ -51,6 +57,8 @@ class AppBootstrapState {
     required this.initialSyncSnapshot,
     required this.network,
     required this.rpcEndpointConfig,
+    NightjarConfig? nightjarConfig,
+    this.nightjarAcceptedAssets = const NightjarAssetAcceptance.empty(),
     this.explorerUrlTemplate = '',
     required this.themeMode,
     required this.privacyModeEnabled,
@@ -63,13 +71,21 @@ class AppBootstrapState {
     this.syncKeepAwakePromptSeen = false,
     this.failureKind,
     this.failureMessage,
-  });
+  }) : _nightjarConfig = nightjarConfig;
 
   final String initialLocation;
   final AccountState initialAccountState;
   final AppSyncSnapshot initialSyncSnapshot;
   final String network;
   final RpcEndpointConfig rpcEndpointConfig;
+  final NightjarConfig? _nightjarConfig;
+
+  /// Assets whose issuer metadata the user accepted, read at startup.
+  ///
+  /// Empty is the safe default and the default a fixture gets: nothing in this
+  /// feature fetches or draws a logo for an asset that is not in here
+  /// (`spec/asset-metadata-v0.md` section 5).
+  final NightjarAssetAcceptance nightjarAcceptedAssets;
   final String explorerUrlTemplate;
   final ThemeMode themeMode;
   final bool privacyModeEnabled;
@@ -87,6 +103,13 @@ class AppBootstrapState {
   final AppBootstrapFailureKind? failureKind;
   final String? failureMessage;
 
+  /// Nightjar settings read at startup, or the network's built-in defaults
+  /// when a caller supplied none. Defaults leave the feature disabled, so a
+  /// fixture that says nothing about Nightjar gets it switched off rather
+  /// than pointed at a channel.
+  NightjarConfig get nightjarConfig =>
+      _nightjarConfig ?? defaultNightjarConfig(network);
+
   bool get hasWallet => initialAccountState.hasAccounts;
   bool get requiresUnlock => hasWallet && !isUnlocked;
   bool get hasBlockingFailure => failureKind != null;
@@ -97,6 +120,7 @@ class AppBootstrapState {
     initialSyncSnapshot: AppSyncSnapshot.empty,
     network: kZcashDefaultNetworkName,
     rpcEndpointConfig: defaultRpcEndpointConfig(kZcashDefaultNetworkName),
+    nightjarConfig: defaultNightjarConfig(kZcashDefaultNetworkName),
     themeMode: ThemeMode.system,
     privacyModeEnabled: false,
     isPasswordConfigured: false,
@@ -113,6 +137,7 @@ class AppBootstrapState {
     initialSyncSnapshot: AppSyncSnapshot.empty,
     network: kZcashDefaultNetworkName,
     rpcEndpointConfig: defaultRpcEndpointConfig(kZcashDefaultNetworkName),
+    nightjarConfig: defaultNightjarConfig(kZcashDefaultNetworkName),
     themeMode: ThemeMode.system,
     privacyModeEnabled: false,
     isPasswordConfigured: false,
@@ -243,6 +268,8 @@ Future<AppBootstrapState> loadAppBootstrap() async {
     );
     final rpcEndpointConfig = await _readRpcEndpointConfig(storage, network);
     final explorerUrlTemplate = await _readExplorerUrlTemplate(storage);
+    final nightjarConfig = await _readNightjarConfig(storage, network);
+    final nightjarAcceptedAssets = await _readNightjarAcceptedAssets(storage);
     final themeMode = await _readThemeMode(storage);
     final privacyModeEnabled = await _readPrivacyModeEnabled(storage);
     final swapEnabledOverrideCachedForRelease =
@@ -392,6 +419,8 @@ Future<AppBootstrapState> loadAppBootstrap() async {
       initialSyncSnapshot: initialSyncSnapshot,
       network: network,
       rpcEndpointConfig: rpcEndpointConfig,
+      nightjarConfig: nightjarConfig,
+      nightjarAcceptedAssets: nightjarAcceptedAssets,
       explorerUrlTemplate: explorerUrlTemplate,
       themeMode: themeMode,
       privacyModeEnabled: privacyModeEnabled,
@@ -520,6 +549,60 @@ Future<RpcEndpointConfig> _readRpcEndpointConfig(
   } catch (e) {
     log('bootstrap: failed to read RPC endpoint: $e');
     return defaultRpcEndpointConfig(network);
+  }
+}
+
+/// Reads the stored Nightjar settings, folded over the network's defaults.
+///
+/// Mirrors [_readExplorerUrlTemplate]: a stored value that no longer parses is
+/// dropped back to the default so a bad indexer URL cannot block startup, but
+/// secure storage being unavailable at all still blocks it.
+Future<NightjarConfig> _readNightjarConfig(
+  AppSecureStore storage,
+  String network,
+) async {
+  try {
+    return resolveStoredNightjarConfig(
+      networkName: zcashNetworkFromName(network).name,
+      storedIndexerUrl: await storage.readString(kNightjarIndexerUrlKey),
+      storedChannelUivk: await storage.readString(kNightjarChannelUivkKey),
+      storedChannelAddress: await storage.readString(
+        kNightjarChannelAddressKey,
+      ),
+      storedBirthday: await storage.readString(kNightjarBirthdayKey),
+      storedEnabled: await storage.readString(kNightjarEnabledKey),
+      storedProvingKeyDir: await storage.readString(kNightjarProvingKeyDirKey),
+    );
+  } on SecureStorageUnavailableException {
+    rethrow;
+  } on FormatException catch (e) {
+    log('bootstrap: ignoring invalid Nightjar settings: $e');
+    return defaultNightjarConfig(network);
+  } catch (e) {
+    log('bootstrap: failed to read Nightjar settings: $e');
+    return defaultNightjarConfig(network);
+  }
+}
+
+/// Reads the accepted-asset set.
+///
+/// Unreadable comes back empty, which is the direction that shows *less*: an
+/// acceptance list this wallet cannot parse must never be guessed at, because
+/// guessing wrong means drawing an issuer-chosen picture for an asset the user
+/// never accepted. Secure storage being unavailable at all still blocks
+/// startup, like every other setting here.
+Future<NightjarAssetAcceptance> _readNightjarAcceptedAssets(
+  AppSecureStore storage,
+) async {
+  try {
+    return NightjarAssetAcceptance.decode(
+      await storage.readString(kNightjarAcceptedAssetsKey),
+    );
+  } on SecureStorageUnavailableException {
+    rethrow;
+  } catch (e) {
+    log('bootstrap: failed to read Nightjar accepted assets: $e');
+    return const NightjarAssetAcceptance.empty();
   }
 }
 

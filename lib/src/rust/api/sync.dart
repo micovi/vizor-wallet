@@ -7,7 +7,7 @@ import '../frb_generated.dart';
 import 'keystone.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `catch`, `fetch_block_time`, `migration_status_from_balance`, `parse_network_and_migrate`, `run_full_sync_internal`, `to_wallet_action_sigs`, `to_wallet_migration_schedule`, `to_wallet_signed_messages`
+// These functions are ignored because they are not marked as `pub`: `catch`, `fetch_block_time`, `migration_status_from_balance`, `parse_network_and_migrate`, `run_full_sync_internal`, `to_wallet_action_sigs`, `to_wallet_migration_schedule`, `to_wallet_raw_send_outputs`, `to_wallet_signed_messages`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `MempoolObserverState`
 
 /// Set the desired sync mode. 0=none, 1=foreground, 2=background.
@@ -264,6 +264,32 @@ Future<ProposalResult> proposeSend({
   toAddress: toAddress,
   amountZatoshi: amountZatoshi,
   memo: memo,
+);
+
+/// Step 1, binary-memo variant: propose a transfer with one output per entry
+/// in `outputs` and memos passed through byte for byte.
+///
+/// All outputs land in one transaction. A Nightjar message is 1-8 memos that
+/// a reader can only reassemble from a single txid, so proposing them
+/// separately would produce parts nobody can put back together.
+///
+/// The returned `ProposalResult` is the same one `propose_send` returns and
+/// carries the same consume-on-entry contract: whoever receives a
+/// `proposal_id` here must either pass it to `execute_proposal` /
+/// `create_pczt_from_proposal` exactly once, or call `discard_proposal` from a
+/// `finally` block on every exit that did not consume it.
+Future<ProposalResult> proposeSendRaw({
+  required String dbPath,
+  required String network,
+  required String accountUuid,
+  required String sendFlowId,
+  required List<RawSendOutput> outputs,
+}) => RustLib.instance.api.crateApiSyncProposeSendRaw(
+  dbPath: dbPath,
+  network: network,
+  accountUuid: accountUuid,
+  sendFlowId: sendFlowId,
+  outputs: outputs,
 );
 
 /// Estimate the fee for a transfer without storing a proposal.
@@ -928,6 +954,25 @@ Future<TransactionDetail> getTransactionDetail({
   accountUuid: accountUuid,
   txidHex: txidHex,
   txKind: txKind,
+);
+
+/// Every raw memo attached to one transaction's wallet-visible shielded
+/// outputs, in output order.
+///
+/// `get_transaction_detail().memo` decodes only `Memo::Text` and reports
+/// `None` for the binary ZIP-302 encodings, so an incoming Nightjar message —
+/// whose parts start with the marker byte `0xFF` — is invisible through it.
+/// Read the bytes here and parse them on the caller's side.
+Future<List<RawMemoOutput>> getTransactionRawMemos({
+  required String dbPath,
+  required String network,
+  required String accountUuid,
+  required String txidHex,
+}) => RustLib.instance.api.crateApiSyncGetTransactionRawMemos(
+  dbPath: dbPath,
+  network: network,
+  accountUuid: accountUuid,
+  txidHex: txidHex,
 );
 
 String getBlocksDir({required String cachePath}) =>
@@ -2296,6 +2341,63 @@ class ProposalResult {
           proposalId == other.proposalId &&
           needsSaplingParams == other.needsSaplingParams &&
           feeZatoshi == other.feeZatoshi;
+}
+
+/// One output's memo field, uninterpreted.
+class RawMemoOutput {
+  final String pool;
+  final int outputIndex;
+
+  /// The full 512-byte memo field, padding included.
+  final Uint8List memoBytes;
+
+  const RawMemoOutput({
+    required this.pool,
+    required this.outputIndex,
+    required this.memoBytes,
+  });
+
+  @override
+  int get hashCode => pool.hashCode ^ outputIndex.hashCode ^ memoBytes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RawMemoOutput &&
+          runtimeType == other.runtimeType &&
+          pool == other.pool &&
+          outputIndex == other.outputIndex &&
+          memoBytes == other.memoBytes;
+}
+
+/// One recipient of a raw-memo send. `memo_bytes` is written into the
+/// 512-byte memo field unchanged, so callers that need a binary memo — a
+/// Nightjar message part starts with the ZIP-302 marker `0xFF` — can reach
+/// the send path at all. A body longer than 512 bytes is rejected, never
+/// truncated.
+class RawSendOutput {
+  final String toAddress;
+  final BigInt amountZatoshi;
+  final Uint8List? memoBytes;
+
+  const RawSendOutput({
+    required this.toAddress,
+    required this.amountZatoshi,
+    this.memoBytes,
+  });
+
+  @override
+  int get hashCode =>
+      toAddress.hashCode ^ amountZatoshi.hashCode ^ memoBytes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RawSendOutput &&
+          runtimeType == other.runtimeType &&
+          toAddress == other.toAddress &&
+          amountZatoshi == other.amountZatoshi &&
+          memoBytes == other.memoBytes;
 }
 
 class ScanRangeInfo {

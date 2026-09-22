@@ -1503,7 +1503,9 @@ void main() {
     // The new guidance uses the existing gap above the actions.
     expect(
       tester
-          .getTopLeft(find.byKey(const ValueKey('payment_link_copy_link_button')))
+          .getTopLeft(
+            find.byKey(const ValueKey('payment_link_copy_link_button')),
+          )
           .dy,
       closeTo(596.5, 1),
     );

@@ -134,12 +134,7 @@ void main() {
     expect(signingCalls, 0);
     expect(rustApi.createPcztCalls, 0);
     expect(find.byType(LedgerSigningModal), findsNothing);
-    expect(
-      find.text(
-        "Ledger can't sign non-English text yet",
-      ),
-      findsOneWidget,
-    );
+    expect(find.text("Ledger can't sign non-English text yet"), findsOneWidget);
   });
 
   testWidgets('a whitespace-only memo keeps its Message row, with a '

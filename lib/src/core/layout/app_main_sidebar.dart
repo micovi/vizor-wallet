@@ -580,6 +580,18 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     AppSidebarItem(
+                      key: const ValueKey('sidebar_nightjar_button'),
+                      label: 'Nightjar',
+                      iconName: AppIcons.coins,
+                      active: _routeShouldBeActive('/nightjar'),
+                      // Stays tappable on the detail and receive subroutes
+                      // as a way back to the assets list.
+                      onTap: isImporting
+                          ? null
+                          : () => _navigateTo('/nightjar'),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    AppSidebarItem(
                       key: const ValueKey('sidebar_activity_button'),
                       label: 'Activity',
                       iconName: AppIcons.history,

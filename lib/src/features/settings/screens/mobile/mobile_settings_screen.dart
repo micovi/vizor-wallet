@@ -24,8 +24,10 @@ import '../../../../core/widgets/mobile/mobile_surface_card.dart';
 import '../../../../providers/account_provider.dart';
 import '../../../../providers/app_security_provider.dart';
 import '../../../../providers/biometric_unlock_provider.dart';
+import '../../../../core/config/nightjar_config.dart';
 import '../../../../core/config/zcash_explorer.dart';
 import '../../../../providers/rpc_endpoint_provider.dart';
+import '../../../../providers/nightjar_config_provider.dart';
 import '../../../../providers/zcash_explorer_provider.dart';
 import '../../../../providers/sync_keep_awake_provider.dart';
 import '../../../../providers/theme_mode_provider.dart';
@@ -52,6 +54,7 @@ class MobileSettingsScreen extends ConsumerWidget {
       ref.watch(zcashExplorerProvider),
       networkName: endpointConfig.networkName,
     );
+    final nightjar = _nightjarLabel(ref.watch(nightjarConfigProvider));
     final themeMode = ref.watch(themeModeProvider);
     final profilePictureId =
         account?.profilePictureId ?? kDefaultProfilePictureId;
@@ -264,6 +267,19 @@ class MobileSettingsScreen extends ConsumerWidget {
                       onTap: () => context.push('/settings/explorer'),
                     ),
                     MobileListRow(
+                      key: const ValueKey('mobile_settings_nightjar_row'),
+                      leading: _RowIcon(AppIcons.coins),
+                      label: 'Nightjar',
+                      value: nightjar,
+                      minRowHeight: _settingsRowHeight,
+                      textStyle: settingsRowStyle,
+                      valueTextStyle: settingsRowStyle,
+                      valueColor: settingsValueColor,
+                      chevronColor: settingsChevronColor,
+                      showChevron: true,
+                      onTap: () => context.push('/settings/nightjar'),
+                    ),
+                    MobileListRow(
                       key: const ValueKey('mobile_settings_theme_row'),
                       leading: _RowIcon(AppIcons.theme),
                       label: 'Theme',
@@ -362,6 +378,13 @@ class MobileSettingsScreen extends ConsumerWidget {
         iconName: AppIcons.cross,
       );
     }
+  }
+
+  /// Row value for the Nightjar entry. A network with no channel says so
+  /// here rather than reading "Off", which would suggest a switch exists.
+  static String _nightjarLabel(NightjarConfig config) {
+    if (!config.hasChannel) return 'Not available';
+    return config.enabled ? 'On' : 'Off';
   }
 
   static String _themeLabel(ThemeMode mode) => switch (mode) {

@@ -20,6 +20,17 @@
 //!      succeeds, broadcast failures are returned as a structured
 //!      pending-broadcast result instead of a fatal send failure.
 //!
+//! [`propose_send_raw`] is the binary-memo twin of step 1. It exists
+//! because `Memo::from_bytes` classifies its input and can only ever
+//! return `Memo::Text` for the UTF-8 that step 1 accepts, so a memo
+//! starting with the ZIP-302 binary marker `0xFF` (every Nightjar
+//! message part) has no representation on the text path. It also takes
+//! a list of outputs rather than one, because a Nightjar message is
+//! 1-8 memos that are only reassemblable if they share a txid. Both
+//! variants funnel into [`propose_and_store_request`], so a proposal
+//! from either is the same `StoredProposal` and steps 2 and 3 treat
+//! them identically.
+//!
 //! The `PROPOSAL_STORE` stays in `sync/mod.rs` because the hardware
 //! PCZT pipeline also consumes from it (see `sync/pczt.rs`) and
 //! keeping it in the parent avoids a cross-submodule cycle.
@@ -757,6 +768,21 @@ fn retry_store_then_pending_migration_policy_rebuild_message(
     pending_migration_policy_rebuild_message(db_path, network, run_id, chain_tip_height)
 }
 
+/// One recipient of a raw-memo send.
+///
+/// The text-memo path narrows a memo to a UTF-8 `&str`, which is a dead end
+/// for Nightjar: its messages are 512-byte binary memos whose first byte is
+/// the ZIP-302 binary marker `0xFF`, and a single message is 1-8 of those
+/// memos that all have to land in one transaction. This struct is the
+/// per-output half of that shape; the whole-message half is the slice passed
+/// to [`propose_send_raw`].
+#[derive(Clone, Debug)]
+pub(crate) struct RawSendOutput {
+    pub to_address: String,
+    pub amount_zatoshi: u64,
+    pub memo_bytes: Option<Vec<u8>>,
+}
+
 pub(crate) fn propose_send(
     db_path: &str,
     network: WalletNetwork,
@@ -766,6 +792,56 @@ pub(crate) fn propose_send(
     amount_zatoshi: u64,
     memo_str: Option<&str>,
 ) -> Result<ProposalResult, String> {
+    propose_and_store_request(db_path, network, account_uuid, send_flow_id, || {
+        build_send_request(to_address, amount_zatoshi, memo_str)
+    })
+}
+
+/// Propose a transfer with arbitrary memo bytes and one payment per element
+/// of `outputs`.
+///
+/// Every output becomes its own shielded output of a single transaction. That
+/// is the property Nightjar depends on: a reader reassembles a multi-memo
+/// message only from parts that share one txid, so splitting the parts across
+/// transactions would produce a message nobody can decode.
+///
+/// Apart from the request handed to note selection this is exactly
+/// [`propose_send`] — both delegate to [`propose_and_store_request`], so the
+/// stored proposal is indistinguishable from a text-memo one and
+/// `execute_proposal` consumes it unchanged.
+pub(crate) fn propose_send_raw(
+    db_path: &str,
+    network: WalletNetwork,
+    account_uuid: &str,
+    send_flow_id: &str,
+    outputs: &[RawSendOutput],
+) -> Result<ProposalResult, String> {
+    propose_and_store_request(db_path, network, account_uuid, send_flow_id, || {
+        build_send_request_raw(outputs)
+    })
+}
+
+/// Shared body of [`propose_send`] and [`propose_send_raw`].
+///
+/// The proposal-lifecycle invariants only survive if there is exactly one copy
+/// of this bookkeeping: the recovery rows are persisted before the DB locks are
+/// taken, and both are released again on every exit that does not end with a
+/// stored proposal. A second hand-copied version of this function would drift
+/// from the first on the next fix and leak either input locks or store entries.
+///
+/// `build_request` is a closure rather than a prebuilt `TransactionRequest`
+/// because the V6→V5 downgrade retry has to construct a second, independent
+/// request after the first proposal pass has already consumed one.
+fn propose_and_store_request<F>(
+    db_path: &str,
+    network: WalletNetwork,
+    account_uuid: &str,
+    send_flow_id: &str,
+    build_request: F,
+) -> Result<ProposalResult, String>
+where
+    F: Fn() -> Result<TransactionRequest, String>,
+{
     use zcash_protocol::{PoolType, ShieldedPool as SP};
 
     if send_flow_id.is_empty() {
@@ -778,7 +854,7 @@ pub(crate) fn propose_send(
         let account_id = parse_account_uuid(account_uuid)?;
         let proposed_tx_version =
             proposed_tx_version_for_wallet_db(&db, network, "creating a send")?;
-        let request = build_send_request(to_address, amount_zatoshi, memo_str)?;
+        let request = build_request()?;
         let migration_locks = super::migration::locked_migration_note_refs(db_path, account_uuid)?;
         let spend_policy = ordinary_send_spend_policy(
             super::migration::migration_reserves_orchard_inputs(db_path, account_uuid, network)?,
@@ -797,7 +873,7 @@ pub(crate) fn propose_send(
             pass1_proposal,
             proposed_tx_version,
             |tx_version| {
-                let request = build_send_request(to_address, amount_zatoshi, memo_str)?;
+                let request = build_request()?;
                 propose_send_with_reserved_notes(
                     &db,
                     network,
@@ -3510,6 +3586,65 @@ fn build_send_request(
     let payment = Payment::new(to, Some(value), memo_bytes, None, None, vec![])
         .map_err(|e| format!("Cannot create payment: {e:?}"))?;
     TransactionRequest::new(vec![payment]).map_err(|e| format!("{e:?}"))
+}
+
+/// Build a multi-payment request whose memos are passed through byte for byte.
+///
+/// The difference from [`build_send_request`] is not cosmetic.
+/// `Memo::from_bytes` classifies its input and always produces a `Memo::Text`
+/// for the UTF-8 the text path can supply, so a Nightjar memo — which begins
+/// with the ZIP-302 binary marker `0xFF` — cannot be expressed there at all.
+/// `MemoBytes::from_bytes` skips classification and stores the 512-byte field
+/// as given.
+fn build_send_request_raw(outputs: &[RawSendOutput]) -> Result<TransactionRequest, String> {
+    if outputs.is_empty() {
+        return Err("A raw send needs at least one output".to_string());
+    }
+
+    let mut payments = Vec::with_capacity(outputs.len());
+    for (index, output) in outputs.iter().enumerate() {
+        let to: zcash_address::ZcashAddress = output
+            .to_address
+            .parse()
+            .map_err(|e| format!("Bad address in output {index}: {e}"))?;
+        let value = Zatoshis::from_u64(output.amount_zatoshi)
+            .map_err(|_| format!("Bad amount in output {index}"))?;
+        let memo_bytes = match output.memo_bytes.as_deref() {
+            Some([]) => {
+                // An all-zero 512-byte memo is not a valid ZIP-302 encoding of
+                // "no memo" (that is the single byte 0xF6), so accepting an
+                // empty vector here would put an undecodable memo on chain
+                // instead of the omitted-memo output the caller meant.
+                return Err(format!(
+                    "Empty memo in output {index}; use no memo instead of an empty one"
+                ));
+            }
+            Some(bytes) => {
+                // `MemoBytes::from_bytes` zero-pads a short body up to the
+                // 512-byte field and rejects anything longer. Surfacing that
+                // rejection is the whole point: truncating instead would
+                // broadcast a Nightjar message part whose tail is missing, and
+                // the reader would fail reassembly with no way to tell which of
+                // the 1-8 parts was damaged.
+                Some(
+                    MemoBytes::from_bytes(bytes)
+                        .map_err(|e| format!("Bad memo in output {index}: {e}"))?,
+                )
+            }
+            None => None,
+        };
+
+        payments.push(
+            Payment::new(to, Some(value), memo_bytes, None, None, vec![])
+                .map_err(|e| format!("Cannot create payment for output {index}: {e:?}"))?,
+        );
+    }
+
+    // One `Payment` per output, unlike `build_send_request`'s hardcoded single
+    // payment: note selection then emits one shielded output per payment within
+    // one transaction, which is what lets a multi-memo Nightjar message share a
+    // single txid.
+    TransactionRequest::new(payments).map_err(|e| format!("{e:?}"))
 }
 
 fn propose_send_with_reserved_notes(

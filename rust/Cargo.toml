@@ -83,6 +83,37 @@ prost13 = { package = "prost", version = "0.13" }
 tendermint = "0.40.4"
 tendermint-light-client-verifier = "0.40.4"
 
+# Nightjar: the client-verified private-asset overlay. Three Nightjar crates are
+# linked here, the ones that carry NO zcash dependency at all — codec (wire
+# format), state (the deterministic verifier) and zk (keys, notes, Groth16) —
+# plus decaf377-rdsa and bech32 below, which those three need. There is no
+# nightjar-tx here: this comment used to claim one, and nothing in the tree ever
+# depended on it.
+#
+# The scanner, chain and wallet crates are deliberately left out: they pull
+# upstream librustzcash, which would put a second, incompatible Zcash stack
+# beside the Zakura forks this wallet is built on. Everything Zcash-shaped that
+# Nightjar needs (fetching blocks, decrypting memos, sending a transaction) is
+# done with this wallet's own stack instead.
+#
+# These are path dependencies into the Nightjar repo three levels up, so this
+# directory is not a standalone checkout: `cargo build` here needs
+# `../../../crates/` to exist.
+[dependencies.nightjar-codec]
+path = "../../../crates/nightjar-codec"
+
+[dependencies.nightjar-state]
+path = "../../../crates/nightjar-state"
+
+[dependencies.nightjar-zk]
+path = "../../../crates/nightjar-zk"
+
+[dependencies.decaf377-rdsa]
+version = "0.11"
+
+[dependencies.bech32]
+version = "0.11"
+
 # Zcash core. Package names are the Zakura forks; lib names stay upstream so
 # `use orchard` / `use zcash_client_backend` keep working.
 [dependencies.zcash_primitives]

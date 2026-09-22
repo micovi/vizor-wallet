@@ -96,9 +96,7 @@ void main() {
       expect(signingCalls, 0);
       expect(events, isNot(contains('create')));
       expect(
-        find.text(
-          "Ledger can't sign non-English text yet",
-        ),
+        find.text("Ledger can't sign non-English text yet"),
         findsOneWidget,
       );
     },

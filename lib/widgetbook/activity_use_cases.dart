@@ -1,6 +1,9 @@
 // ignore_for_file: depend_on_referenced_packages
 // widgetbook is dev-only; see `widgetbook.dart` for the boundary.
 
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/widgets.dart';
 
 import '../src/core/layout/app_desktop_shell.dart';
@@ -9,8 +12,10 @@ import '../src/core/theme/app_theme.dart';
 import '../src/core/widgets/app_back_link.dart';
 import '../src/core/widgets/app_button.dart';
 import '../src/core/widgets/app_icon.dart';
+import '../src/features/activity/activity_feed_sections.dart';
 import '../src/features/activity/models/activity_row_data.dart';
 import '../src/features/activity/gift_card_activity_index.dart';
+import '../src/features/activity/nightjar_activity_row_mapper.dart';
 import '../src/features/activity/widgets/activity_feed.dart';
 import '../src/features/activity/widgets/gift_card_activity_detail_view.dart';
 import '../src/features/payment_links/widgets/payment_link_gift_card.dart';
@@ -81,6 +86,202 @@ Widget buildActivityPageUseCase(BuildContext context) {
     ),
   );
 }
+
+/// Nightjar messages beside ZEC transactions, through the real mapper.
+///
+/// Four cases the copy has to survive, all in one feed: the send this feature
+/// exists for (1 000 in, 988 back as change, so the row is the 12 that left
+/// and the change is not a row at all), a receipt of a named asset, a receipt
+/// of an asset the issuer never named (truncated id, no ticker), and a message
+/// whose block the indexer could not date — which sorts last and groups under
+/// "Earlier" rather than being given a time it has not got.
+Widget buildNightjarActivityUseCase(BuildContext context) {
+  final now = DateTime.now();
+  final items = [
+    NightjarActivityItem(
+      msgId: '2f1d4c6b8a097e53',
+      assetId:
+          'a3f1c0d29b8e47a5f6031d8c2b7e4906aa11bb22cc33dd44ee55ff6600778899',
+      name: 'Devnet Mint',
+      symbol: 'DMT',
+      kind: NightjarActivityKind.sent,
+      delta: BigInt.from(-1200),
+      moved: BigInt.from(100000),
+      decimals: 2,
+      height: BigInt.from(7257),
+      ownedInputs: 1,
+      totalInputs: 1,
+      ownedOutputs: 1,
+      totalOutputs: 2,
+      timestamp: now.subtract(const Duration(hours: 2)),
+    ),
+    NightjarActivityItem(
+      msgId: '9c8b7a6f5e4d3c2b',
+      assetId:
+          'a3f1c0d29b8e47a5f6031d8c2b7e4906aa11bb22cc33dd44ee55ff6600778899',
+      name: 'Devnet Mint',
+      symbol: 'DMT',
+      kind: NightjarActivityKind.received,
+      delta: BigInt.from(100),
+      moved: BigInt.zero,
+      decimals: 2,
+      height: BigInt.from(7164),
+      ownedOutputs: 1,
+      totalOutputs: 1,
+      timestamp: now.subtract(const Duration(hours: 3)),
+    ),
+    NightjarActivityItem(
+      msgId: '00112233445566aa',
+      assetId:
+          '00ff11ee22dd33cc44bb55aa6699778800112233445566778899aabbccddeeff',
+      kind: NightjarActivityKind.received,
+      delta: BigInt.from(5),
+      moved: BigInt.zero,
+      decimals: 0,
+      height: BigInt.from(7030),
+      ownedOutputs: 1,
+      totalOutputs: 1,
+      timestamp: now.subtract(const Duration(days: 40)),
+    ),
+    NightjarActivityItem(
+      msgId: 'bbccddee00112233',
+      assetId:
+          'a3f1c0d29b8e47a5f6031d8c2b7e4906aa11bb22cc33dd44ee55ff6600778899',
+      name: 'Devnet Mint',
+      symbol: 'DMT',
+      kind: NightjarActivityKind.received,
+      delta: BigInt.from(2550),
+      moved: BigInt.zero,
+      decimals: 2,
+      height: BigInt.from(2201),
+      ownedOutputs: 1,
+      totalOutputs: 1,
+    ),
+  ];
+
+  final entries = <ActivityEntry>[
+    ActivityEntry(
+      timestamp: now.subtract(const Duration(hours: 1)),
+      row: _activityRow(
+        context,
+        title: 'Received ZEC',
+        iconName: AppIcons.arrowDownCircle,
+        subtitle: 'Ironwood',
+        subtitleIconName: AppIcons.shieldKeyholeOutline,
+        amountText: '+1.25 ZEC',
+        amountColor: context.colors.text.positiveStrong,
+      ),
+    ),
+    ...buildNightjarActivityEntries(context: context, items: items),
+  ];
+
+  return SizedBox(
+    width: 480,
+    height: 720,
+    child: ColoredBox(
+      color: context.colors.macosUtility.window,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: ActivityFeed(
+          sections: buildActivityFeedSections(entries),
+          rowKeyPrefix: 'nightjar_activity',
+        ),
+      ),
+    ),
+  );
+}
+
+/// The same feed, once the user has accepted one of the two assets.
+///
+/// This is the pair the row's logo support exists for, and the pair worth
+/// looking at together:
+///
+/// * **Accepted** — `Devnet Mint` draws the issuer's picture in the circle the
+///   generic shield used to occupy, *and* its truncated `asset_id` on the
+///   supporting line. `spec/asset-metadata-v0.md` section 5: a name and a
+///   picture are the impersonation, so the id goes wherever the logo goes.
+/// * **Not accepted** — the unnamed asset has no bytes in the logo map,
+///   because `nightjarAssetLogosProvider` is built from the accepted set. It
+///   falls back to the icon with nothing else changed, and its truncated id
+///   is on the supporting line either way, where the asset is named.
+///
+/// Both rows are messages rather than notes: a receipt and a send, the send
+/// showing the difference that left rather than the change that came back.
+Widget buildNightjarActivityLogoUseCase(BuildContext context) {
+  final now = DateTime.now();
+  final items = [
+    NightjarActivityItem(
+      msgId: 'a1b2c3d4e5f60718',
+      assetId: _acceptedAssetId,
+      name: 'Devnet Mint',
+      symbol: 'DMT',
+      kind: NightjarActivityKind.sent,
+      // 1 000 in, 988 back as change: the row is the 12 that left, and the
+      // change is not a row at all.
+      delta: BigInt.from(-1200),
+      moved: BigInt.from(100000),
+      decimals: 2,
+      height: BigInt.from(7257),
+      ownedInputs: 1,
+      totalInputs: 1,
+      ownedOutputs: 1,
+      totalOutputs: 2,
+      timestamp: now.subtract(const Duration(hours: 3)),
+    ),
+    NightjarActivityItem(
+      msgId: 'f0e1d2c3b4a59687',
+      assetId: _unacceptedAssetId,
+      kind: NightjarActivityKind.received,
+      delta: BigInt.from(5),
+      moved: BigInt.zero,
+      decimals: 0,
+      height: BigInt.from(7030),
+      ownedOutputs: 1,
+      totalOutputs: 1,
+      timestamp: now.subtract(const Duration(hours: 5)),
+    ),
+  ];
+
+  // What `nightjarAssetLogosProvider` would answer with one asset accepted.
+  final logos = <String, Uint8List>{_acceptedAssetId: _sampleLogoPng};
+
+  final entries = <ActivityEntry>[
+    for (final item in items)
+      nightjarActivityEntry(context: context, item: item, logos: logos),
+  ];
+
+  return SizedBox(
+    width: 480,
+    height: 420,
+    child: ColoredBox(
+      color: context.colors.macosUtility.window,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        child: ActivityFeed(
+          sections: buildActivityFeedSections(entries),
+          rowKeyPrefix: 'nightjar_activity_logo',
+        ),
+      ),
+    ),
+  );
+}
+
+const _acceptedAssetId =
+    'a3f1c0d29b8e47a5f6031d8c2b7e4906aa11bb22cc33dd44ee55ff6600778899';
+const _unacceptedAssetId =
+    '00ff11ee22dd33cc44bb55aa6699778800112233445566778899aabbccddeeff';
+
+/// A 64x64 PNG standing in for an issuer's logo. Real bytes, so the row's
+/// bounded decode is exercised rather than mocked.
+final Uint8List _sampleLogoPng = base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABAklEQVR42u2bwRGD'
+  'MAwEKSOTV0pJ1+ksX9ICKLqTZC8zfDG7NjNY1h0HV+31/bzPLSCj95bQY2UooEfI'
+  'cIK3E1EJXyoh6+Ufz9c8ERHI6N1Oggv8HxHl8JngUREl8ErwiAgbvBP8roil4eUS'
+  'JsBLJUyBvyJhefhUCVPh0yRsLcANr3xuSIJSgPM3Ol2AE149pnX2s7bMllXQEV71'
+  'DnIBisqPVEDn2besgu6zL18FWQM6iqAIQAACEJAqYBI8EvgEEIAABLAXaC5g5G5w'
+  '+3oAFSFqglSFORfgZIizQQTQH0CHCD1CdInRJ0inKL3CdIuTFyAxQmaI1Bi5QZKj'
+  'ZIfXT4//AMqxRvxNdz9DAAAAAElFTkSuQmCC',
+);
 
 Widget buildCreatedGiftCardActivityDetailUseCase(BuildContext context) {
   return _buildGiftCardActivityDetailUseCase(

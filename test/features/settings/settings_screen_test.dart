@@ -237,7 +237,11 @@ void main() {
     await tester.pump();
 
     // The pane stays interactive while the cards load, so the user can open
-    // a modal the late navigation would replace.
+    // a modal the late navigation would replace. The row is scrolled into
+    // view first: the settings list is longer than the pane, so its offset
+    // moves whenever a row is added above it.
+    await tester.ensureVisible(find.text('Theme'));
+    await tester.pump();
     await tester.tap(find.text('Theme'));
     await tester.pumpAndSettle();
     expect(find.text('System (Auto)'), findsOneWidget);

@@ -6,6 +6,7 @@ export 'network_config.dart';
 const kDefaultRpcEndpointPresetId = 'default-mainnet';
 const kCustomRpcEndpointPresetId = 'custom';
 const kIronwoodMasqueradeRpcEndpointPresetId = 'ironwood-masquerade';
+const kNightjarDevnetRpcEndpointPresetId = 'nightjar-devnet';
 const kRegtestSlowRpcEndpointPresetId = 'slow-regtest';
 const kRegtestUnavailableRpcEndpointPresetId = 'unavailable-regtest';
 
@@ -171,17 +172,46 @@ final kRegtestRpcEndpointPresets = List<RpcEndpointPreset>.unmodifiable([
     url: ZcashNetwork.regtest.lightwalletdUrl,
     isDefault: true,
   ),
+  // The Nightjar devnet (infra/README.md in the Nightjar repo), on 19067 rather
+  // than the regtest default of 9067, so it cannot reuse `default-regtest`. It is
+  // a preset rather than a note in the docs because every Nightjar PoC session
+  // starts by pointing the wallet here.
+  //
+  // **It must be lightwalletd, not Zaino, and that is the whole reason this
+  // comment is long.** The devnet runs both: Zaino on 28137 and upstream
+  // lightwalletd v0.5.4 on 19067, against the same Zebra. This preset pointed at
+  // Zaino until it was found to make Ironwood sync die at about 5 % every time —
+  // Zaino 0.6.0's `ShieldedProtocol` enum stops at Orchard, so `GetSubtreeRoots`
+  // for Ironwood comes back `invalid_argument` and the scan cannot proceed. The
+  // symptom is a progress bar that stalls and then reports a failure with nothing
+  // in it naming a protocol version, which is why it cost a second diagnosis
+  // after the first. Ironwood landed in upstream lightwalletd (PR 567) and ships
+  // in v0.5.4; Zaino 0.9.0 adds it too, but 0.7→0.9 is a large refactor needing a
+  // volume wipe, so the devnet runs the second reader instead and Zaino is left
+  // alone for the indexer.
+  const RpcEndpointPreset(
+    id: kNightjarDevnetRpcEndpointPresetId,
+    region: 'Regtest',
+    label: 'Nightjar devnet',
+    url: 'http://127.0.0.1:19067',
+  ),
   const RpcEndpointPreset(
     id: kRegtestSlowRpcEndpointPresetId,
     region: 'Regtest',
     label: 'Slow Regtest',
     url: 'http://127.0.0.1:19068',
   ),
+  // A port nothing listens on, on purpose: this preset exists to exercise the
+  // unreachable-endpoint path. It used to be 19067, which became the Nightjar
+  // devnet's lightwalletd — so the one endpoint that actually worked was sitting
+  // behind a label saying it did not, and the one labelled for the devnet led
+  // into the Zaino/Ironwood failure above. Keep this on a port no service in
+  // `infra/` binds.
   const RpcEndpointPreset(
     id: kRegtestUnavailableRpcEndpointPresetId,
     region: 'Regtest',
     label: 'Unavailable Regtest',
-    url: 'http://127.0.0.1:19067',
+    url: 'http://127.0.0.1:19070',
   ),
 ]);
 

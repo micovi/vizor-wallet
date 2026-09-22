@@ -1542,6 +1542,102 @@ fn decode_text_memo(memo: Option<&[u8]>) -> Option<String> {
     }
 }
 
+/// One wallet-visible output's memo field, handed over uninterpreted.
+pub(crate) struct RawMemoOutput {
+    pub pool: String,
+    pub output_index: u32,
+    /// The full 512-byte memo field, padding included.
+    pub memo_bytes: Vec<u8>,
+}
+
+/// Raw memo fields for one transaction's wallet-visible shielded outputs.
+///
+/// `decode_text_memo` above maps `Memo::Future` and `Memo::Arbitrary` to
+/// `None`, and those are exactly the ZIP-302 encodings a binary memo uses — a
+/// Nightjar message part begins with the marker byte `0xFF` — so a caller that
+/// needs those bytes cannot get at them through the text path at any point.
+/// This accessor is additive: it reads the same rows `get_transaction_detail`
+/// reads and changes nothing about how the text memo is derived.
+///
+/// The bytes are re-expanded through `MemoBytes::from_bytes` because
+/// zcash_client_sqlite persists `MemoBytes::as_slice()`, which drops the
+/// trailing zero padding. Re-padding reproduces the exact 512-byte field that
+/// was received, which is the length a memo parser is entitled to assume.
+pub(crate) fn get_transaction_raw_memos(
+    db_path: &str,
+    account_uuid: &str,
+    txid_hex: &str,
+) -> Result<Vec<RawMemoOutput>, String> {
+    let uuid = uuid::Uuid::parse_str(account_uuid).map_err(|e| format!("Invalid UUID: {e}"))?;
+    let uuid_bytes = uuid.as_bytes().to_vec();
+    let txid = hex::decode(txid_hex).map_err(|e| format!("Invalid txid: {e}"))?;
+    if txid.len() != 32 {
+        return Err("Invalid txid length".to_string());
+    }
+
+    let conn = open_readonly_conn(db_path)?;
+    let read_tx = conn
+        .unchecked_transaction()
+        .map_err(|e| format!("SQL error: {e}"))?;
+    let mut outputs = read_outputs_for_tx(&read_tx, &uuid_bytes, &txid)?;
+    // Sorted only so two calls return the same list, the same way
+    // `get_transaction_detail` does, rather than whatever order SQLite
+    // happens to hand the rows back in.
+    //
+    // **This order is not the reassembly order and no caller may treat it as
+    // one.** `output_index` is the index of the *action* in the built bundle,
+    // and the Orchard builder shuffles outputs before it builds actions
+    // (`zakura-orchard-1.2.0/src/builder.rs:1461` and `:1520-1521`), so
+    // sorting by it gives a random permutation of the parts the sender
+    // framed. Concatenating `memo_bytes` in this order corrupts every
+    // multi-fragment message — which is every Nightjar transition.
+    //
+    // It does not matter here because a Nightjar fragment is self-indexing:
+    // `nightjar_codec::transport::frame` writes the fragment index at memo
+    // bytes 40..42 and the count at 42..44, and `Reassembler` files each
+    // fragment under the index it carries, never under its arrival position.
+    // So a consumer hands these memos to the reassembler and lets it do the
+    // ordering.
+    outputs.sort_by(|a, b| {
+        a.output_index
+            .cmp(&b.output_index)
+            .then_with(|| a.output_pool.cmp(&b.output_pool))
+    });
+
+    let mut memos = Vec::new();
+    for output in outputs {
+        if !is_shielded_pool(output.output_pool) {
+            continue;
+        }
+        let Some(raw) = output.memo.as_deref() else {
+            continue;
+        };
+        // zcash_client_sqlite writes the empty memo as the single byte 0xF6.
+        // Expanding it would hand every caller a 512-byte "no memo" to
+        // recognise and discard again.
+        if raw == [0xF6] {
+            continue;
+        }
+        let memo_bytes = MemoBytes::from_bytes(raw)
+            .map_err(|e| {
+                format!(
+                    "Stored memo for output {} is not a valid memo field: {e}",
+                    output.output_index
+                )
+            })?
+            .as_array()
+            .to_vec();
+        memos.push(RawMemoOutput {
+            pool: output_pool_label(output.output_pool).to_string(),
+            output_index: u32::try_from(output.output_index)
+                .map_err(|_| "Output index out of range".to_string())?,
+            memo_bytes,
+        });
+    }
+
+    Ok(memos)
+}
+
 fn build_external_send_keys(
     bases: &[TxBase],
     summaries: &HashMap<Vec<u8>, ActivitySummary>,

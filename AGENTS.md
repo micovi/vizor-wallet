@@ -21,9 +21,13 @@ fvm flutter test --tags mobile --run-skipped --dart-define=VIZOR_FORM_FACTOR=mob
 # Rust tests (run from project root or rust/)
 cd rust && cargo test
 
-# After changing Rust API files (rust/src/api/*.rs):
-# MUST run from project root, not rust/
-flutter_rust_bridge_codegen generate
+# After changing Rust API files (rust/src/api/*.rs).
+# Use this script, not `flutter_rust_bridge_codegen generate` directly: the
+# bare command fails with "unexpected token, expected `;`" because FRB 2.11.1's
+# syn cannot parse the `super let` that rustc 1.95.0 emits when it expands
+# `std::pin::pin!` inside zcash_voting. The script works around exactly that
+# and explains itself in its header.
+./scripts/generate-rust-bridge.sh
 
 # Clear app from iOS simulator (keychain + state + uninstall)
 ./clear-app.sh

@@ -1123,6 +1123,64 @@ pub fn propose_send(
     })
 }
 
+/// One recipient of a raw-memo send. `memo_bytes` is written into the
+/// 512-byte memo field unchanged, so callers that need a binary memo — a
+/// Nightjar message part starts with the ZIP-302 marker `0xFF` — can reach
+/// the send path at all. A body longer than 512 bytes is rejected, never
+/// truncated.
+pub struct RawSendOutput {
+    pub to_address: String,
+    pub amount_zatoshi: u64,
+    pub memo_bytes: Option<Vec<u8>>,
+}
+
+fn to_wallet_raw_send_outputs(outputs: Vec<RawSendOutput>) -> Vec<wallet_sync::RawSendOutput> {
+    outputs
+        .into_iter()
+        .map(|output| wallet_sync::RawSendOutput {
+            to_address: output.to_address,
+            amount_zatoshi: output.amount_zatoshi,
+            memo_bytes: output.memo_bytes,
+        })
+        .collect()
+}
+
+/// Step 1, binary-memo variant: propose a transfer with one output per entry
+/// in `outputs` and memos passed through byte for byte.
+///
+/// All outputs land in one transaction. A Nightjar message is 1-8 memos that
+/// a reader can only reassemble from a single txid, so proposing them
+/// separately would produce parts nobody can put back together.
+///
+/// The returned `ProposalResult` is the same one `propose_send` returns and
+/// carries the same consume-on-entry contract: whoever receives a
+/// `proposal_id` here must either pass it to `execute_proposal` /
+/// `create_pczt_from_proposal` exactly once, or call `discard_proposal` from a
+/// `finally` block on every exit that did not consume it.
+pub fn propose_send_raw(
+    db_path: String,
+    network: String,
+    account_uuid: String,
+    send_flow_id: String,
+    outputs: Vec<RawSendOutput>,
+) -> Result<ProposalResult, String> {
+    catch(|| {
+        let network = parse_network_and_migrate(&db_path, &network)?;
+        let r = wallet_sync::propose_send_raw(
+            &db_path,
+            network,
+            &account_uuid,
+            &send_flow_id,
+            &to_wallet_raw_send_outputs(outputs),
+        )?;
+        Ok(ProposalResult {
+            proposal_id: r.proposal_id,
+            needs_sapling_params: r.needs_sapling_params,
+            fee_zatoshi: r.fee_zatoshi,
+        })
+    })
+}
+
 /// Estimate the fee for a transfer without storing a proposal.
 pub fn estimate_fee(
     db_path: String,
@@ -2597,6 +2655,46 @@ pub fn get_transaction_detail(
                 })
                 .collect(),
         })
+    })
+}
+
+/// One output's memo field, uninterpreted.
+pub struct RawMemoOutput {
+    pub pool: String,
+    pub output_index: u32,
+    /// The full 512-byte memo field, padding included.
+    pub memo_bytes: Vec<u8>,
+}
+
+/// Every raw memo attached to one transaction's wallet-visible shielded
+/// outputs, in output order.
+///
+/// `get_transaction_detail().memo` decodes only `Memo::Text` and reports
+/// `None` for the binary ZIP-302 encodings, so an incoming Nightjar message —
+/// whose parts start with the marker byte `0xFF` — is invisible through it.
+/// Read the bytes here and parse them on the caller's side.
+pub fn get_transaction_raw_memos(
+    db_path: String,
+    network: String,
+    account_uuid: String,
+    txid_hex: String,
+) -> Result<Vec<RawMemoOutput>, String> {
+    catch(|| {
+        // The network is not used to read a memo field, but parsing it runs
+        // the same pending-migration gate every other DB reader in this file
+        // goes through, so a raw-memo read cannot be the one call that opens
+        // a database an upgrade has not finished with.
+        let _network = parse_network_and_migrate(&db_path, &network)?;
+        Ok(
+            wallet_sync::get_transaction_raw_memos(&db_path, &account_uuid, &txid_hex)?
+                .into_iter()
+                .map(|output| RawMemoOutput {
+                    pool: output.pool,
+                    output_index: output.output_index,
+                    memo_bytes: output.memo_bytes,
+                })
+                .collect(),
+        )
     })
 }
 

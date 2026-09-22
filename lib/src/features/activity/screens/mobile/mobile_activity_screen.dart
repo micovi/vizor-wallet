@@ -19,6 +19,11 @@ import '../../../../rust/api/sync.dart' as rust_sync;
 import '../../activity_feed_sections.dart';
 import '../../activity_row_mapper.dart';
 import '../../gift_card_activity_index.dart';
+import '../../../nightjar_assets/providers/nightjar_asset_metadata_provider.dart';
+import '../../../nightjar_assets/providers/nightjar_assets_view_provider.dart';
+import '../../nightjar_activity_provider.dart';
+import '../../nightjar_activity_row_mapper.dart';
+import '../nightjar_activity_detail_screen.dart';
 import '../../../swap/models/swap_activity_navigation.dart';
 import '../../../swap/widgets/swap_activity_status_auto_refresh.dart';
 import '../../swap_activity_row_items_provider.dart';
@@ -257,6 +262,17 @@ class _MobileActivityScreenState extends ConsumerState<MobileActivityScreen> {
           );
     final swapReceiveTxByIntent = absorption.receiveTxByIntent;
 
+    // An empty list for every degraded Nightjar case — unconfigured, still
+    // loading, unreachable, unverified — so this feed never waits on it.
+    final nightjarItems = ref.watch(nightjarActivityItemsProvider);
+    // Built from the accepted set and nothing else, so an asset the user never
+    // accepted has no bytes and its row keeps the generic icon
+    // (`spec/asset-metadata-v0.md` section 5).
+    final nightjarLogos = ref.watch(nightjarAssetLogosProvider);
+    // Read, not watched: it is only wanted at the moment a row is tapped, and
+    // the rows themselves come from the synchronous items provider.
+    final nightjarView = ref.read(nightjarAssetsViewProvider).value;
+
     final entries = <ActivityEntry>[
       for (final tx in giftCardActivityIndex.withPendingClaims(transactions))
         if (!absorption.absorbs(tx))
@@ -288,6 +304,21 @@ class _MobileActivityScreenState extends ConsumerState<MobileActivityScreen> {
               null => null,
               final tx => () => _openLoadedTransactionStatus(context, tx),
             },
+          ),
+        ),
+      for (final item in nightjarItems)
+        nightjarActivityEntry(
+          context: context,
+          item: item,
+          logos: nightjarLogos,
+          privacyModeEnabled: privacyModeEnabled,
+          // No transaction receipt to open: a Nightjar message is channel
+          // state, not a transaction this wallet ever saw. The asset screen
+          // holds the rest of the story, and the message this row is about
+          // rides along in the query string.
+          onTap: () => context.push(
+            nightjarActivityDetailRouteFor(item.msgId),
+            extra: nightjarActivityDetailArgsFor(item, view: nightjarView),
           ),
         ),
     ];

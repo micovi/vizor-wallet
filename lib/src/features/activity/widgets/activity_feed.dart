@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import '../../../core/layout/app_form_factor.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
+import '../../nightjar_assets/widgets/nightjar_asset_logo.dart';
 import '../models/activity_row_data.dart';
 
 const _activityFeedActivationShortcuts = <ShortcutActivator, Intent>{
@@ -901,6 +902,14 @@ class _ActivityRowTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    // `spec/asset-metadata-v0.md` section 5: the asset id goes wherever the
+    // logo goes. The row's title is the issuer's declared name, which is not
+    // identifying, so the supporting line carries the id — except when the
+    // title already *is* that id, which is how an asset whose issuer never
+    // declared a name is titled. Showing it twice on one row would be noise,
+    // not disclosure.
+    final identityLabel = row.leadingImage?.identityLabel;
+    final showIdentity = identityLabel != null && identityLabel != row.title;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -911,13 +920,14 @@ class _ActivityRowTitle extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppTypography.labelLarge.copyWith(color: colors.text.accent),
         ),
-        if (row.subtitle != null) ...[
+        if (row.subtitle != null || showIdentity) ...[
           // Mobile-only extra gap; desktop keeps subtitle flush as on main.
           if (kAppFormFactor == AppFormFactor.mobile)
             const SizedBox(height: _activityRowInnerLineGap),
           _ActivityRowSubtitle(
-            text: row.subtitle!,
+            text: row.subtitle,
             iconName: row.subtitleIconName,
+            identityLabel: showIdentity ? identityLabel : null,
           ),
         ],
       ],
@@ -926,14 +936,36 @@ class _ActivityRowTitle extends StatelessWidget {
 }
 
 class _ActivityRowSubtitle extends StatelessWidget {
-  const _ActivityRowSubtitle({required this.text, this.iconName});
+  const _ActivityRowSubtitle({this.text, this.iconName, this.identityLabel});
 
-  final String text;
+  final String? text;
   final String? iconName;
+
+  /// The asset id, or an unambiguous abbreviation of it, shown whenever the
+  /// row draws a logo (`spec/asset-metadata-v0.md` section 5).
+  ///
+  /// It leads the line, and it shares a single [Text] with [text] rather than
+  /// sitting in its own. That is the part worth not undoing: a `Row` gives its
+  /// non-flexible children unbounded width, so an id in a box of its own is an
+  /// id that overflows a narrow row instead of shortening, and an id in a
+  /// `Flexible` beside another `Flexible` is an id that gets elided to make
+  /// room for a description. One string with one ellipsis at the end means the
+  /// *description* is what a narrow row loses, and the id survives to the last
+  /// few characters.
+  final String? identityLabel;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final text = this.text;
+    final identityLabel = this.identityLabel;
+    final label = switch ((identityLabel, text)) {
+      (null, null) => null,
+      (final String id, null) => id,
+      (null, final String value) => value,
+      (final String id, final String value) => '$id \u00b7 $value',
+    };
+    if (label == null) return const SizedBox.shrink();
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -949,7 +981,7 @@ class _ActivityRowSubtitle extends StatelessWidget {
         ],
         Flexible(
           child: Text(
-            text,
+            label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: _activityRowSubtitleStyle.copyWith(
@@ -1111,15 +1143,35 @@ class _ActivityRowIcon extends StatelessWidget {
             dimension: _progressRingSize,
             child: CustomPaint(
               painter: _ActivityProgressRingPainter(progress: progress),
-              child: Center(
-                child: AppIcon(
-                  row.leadingIconName,
-                  size: AppAssetSize.icon,
-                  color: row.leadingIconColor,
-                  animated: row.leadingIconName == AppIcons.loader,
-                ),
-              ),
+              child: _ActivityIconGlyph(row: row),
             ),
+          ),
+        ),
+      );
+    }
+
+    final image = row.leadingImage;
+    if (image != null) {
+      // The same circle, at the same size, over the same background as the
+      // icon it replaces: the background still shows through a logo with
+      // transparency, and it is what the glyph sits on when bytes that passed
+      // the metadata layer's sniff turn out not to decode.
+      //
+      // `NightjarAssetLogoImage` rather than a second `Image.memory` here on
+      // purpose — it is the audited bounded decode (`cacheWidth`/`cacheHeight`
+      // capped at `kNightjarLogoMaxDecodePixels`, section 4.2), and a copy of
+      // it in this file would be a second decode path to keep correct.
+      return SizedBox.square(
+        dimension: _avatarSize,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: row.leadingBackgroundColor,
+            shape: BoxShape.circle,
+          ),
+          child: NightjarAssetLogoImage(
+            bytes: image.bytes,
+            size: _avatarSize,
+            fallback: _ActivityIconGlyph(row: row),
           ),
         ),
       );
@@ -1144,13 +1196,26 @@ class _ActivityIconFallback extends StatelessWidget {
         color: row.leadingBackgroundColor,
         shape: BoxShape.circle,
       ),
-      child: Center(
-        child: AppIcon(
-          row.leadingIconName,
-          size: AppAssetSize.icon,
-          color: row.leadingIconColor,
-          animated: row.leadingIconName == AppIcons.loader,
-        ),
+      child: _ActivityIconGlyph(row: row),
+    );
+  }
+}
+
+/// The leading icon itself, without the circle behind it. Shared by the plain
+/// row, the progress ring, and the fallback a logo falls back to.
+class _ActivityIconGlyph extends StatelessWidget {
+  const _ActivityIconGlyph({required this.row});
+
+  final ActivityRowData row;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: AppIcon(
+        row.leadingIconName,
+        size: AppAssetSize.icon,
+        color: row.leadingIconColor,
+        animated: row.leadingIconName == AppIcons.loader,
       ),
     );
   }

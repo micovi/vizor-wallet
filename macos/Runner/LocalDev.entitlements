@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  Entitlements for a LOCAL, UNSIGNED developer build only. Never ship this.
+
+  The shipped DebugProfile/Release entitlements turn the App Sandbox on and bind the app to a
+  team through `com.apple.application-identifier`. Both are right for a released build and both
+  are unusable on a machine that is not in that team: without a provisioning profile for
+  com.keplr.vizor the build is refused outright, and if the entitlements are simply dropped to
+  get past that, the app launches sandboxed-without-an-identity and `flutter_secure_storage`
+  cannot reach the Keychain at all — which surfaces as "Secure storage is locked" with a Retry
+  button that can never succeed, because nothing about it is transient.
+
+  So this file keeps the sandbox off. A non-sandboxed, ad-hoc-signed app can use the Keychain
+  normally, which is all a devnet PoC needs. The cost: an ad-hoc signature is derived from the
+  binary, so every rebuild produces a new identity and the previous build's Keychain items are no
+  longer readable — a rebuilt app comes up as a fresh wallet. That is fine for regtest and would
+  not be fine for anything else.
+-->
+<dict>
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+</dict>
+</plist>

@@ -149,12 +149,15 @@ real one-time deposit instruction. Reviewing a quote does not move funds by
 itself. Starting a ZEC-to-external swap sends the software-wallet deposit by
 default; hardware-wallet accounts wait for Keystone signing.
 
-After changing Rust API files in `rust/src/api/`, regenerate bindings from the
-repo root:
+After changing Rust API files in `rust/src/api/`, regenerate bindings:
 
 ```bash
-flutter_rust_bridge_codegen generate
+./scripts/generate-rust-bridge.sh
 ```
+
+Use the script rather than `flutter_rust_bridge_codegen generate` directly. The
+bare command fails on this toolchain; the script documents why and how to drop
+it once the upstream fix lands.
 
 ## Support Vizor
 

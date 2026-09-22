@@ -1,0 +1,204 @@
+{
+    "items": [
+        {
+            "ord": 29596619702274,
+            "seq": 29596619702274,
+            "msg_id": "3ca25836e4a4fed0e3f6c058c0a65ea22bf0b7be9abd4049d6108b172f0cb338",
+            "kind": 1,
+            "kind_name": "transition",
+            "height": 6891,
+            "tx_index": 1,
+            "action_index": 2,
+            "txid": "3d9d2f5706cddf4dbbc6e31b13f4f0a23377ab656b0b5a2739efe6e345ef42b3",
+            "fragments": 2,
+            "body_len": 583,
+            "outcome": "applied",
+            "reason": null,
+            "detail": {
+                "shape": {
+                    "n_in": 1,
+                    "n_out": 1,
+                    "issue": false,
+                    "issue_public": false,
+                    "before": [
+                        false,
+                        false
+                    ],
+                    "keys": [
+                        1,
+                        0
+                    ],
+                    "hashes": [
+                        false,
+                        false
+                    ],
+                    "zec": [
+                        false,
+                        false
+                    ],
+                    "word": 21
+                },
+                "issuance": null,
+                "expiries": [],
+                "anchor": "e42de93f8a689e9ad5ce2dd0725196e4d16a09d518f3b975d9fd97bf0b98fa09",
+                "declared_height": 6880,
+                "nullifiers": [
+                    "c5d6573bd036725c0953ddd9573d9110e8ef24763363eb2ef9cab1f8d91f1a08"
+                ],
+                "commitments": [
+                    "380bf2446380a8223b502b99ab60b38ba94a339eef46f1afa75f0b45b8d8a100"
+                ],
+                "rks": [
+                    "16c4b487436f331a172c2e3e13a5e9a50f33f7830d301c4435547cd0b7698e0b"
+                ],
+                "preimages": [],
+                "preimage_count": 0,
+                "rk_issuer": null,
+                "zec_claims": [],
+                "signatures": [
+                    "f4ac4c02db8410382a9cc469dd0264aeb392f6e14d467f679655345354a83e102beabfc6916ea2c556f5419553dc225330f3aab6278b901a5f8ee81a921b1403"
+                ],
+                "signature_count": 1,
+                "proof": "9b4ed8045613b650b19f0624bf800bc3125faf3cdb460461d4ac1153af0f93bab32d9eb9d09ec910397ca901fc607d0102d0f1265924a2b1181c7418943bc45de945e9d4dbb8b34d4f2a456711e58476771401b14ef8878f0eb416b9e8cde800d73d5d0ee243cbefa823881e8f617d16846f81a2d6f7b4718b0f45c66f5b0b08a052f5c562389f6c606db0d99ed7ef00f478d0a4153ccc498a378f82eab8bc5c7192d13d43f7d835e51cc515ed7e5fcd836c33882874046f91f74726aba4eb00",
+                "ciphertexts": [
+                    [
+                        {
+                            "epk": "ec87dc9e4f34356c5a48f4423465f04ef12a45a5f3869c078b69e5b16451ed03",
+                            "ct": "4d549369284909be46ceefcce8918c309afd93260033295051eb17bea97898f11243d3518d6ca62e3ba0464a974b6a99f55eb37bb66ece68654b9480b9dda1a7acab17b84da8977dbc7b79d7a84fafc80a4f29baaba841c8ab8b3860d855a018977f31f4ca28eea27dfe30332e39a4d7f3d51a60f74dfcbaea7996ab8a6b70a39b4c46d0c0f1d49f055fb29fe8ef3379fb4c03bb742e18f74e3b0d88",
+                            "len": 156
+                        }
+                    ]
+                ],
+                "ciphertext_lengths": [
+                    [
+                        156
+                    ]
+                ],
+                "new_root": "eae38952c564745415f6fa81c883f0ca5861999a0aa5b95752e9797e14af6112",
+                "spent": [
+                    "c5d6573bd036725c0953ddd9573d9110e8ef24763363eb2ef9cab1f8d91f1a08"
+                ],
+                "created": [
+                    {
+                        "position": 5,
+                        "cm": "380bf2446380a8223b502b99ab60b38ba94a339eef46f1afa75f0b45b8d8a100",
+                        "created": 6891,
+                        "ciphertexts": 1
+                    }
+                ]
+            },
+            "body": "00031500e42de93f8a689e9ad5ce2dd0725196e4d16a09d518f3b975d9fd97bf0b98fa09e01a0000c5d6573bd036725c0953ddd9573d9110e8ef24763363eb2ef9cab1f8d91f1a08380bf2446380a8223b502b99ab60b38ba94a339eef46f1afa75f0b45b8d8a10016c4b487436f331a172c2e3e13a5e9a50f33f7830d301c4435547cd0b7698e0b9b4ed8045613b650b19f0624bf800bc3125faf3cdb460461d4ac1153af0f93bab32d9eb9d09ec910397ca901fc607d0102d0f1265924a2b1181c7418943bc45de945e9d4dbb8b34d4f2a456711e58476771401b14ef8878f0eb416b9e8cde800d73d5d0ee243cbefa823881e8f617d16846f81a2d6f7b4718b0f45c66f5b0b08a052f5c562389f6c606db0d99ed7ef00f478d0a4153ccc498a378f82eab8bc5c7192d13d43f7d835e51cc515ed7e5fcd836c33882874046f91f74726aba4eb00f4ac4c02db8410382a9cc469dd0264aeb392f6e14d467f679655345354a83e102beabfc6916ea2c556f5419553dc225330f3aab6278b901a5f8ee81a921b140301ec87dc9e4f34356c5a48f4423465f04ef12a45a5f3869c078b69e5b16451ed039c004d549369284909be46ceefcce8918c309afd93260033295051eb17bea97898f11243d3518d6ca62e3ba0464a974b6a99f55eb37bb66ece68654b9480b9dda1a7acab17b84da8977dbc7b79d7a84fafc80a4f29baaba841c8ab8b3860d855a018977f31f4ca28eea27dfe30332e39a4d7f3d51a60f74dfcbaea7996ab8a6b70a39b4c46d0c0f1d49f055fb29fe8ef3379fb4c03bb742e18f74e3b0d88"
+        },
+        {
+            "ord": 29549375062018,
+            "seq": 29549375062018,
+            "msg_id": "413abe7ba06f01ba28ee5c9faedb3737199548d4e500e3d876d8f45ef964ca6d",
+            "kind": 1,
+            "kind_name": "transition",
+            "height": 6880,
+            "tx_index": 1,
+            "action_index": 2,
+            "txid": "22677c0f4d776afdabd8d7239dc376f1dce3d81db27104bd0b4bf5081b5f4590",
+            "fragments": 2,
+            "body_len": 812,
+            "outcome": "applied",
+            "reason": null,
+            "detail": {
+                "shape": {
+                    "n_in": 1,
+                    "n_out": 2,
+                    "issue": false,
+                    "issue_public": false,
+                    "before": [
+                        false,
+                        false
+                    ],
+                    "keys": [
+                        1,
+                        0
+                    ],
+                    "hashes": [
+                        false,
+                        false
+                    ],
+                    "zec": [
+                        false,
+                        false
+                    ],
+                    "word": 25
+                },
+                "issuance": null,
+                "expiries": [],
+                "anchor": "7bcd4d3ab61864170d54d1718380ded3f93bf7414895ec9fe0711cb7cf563710",
+                "declared_height": 6869,
+                "nullifiers": [
+                    "b8f26043dfef25afd1b0b348d2468c4bd23c621d6daf3a5e930b70be88d6790d"
+                ],
+                "commitments": [
+                    "d0ac420cea86641c9a61ebe6e78de7b52e9a5448322680fd8c14bb2c90e7eb03",
+                    "56d809302746724a54df2ba1b015a206bb758862dd953d8939d6e57735fecc09"
+                ],
+                "rks": [
+                    "b85bb20f9ad7bf8b4b127c72c944699e9651b26825261b53fd89f0e5b13d2508"
+                ],
+                "preimages": [],
+                "preimage_count": 0,
+                "rk_issuer": null,
+                "zec_claims": [],
+                "signatures": [
+                    "46360b492a036d78d010df8cdfd51fe7d458bf8b8fa1c092c60a517f4dfe430b8b60da7a25716ae92c6075a2c5654927c4ba082c77b934d686b81ecce2024a03"
+                ],
+                "signature_count": 1,
+                "proof": "1d5542be49ccd396903fc4a0908938bc27adc1a23495485d579057f840cba0b84d3040c2447ba251c546b6ac6447c600975ea279e594f9de640930962ca1ea33b2590d2db2098db475b8eea9b73b23c29585cf4a4b553ea15d17e5096e795a01d6fd68cc57319d0b5585c683e6c1ef2db0f129658d1aae976e2a2b6a533db6200a5deff80836b37c00f239532e0a3600f8e7066ff4c7fe4a1e927a6397511269b2a04de7a8941adfefe07cc78227d61ab62e33657f605e48f84670de32461901",
+                "ciphertexts": [
+                    [
+                        {
+                            "epk": "0c399fa4e4c8e2f0d94d02d145402c0aafcfe20ad1ee36c1640f6a6b4e932609",
+                            "ct": "f5c6b3bbc570ef334ac0b401864354c7e26bf03d9096fff25f51a416b65500cc95845087d3d60b99b7abecfad017c1c076edb503f8113d9c6d565271fa1d3a963fe2e8b18383f080787d99d4e63b2afaca4199fa00421abe5f37ea7df115b8dfb0ed455258ab1bb487d055569f0d5f4b9a404d014d6b57e8252df5cd919ae28e76680cf38addcaebe23ca4a9694b895a3c7e304580f5520f53ad491e7986df7dbaaa",
+                            "len": 162
+                        }
+                    ],
+                    [
+                        {
+                            "epk": "f60e232a7ecd69aca4631110fe47b199f151c000cb11bc1b935afb9b17e2c80d",
+                            "ct": "41a18188debee28f441c2715af0b97765798ad200ebf7d375ceea6adbcc483046c61734f25ad6f6fa46af994fe1255c4e0d093188a0e3d4d3ef2fac3e0bcfe6aa75f802b78330f844564f6623d398c4cb97bf3577d0b59ae9dcbd8438bee29ca89c06f78742bf4230e49e902ace8d453990afb98a24ff2a2c052f06c692f890bd336cf85f0d0aa01059faeeb9c03696f16fd78f16ef9d601633b5a89",
+                            "len": 156
+                        }
+                    ]
+                ],
+                "ciphertext_lengths": [
+                    [
+                        162
+                    ],
+                    [
+                        156
+                    ]
+                ],
+                "new_root": "e42de93f8a689e9ad5ce2dd0725196e4d16a09d518f3b975d9fd97bf0b98fa09",
+                "spent": [
+                    "b8f26043dfef25afd1b0b348d2468c4bd23c621d6daf3a5e930b70be88d6790d"
+                ],
+                "created": [
+                    {
+                        "position": 3,
+                        "cm": "d0ac420cea86641c9a61ebe6e78de7b52e9a5448322680fd8c14bb2c90e7eb03",
+                        "created": 6880,
+                        "ciphertexts": 1
+                    },
+                    {
+                        "position": 4,
+                        "cm": "56d809302746724a54df2ba1b015a206bb758862dd953d8939d6e57735fecc09",
+                        "created": 6880,
+                        "ciphertexts": 1
+                    }
+                ]
+            },
+            "body": "000319007bcd4d3ab61864170d54d1718380ded3f93bf7414895ec9fe0711cb7cf563710d51a0000b8f26043dfef25afd1b0b348d2468c4bd23c621d6daf3a5e930b70be88d6790dd0ac420cea86641c9a61ebe6e78de7b52e9a5448322680fd8c14bb2c90e7eb0356d809302746724a54df2ba1b015a206bb758862dd953d8939d6e57735fecc09b85bb20f9ad7bf8b4b127c72c944699e9651b26825261b53fd89f0e5b13d25081d5542be49ccd396903fc4a0908938bc27adc1a23495485d579057f840cba0b84d3040c2447ba251c546b6ac6447c600975ea279e594f9de640930962ca1ea33b2590d2db2098db475b8eea9b73b23c29585cf4a4b553ea15d17e5096e795a01d6fd68cc57319d0b5585c683e6c1ef2db0f129658d1aae976e2a2b6a533db6200a5deff80836b37c00f239532e0a3600f8e7066ff4c7fe4a1e927a6397511269b2a04de7a8941adfefe07cc78227d61ab62e33657f605e48f84670de3246190146360b492a036d78d010df8cdfd51fe7d458bf8b8fa1c092c60a517f4dfe430b8b60da7a25716ae92c6075a2c5654927c4ba082c77b934d686b81ecce2024a0301010c399fa4e4c8e2f0d94d02d145402c0aafcfe20ad1ee36c1640f6a6b4e932609a200f5c6b3bbc570ef334ac0b401864354c7e26bf03d9096fff25f51a416b65500cc95845087d3d60b99b7abecfad017c1c076edb503f8113d9c6d565271fa1d3a963fe2e8b18383f080787d99d4e63b2afaca4199fa00421abe5f37ea7df115b8dfb0ed455258ab1bb487d055569f0d5f4b9a404d014d6b57e8252df5cd919ae28e76680cf38addcaebe23ca4a9694b895a3c7e304580f5520f53ad491e7986df7dbaaaf60e232a7ecd69aca4631110fe47b199f151c000cb11bc1b935afb9b17e2c80d9c0041a18188debee28f441c2715af0b97765798ad200ebf7d375ceea6adbcc483046c61734f25ad6f6fa46af994fe1255c4e0d093188a0e3d4d3ef2fac3e0bcfe6aa75f802b78330f844564f6623d398c4cb97bf3577d0b59ae9dcbd8438bee29ca89c06f78742bf4230e49e902ace8d453990afb98a24ff2a2c052f06c692f890bd336cf85f0d0aa01059faeeb9c03696f16fd78f16ef9d601633b5a89"
+        }
+    ],
+    "count": 2,
+    "total": 350,
+    "limit": 2,
+    "has_more": true,
+    "next_cursor": 29549375062018
+}

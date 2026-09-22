@@ -10,6 +10,7 @@ import 'api/gift_card_tracking.dart';
 import 'api/keystone.dart';
 import 'api/ledger.dart';
 import 'api/network_privacy.dart';
+import 'api/nightjar.dart';
 import 'api/secret.dart';
 import 'api/simple.dart';
 import 'api/sync.dart';
@@ -276,6 +277,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   NextStepView dco_decode_box_autoadd_next_step_view(dynamic raw);
+
+  @protected
+  NjZecSources dco_decode_box_autoadd_nj_zec_sources(dynamic raw);
 
   @protected
   OrchardMigrationImmediatePlan
@@ -693,6 +697,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<NextStepView> dco_decode_list_next_step_view(dynamic raw);
 
   @protected
+  List<NjAsset> dco_decode_list_nj_asset(dynamic raw);
+
+  @protected
+  List<NjMessageInput> dco_decode_list_nj_message_input(dynamic raw);
+
+  @protected
+  List<NjNote> dco_decode_list_nj_note(dynamic raw);
+
+  @protected
   List<PirSnapshotEndpointDiagnosticView>
   dco_decode_list_pir_snapshot_endpoint_diagnostic_view(dynamic raw);
 
@@ -710,6 +723,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<RawMemoOutput> dco_decode_list_raw_memo_output(dynamic raw);
+
+  @protected
+  List<RawSendOutput> dco_decode_list_raw_send_output(dynamic raw);
 
   @protected
   List<ResubmittedShareView> dco_decode_list_resubmitted_share_view(
@@ -851,6 +870,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   NextStepView dco_decode_next_step_view(dynamic raw);
+
+  @protected
+  NjAsset dco_decode_nj_asset(dynamic raw);
+
+  @protected
+  NjIdentity dco_decode_nj_identity(dynamic raw);
+
+  @protected
+  NjMessageInput dco_decode_nj_message_input(dynamic raw);
+
+  @protected
+  NjNote dco_decode_nj_note(dynamic raw);
+
+  @protected
+  NjPayPlan dco_decode_nj_pay_plan(dynamic raw);
+
+  @protected
+  NjProvingKey dco_decode_nj_proving_key(dynamic raw);
+
+  @protected
+  NjView dco_decode_nj_view(dynamic raw);
+
+  @protected
+  NjZecSources dco_decode_nj_zec_sources(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -1048,6 +1091,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ProposalResult dco_decode_proposal_result(dynamic raw);
+
+  @protected
+  RawMemoOutput dco_decode_raw_memo_output(dynamic raw);
+
+  @protected
+  RawSendOutput dco_decode_raw_send_output(dynamic raw);
 
   @protected
   ResolvedVotingConfig dco_decode_resolved_voting_config(dynamic raw);
@@ -1597,6 +1646,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  NjZecSources sse_decode_box_autoadd_nj_zec_sources(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   OrchardMigrationImmediatePlan
   sse_decode_box_autoadd_orchard_migration_immediate_plan(
     SseDeserializer deserializer,
@@ -2136,6 +2190,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<NjAsset> sse_decode_list_nj_asset(SseDeserializer deserializer);
+
+  @protected
+  List<NjMessageInput> sse_decode_list_nj_message_input(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<NjNote> sse_decode_list_nj_note(SseDeserializer deserializer);
+
+  @protected
   List<PirSnapshotEndpointDiagnosticView>
   sse_decode_list_pir_snapshot_endpoint_diagnostic_view(
     SseDeserializer deserializer,
@@ -2155,6 +2220,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<RawMemoOutput> sse_decode_list_raw_memo_output(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<RawSendOutput> sse_decode_list_raw_send_output(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<ResubmittedShareView> sse_decode_list_resubmitted_share_view(
@@ -2330,6 +2405,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   NextStepView sse_decode_next_step_view(SseDeserializer deserializer);
+
+  @protected
+  NjAsset sse_decode_nj_asset(SseDeserializer deserializer);
+
+  @protected
+  NjIdentity sse_decode_nj_identity(SseDeserializer deserializer);
+
+  @protected
+  NjMessageInput sse_decode_nj_message_input(SseDeserializer deserializer);
+
+  @protected
+  NjNote sse_decode_nj_note(SseDeserializer deserializer);
+
+  @protected
+  NjPayPlan sse_decode_nj_pay_plan(SseDeserializer deserializer);
+
+  @protected
+  NjProvingKey sse_decode_nj_proving_key(SseDeserializer deserializer);
+
+  @protected
+  NjView sse_decode_nj_view(SseDeserializer deserializer);
+
+  @protected
+  NjZecSources sse_decode_nj_zec_sources(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -2575,6 +2674,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ProposalResult sse_decode_proposal_result(SseDeserializer deserializer);
+
+  @protected
+  RawMemoOutput sse_decode_raw_memo_output(SseDeserializer deserializer);
+
+  @protected
+  RawSendOutput sse_decode_raw_send_output(SseDeserializer deserializer);
 
   @protected
   ResolvedVotingConfig sse_decode_resolved_voting_config(
@@ -3264,6 +3369,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_nj_zec_sources(
+    NjZecSources self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_orchard_migration_immediate_plan(
     OrchardMigrationImmediatePlan self,
     SseSerializer serializer,
@@ -3915,6 +4026,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_nj_asset(List<NjAsset> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_nj_message_input(
+    List<NjMessageInput> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_nj_note(List<NjNote> self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_pir_snapshot_endpoint_diagnostic_view(
     List<PirSnapshotEndpointDiagnosticView> self,
     SseSerializer serializer,
@@ -3944,6 +4067,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_raw_memo_output(
+    List<RawMemoOutput> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_raw_send_output(
+    List<RawSendOutput> self,
     SseSerializer serializer,
   );
 
@@ -4162,6 +4297,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_next_step_view(NextStepView self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_nj_asset(NjAsset self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_nj_identity(NjIdentity self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_nj_message_input(
+    NjMessageInput self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_nj_note(NjNote self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_nj_pay_plan(NjPayPlan self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_nj_proving_key(NjProvingKey self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_nj_view(NjView self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_nj_zec_sources(NjZecSources self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
@@ -4435,6 +4597,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     ProposalResult self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_raw_memo_output(RawMemoOutput self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_raw_send_output(RawSendOutput self, SseSerializer serializer);
 
   @protected
   void sse_encode_resolved_voting_config(

@@ -38,5 +38,14 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_macos_build_settings(target)
+
+    # Several pods still declare a 10.14 deployment target of their own, and
+    # `flutter_additional_macos_build_settings` does not raise it. Xcode 27
+    # refuses anything below 12.0 outright, so the build fails on pods that
+    # have nothing to do with the change being built. The Podfile already
+    # declares `platform :osx, '12.0'` above; this makes the pods agree with it.
+    target.build_configurations.each do |config|
+      config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '12.0'
+    end
   end
 end

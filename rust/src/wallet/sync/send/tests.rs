@@ -3466,3 +3466,123 @@ fn ledger_shielding_limits_inputs_and_preserves_account_scope_paths() {
     assert!(progress.below_threshold);
 
 }
+
+/// A regtest unified address with an Orchard receiver, as the string form
+/// `build_send_request_raw` actually parses.
+fn raw_memo_test_address(seed: u8) -> String {
+    let sk = orchard::keys::SpendingKey::from_bytes([seed; 32]).unwrap();
+    let fvk = orchard::keys::FullViewingKey::from(&sk);
+    let recipient = fvk.address_at(0u32, orchard::keys::Scope::External);
+    let ua = zcash_keys::address::UnifiedAddress::from_receivers(Some(recipient), None, None)
+        .expect("UA with an Orchard receiver is valid");
+    Address::from(ua)
+        .to_zcash_address(&WalletNetwork::Regtest)
+        .to_string()
+}
+
+/// A stand-in for one Nightjar message part: the ZIP-302 binary marker, a
+/// recognisable body, and zero padding out to the full memo field.
+fn nightjar_shaped_memo(tag: u8) -> Vec<u8> {
+    let mut memo = vec![0u8; 512];
+    memo[0] = 0xFF;
+    memo[1] = tag;
+    memo[2] = 0xAB;
+    memo[511] = 0xCD;
+    memo
+}
+
+#[test]
+fn build_send_request_raw_round_trips_a_binary_memo() {
+    let memo = nightjar_shaped_memo(1);
+    let request = build_send_request_raw(&[RawSendOutput {
+        to_address: raw_memo_test_address(11),
+        amount_zatoshi: 10_000,
+        memo_bytes: Some(memo.clone()),
+    }])
+    .expect("a 512-byte binary memo is a valid memo field");
+
+    let payments = request.payments();
+    assert_eq!(payments.len(), 1);
+    let payment = payments.values().next().unwrap();
+    assert_eq!(payment.amount(), Some(Zatoshis::const_from_u64(10_000)));
+    // `as_array`, not `as_slice`: the latter strips trailing zeros, and a
+    // Nightjar part's padding is part of the 512 bytes the reader parses.
+    assert_eq!(
+        payment.memo().expect("memo present").as_array().as_slice(),
+        memo.as_slice(),
+        "the text path would have turned this into a Memo::Text or rejected it"
+    );
+}
+
+#[test]
+fn build_send_request_raw_rejects_an_over_long_memo() {
+    let error = build_send_request_raw(&[RawSendOutput {
+        to_address: raw_memo_test_address(11),
+        amount_zatoshi: 10_000,
+        memo_bytes: Some(vec![0xFF; 513]),
+    }])
+    .expect_err("513 bytes does not fit the memo field");
+    assert!(
+        error.contains("Bad memo in output 0"),
+        "error should name the offending output, got: {error}"
+    );
+}
+
+/// One output in, one payment out, with the memo bytes each output was given.
+///
+/// **Not an ordering guarantee, and nothing downstream may read it as one.** The Orchard builder
+/// shuffles outputs before it builds actions (`zakura-orchard-1.2.0/src/builder.rs:1461` and
+/// `:1520-1521`), so the index a part ends up at on chain is unrelated to its position here. That
+/// is harmless for Nightjar because a fragment is self-indexing — `frame` writes the fragment
+/// index at memo bytes 40..42 and the count at 42..44, and `Reassembler` files fragments by that
+/// index, never by arrival order. What this test does pin is that the request does not merge,
+/// drop or cross-wire the memos: three outputs stay three payments and each keeps its own bytes.
+#[test]
+fn build_send_request_raw_makes_one_payment_per_output() {
+    // Same recipient for every part: a Nightjar message addresses one channel
+    // and is only reassemblable if all parts share a transaction.
+    let to_address = raw_memo_test_address(11);
+    let outputs: Vec<RawSendOutput> = (0u8..3)
+        .map(|part| RawSendOutput {
+            to_address: to_address.clone(),
+            amount_zatoshi: 10_000,
+            memo_bytes: Some(nightjar_shaped_memo(part)),
+        })
+        .collect();
+
+    let request = build_send_request_raw(&outputs).expect("three outputs are a valid request");
+
+    let payments = request.payments();
+    assert_eq!(
+        payments.len(),
+        3,
+        "each output must survive as its own payment, not collapse into one"
+    );
+    for (index, payment) in payments.values().enumerate() {
+        assert_eq!(payment.recipient_address().encode(), to_address);
+        assert_eq!(
+            payment.memo().expect("memo present").as_array()[1],
+            index as u8,
+            "each output must keep its own memo: the request is built \
+             one-payment-per-output, so output i's bytes must not end up \
+             under output j"
+        );
+    }
+}
+
+#[test]
+fn build_send_request_raw_rejects_an_empty_output_list() {
+    let error = build_send_request_raw(&[]).expect_err("a send with no recipients is not a send");
+    assert!(error.contains("at least one output"), "got: {error}");
+}
+
+#[test]
+fn build_send_request_raw_rejects_an_empty_memo_body() {
+    let error = build_send_request_raw(&[RawSendOutput {
+        to_address: raw_memo_test_address(11),
+        amount_zatoshi: 10_000,
+        memo_bytes: Some(Vec::new()),
+    }])
+    .expect_err("an all-zero memo field is not the ZIP-302 empty memo");
+    assert!(error.contains("Empty memo in output 0"), "got: {error}");
+}

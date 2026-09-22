@@ -36,6 +36,35 @@ const kPaymentLinkReceivedStorageKey = 'zcash_gift_card_received_v1';
 const kPaymentLinkClaimsInFlightCountKey =
     'zcash_gift_card_claims_in_flight_v1';
 const kZcashExplorerUrlKey = 'zcash_explorer_url';
+
+/// Nightjar settings. Plain (locked-readable) so the feature can render its
+/// configuration before the wallet is unlocked. Versioned because a stored
+/// key is a persistent compatibility surface: a later channel format gets a
+/// `_v2` key rather than a reinterpretation of these values.
+const kNightjarEnabledKey = 'zcash_nightjar_enabled_v1';
+const kNightjarIndexerUrlKey = 'zcash_nightjar_indexer_url_v1';
+const kNightjarChannelUivkKey = 'zcash_nightjar_channel_uivk_v1';
+const kNightjarChannelAddressKey = 'zcash_nightjar_channel_address_v1';
+const kNightjarBirthdayKey = 'zcash_nightjar_birthday_v1';
+
+/// Folder holding `interpreter-v0.pk`, `.vk` and `.circuit`. Nothing serves
+/// the 83 MiB proving key over HTTP, so the path the user points at is the
+/// whole setting — and it is only needed to *send*, never to read.
+const kNightjarProvingKeyDirKey = 'zcash_nightjar_proving_key_dir_v1';
+
+/// Assets whose issuer metadata the user has explicitly accepted, as a JSON
+/// list of `{id, name, symbol}`.
+///
+/// `spec/asset-metadata-v0.md` section 5: a wallet **MUST NOT** display a logo
+/// for an asset the user has not explicitly accepted, and acceptance is per
+/// `asset_id`, never per name, symbol or issuer. Persisting it means a user
+/// accepts an asset once rather than on every launch — and persisting the
+/// *name and symbol* alongside is what lets the collision warning still fire
+/// for an asset accepted long ago and no longer in the channel view.
+///
+/// Plain (locked-readable) like the other Nightjar settings: it decides
+/// decoration, holds no secret, and the assets screen renders before unlock.
+const kNightjarAcceptedAssetsKey = 'zcash_nightjar_accepted_assets_v1';
 const _secureStoreSaltKey = 'zcash_secure_store_salt';
 const _passwordVerifierKey = 'zcash_password_verifier';
 const _passwordVerifierSaltKey = 'zcash_password_verifier_salt';
@@ -50,6 +79,78 @@ const _votingHotkeyKeyPrefix = 'zcash_account_voting_hotkey_';
 const _e2eUseFirstUnlockMnemonicKeychain = bool.fromEnvironment(
   'ZCASH_E2E_FIRST_UNLOCK_MNEMONIC_KEYCHAIN',
 );
+
+/// Debug-only escape hatch for a macOS build that cannot be signed into a team.
+///
+/// The data-protection keychain requires the `com.apple.application-identifier`
+/// entitlement, which only a provisioning profile can grant. A developer
+/// outside this app's signing team cannot get one for `com.keplr.vizor`, so an
+/// ad-hoc build of it fails every keychain call with `errSecMissingEntitlement`
+/// (-34018) and the app never gets past "Secure storage is locked" — a state
+/// whose Retry button can never succeed, because nothing about it is transient.
+///
+/// Setting this falls back to the legacy file-based keychain, which needs no
+/// entitlement. That keychain is *less* isolated — items are scoped by service
+/// name rather than by application identity — which is exactly why this is
+/// gated on `kDebugMode` as well as on the define, and why it must never be set
+/// for a build anybody relies on. It exists so a devnet build can run at all.
+const _localUnsignedMacosKeychain = bool.fromEnvironment(
+  'VIZOR_LOCAL_UNSIGNED_MACOS_KEYCHAIN',
+);
+
+/// True only in a debug build that explicitly asked for the fallback above.
+bool get _usesDataProtectionKeychain =>
+    !(kDebugMode && _localUnsignedMacosKeychain);
+
+/// `MacOsOptions` that actually turns the data-protection keychain off.
+///
+/// `flutter_secure_storage` 10.0.0 serialises the flag as
+/// `usesDataProtectionKeychain` (`lib/options/macos_options.dart:40`) while
+/// `flutter_secure_storage_darwin` 0.2.0 reads it as
+/// `useDataProtectionKeyChain` — different in two places, `use` for `uses` and
+/// `KeyChain` for `Keychain` — and falls back to `?? true`
+/// (`FlutterSecureStorageDarwinPlugin.swift:159`). So the public option is
+/// silently ignored on macOS and every build gets the data-protection keychain
+/// whether it asked for it or not.
+///
+/// This emits both spellings so the native side sees the one it looks for. It
+/// is a workaround for an upstream defect, not a design: delete it once the
+/// plugin agrees with itself, and note that the extra key is inert on any
+/// version that does not read it.
+class _NoDataProtectionMacOsOptions extends MacOsOptions {
+  /// **No `accessibility`, deliberately.** `kSecAttrAccessible` belongs to the
+  /// data-protection keychain; the file-based one rejects a query carrying it
+  /// with `errSecParam` (-50). Single reads and writes happen to survive it,
+  /// which is what made this so slow to find: a wallet could be created and
+  /// used, and only the enumerating query — the mnemonic migration that runs
+  /// *after* a successful unlock — failed. The app reported that failure as
+  /// "invalid password", so a correct password looked wrong and nothing in the
+  /// UI ever mentioned the keychain.
+  const _NoDataProtectionMacOsOptions({super.accountName})
+    : super(usesDataProtectionKeychain: false);
+
+  @override
+  Map<String, String> toMap() => <String, String>{
+    ...super.toMap(),
+    'useDataProtectionKeyChain': 'false',
+  };
+}
+
+/// The macOS options to store under, honouring [_usesDataProtectionKeychain].
+MacOsOptions _macOsOptions({
+  required String accountName,
+  required KeychainAccessibility accessibility,
+}) {
+  if (_usesDataProtectionKeychain) {
+    return MacOsOptions(
+      accountName: accountName,
+      accessibility: accessibility,
+      usesDataProtectionKeychain: true,
+    );
+  }
+  return _NoDataProtectionMacOsOptions(accountName: accountName);
+}
+
 const _iosKeychainAccessibilityMigrationChannel = MethodChannel(
   'com.zcash.wallet/keychain_accessibility_migration',
 );
@@ -138,10 +239,9 @@ class AppSecureStore {
       aOptions: kZcashDefaultNetworkName == 'main'
           ? AndroidOptions.defaultOptions
           : AndroidOptions(sharedPreferencesName: service),
-      mOptions: MacOsOptions(
+      mOptions: _macOsOptions(
         accountName: service,
         accessibility: KeychainAccessibility.first_unlock,
-        usesDataProtectionKeychain: true,
       ),
     );
   }
@@ -159,12 +259,11 @@ class AppSecureStore {
       aOptions: kZcashDefaultNetworkName == 'main'
           ? AndroidOptions.defaultOptions
           : AndroidOptions(sharedPreferencesName: service),
-      mOptions: MacOsOptions(
+      mOptions: _macOsOptions(
         accountName: macOsService,
         accessibility: kDebugMode && _e2eUseFirstUnlockMnemonicKeychain
             ? KeychainAccessibility.first_unlock
             : KeychainAccessibility.unlocked,
-        usesDataProtectionKeychain: true,
       ),
     );
   }
@@ -986,6 +1085,22 @@ class AppSecureStore {
   _migrateAccountMnemonicsAfterUnlockLocked() async {
     if (!_usesSeparateMacOsMnemonicStorage ||
         identical(_mnemonicStorage, _storage)) {
+      return _AccountMnemonicMigrationResult.complete;
+    }
+    // The legacy file-based keychain cannot answer `readAll` — it returns
+    // `errSecParam` (-50) for the query the plugin builds — and this migration
+    // is the only caller. `verifyPassword` treats a failed migration as a
+    // failed unlock (see its call below), so on that keychain a *correct*
+    // password is reported as "Incorrect password. Try again." with the real
+    // error appearing only as a log line about mnemonics.
+    //
+    // There is nothing to migrate here in any case: this configuration exists
+    // only for a local devnet build signed outside the app's team, so its
+    // keychain starts empty and every mnemonic it holds was written straight
+    // to `_mnemonicStorage`. Skipping is correct, not merely convenient — but
+    // it is skipping, so it stays behind the same debug-and-define gate that
+    // selected the keychain.
+    if (kDebugMode && _localUnsignedMacosKeychain) {
       return _AccountMnemonicMigrationResult.complete;
     }
     if (await readPlain(_accountMnemonicMigrationCompleteKey) == 'true') {

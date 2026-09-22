@@ -90,6 +90,10 @@ pub(crate) use send::{
     shield_transparent_balance,
 };
 pub(crate) use send::{get_orchard_migration_immediate_plan, get_orchard_migration_private_plan};
+// Binary-memo send path (Nightjar). Same lifecycle as `propose_send`; the
+// output struct travels with it so `api::sync` can convert its flat FRB
+// struct without reaching into the private `send` module.
+pub(crate) use send::{propose_send_raw, RawSendOutput};
 // Internal-only re-export for `sync_engine::run_sync_impl`'s
 // auto-resubmit pass. Not part of the `wallet::sync` public surface.
 pub(crate) use send::migration_anchor_retention_required;
@@ -114,10 +118,10 @@ pub use transactions::{
 #[allow(unused_imports)] // ditto
 pub(crate) use transactions::{
     get_export_birthday_anchor, get_oldest_mined_transaction_anchor, get_transaction_data_requests,
-    get_transaction_detail, get_transaction_history, get_unmined_txids_with_mined_output_evidence,
-    get_wallet_balance, get_wallet_balances, ExportBirthdayAnchor, TransactionDetail,
-    TransactionDetailOutput, TransactionInfo, TxDataRequest, WalletBalance,
-    WalletBalanceAvailability,
+    get_transaction_detail, get_transaction_history, get_transaction_raw_memos,
+    get_unmined_txids_with_mined_output_evidence, get_wallet_balance, get_wallet_balances,
+    ExportBirthdayAnchor, RawMemoOutput, TransactionDetail, TransactionDetailOutput,
+    TransactionInfo, TxDataRequest, WalletBalance, WalletBalanceAvailability,
 };
 
 pub(super) fn open_wallet_db(

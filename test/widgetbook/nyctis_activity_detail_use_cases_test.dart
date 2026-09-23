@@ -65,7 +65,13 @@ void main() {
       AppThemeData.dark,
     );
 
-    expect(find.text('Outputs readable'), findsOneWidget);
+    // The counts live in the folded "Technical details" section.
+    await tester.tap(
+      find.byKey(const ValueKey('nyctis_activity_detail_technical_toggle')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Outputs this wallet can read'), findsOneWidget);
     expect(find.text('1 of 2'), findsOneWidget);
   });
 }

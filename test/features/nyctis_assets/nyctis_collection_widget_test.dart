@@ -125,10 +125,8 @@ _pumpCollection(
           NyctisAssetMetadataFetcher(transport: transport),
         ),
         nyctisViewLoaderProvider.overrideWithValue(
-          () async => NyctisViewData(
-            status: NyctisViewStatus.ready,
-            assets: members,
-          ),
+          () async =>
+              NyctisViewData(status: NyctisViewStatus.ready, assets: members),
         ),
       ],
       child: MaterialApp(
@@ -138,9 +136,7 @@ _pumpCollection(
             builder: (context, ref, _) => CustomScrollView(
               slivers: buildNyctisCollectionSlivers(
                 collectionId: _collectionId,
-                collection: ref.watch(
-                  nyctisCollectionProvider(_collectionId),
-                ),
+                collection: ref.watch(nyctisCollectionProvider(_collectionId)),
                 horizontalPadding: 12,
                 onMemberTap: (_) {},
               ),
@@ -161,9 +157,7 @@ void main() {
     ) async {
       await _pumpCollection(tester);
 
-      final built = tester
-          .widgetList(find.byType(NyctisCollectionTile))
-          .length;
+      final built = tester.widgetList(find.byType(NyctisCollectionTile)).length;
 
       // The assertion is "bounded by the viewport, not by the collection".
       // The exact number moves with tile geometry and with the cache extent,
@@ -233,8 +227,26 @@ void main() {
     testWidgets('the card says what one press grants before it is pressed', (
       tester,
     ) async {
-      await _pumpCollection(tester, memberCount: 4);
+      final harness = await _pumpCollection(tester, memberCount: 4);
 
+      // Above the button, unfolded: the one sentence saying who a press
+      // contacts and what that host learns, and the count the press covers.
+      expect(
+        find.byKey(const ValueKey('nyctis_collection_lead')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('which learns that'), findsOneWidget);
+      expect(find.text(nyctisCollectionAcceptAction(4)), findsOneWidget);
+      expect(find.text('Show artwork for 4 pieces'), findsOneWidget);
+
+      // The rest of what it grants is behind "What this means", and opening
+      // that is not a press: it fetches nothing.
+      final toggle = find.byKey(
+        const ValueKey('nyctis_collection_details_toggle'),
+      );
+      await tester.ensureVisible(toggle);
+      await tester.tap(toggle);
+      await tester.pump();
       expect(
         find.byKey(const ValueKey('nyctis_collection_explainer')),
         findsOneWidget,
@@ -243,7 +255,7 @@ void main() {
         find.byKey(const ValueKey('nyctis_collection_per_asset')),
         findsOneWidget,
       );
-      expect(find.text('Accept 4 pieces'), findsOneWidget);
+      expect(harness.transport.requested, isEmpty);
     });
 
     testWidgets('accepting a collection writes once and per asset', (
@@ -283,8 +295,7 @@ void main() {
         tester,
         memberCount: 4,
         acceptance: NyctisAssetAcceptance([
-          for (var i = 0; i < 4; i++)
-            NyctisAcceptedAsset(assetId: _pieceId(i)),
+          for (var i = 0; i < 4; i++) NyctisAcceptedAsset(assetId: _pieceId(i)),
         ]),
       );
 
@@ -324,6 +335,10 @@ void main() {
                 slivers: buildNyctisCollectionSlivers(
                   collectionId: _collectionId,
                   collection: null,
+                  // A read that finished and holds no such collection. With
+                  // no view at all the first read is still in flight, and
+                  // that is the loading card rather than this one.
+                  view: const NyctisViewData(status: NyctisViewStatus.ready),
                   onMemberTap: (_) {},
                 ),
               ),
@@ -335,6 +350,10 @@ void main() {
 
       expect(
         find.byKey(const ValueKey('nyctis_collection_missing')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(nyctisUnknownCollectionText(_collectionId)),
         findsOneWidget,
       );
     });

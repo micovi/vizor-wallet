@@ -36,8 +36,21 @@ import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_assets_fe
 import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_collection_data.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_collection_grid.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_collection_mapper.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_facts_card.dart';
 
 import 'support/nyctis_metadata_fixtures.dart';
+
+/// The value a facts card on screen carries under [label], or null.
+String? _factValue(WidgetTester tester, String label) {
+  for (final card in tester.widgetList<NyctisFactsCard>(
+    find.byType(NyctisFactsCard),
+  )) {
+    for (final fact in card.facts) {
+      if (fact.label == label) return fact.value;
+    }
+  }
+  return null;
+}
 
 const _collectionId =
     'f48d439c3b9406edecd728efec22fd5c51475de252dc22b3bfec72daafb87500';
@@ -128,10 +141,7 @@ FakeNyctisTransport _transport({
     body: _documentBytes(digestCount: digestCount, logo: logo),
   ),
   for (var i = 0; i < _memberCount; i++)
-    _imageUri(i): NyctisHttpReply(
-      statusCode: 200,
-      body: image ?? kOnePixelPng,
-    ),
+    _imageUri(i): NyctisHttpReply(statusCode: 200, body: image ?? kOnePixelPng),
   if (logoBytes != null)
     _logoUri: NyctisHttpReply(statusCode: 200, body: logoBytes),
 });
@@ -226,9 +236,7 @@ Future<FakeNyctisTransport> _pumpCollection(
             builder: (context, ref, _) => CustomScrollView(
               slivers: buildNyctisCollectionSlivers(
                 collectionId: _collectionId,
-                collection: ref.watch(
-                  nyctisCollectionProvider(_collectionId),
-                ),
+                collection: ref.watch(nyctisCollectionProvider(_collectionId)),
                 horizontalPadding: 12,
                 onMemberTap: (_) {},
               ),
@@ -475,10 +483,8 @@ void main() {
             NyctisAssetMetadataFetcher(transport: fake),
           ),
           nyctisViewLoaderProvider.overrideWithValue(
-            () async => NyctisViewData(
-              status: NyctisViewStatus.ready,
-              assets: assets,
-            ),
+            () async =>
+                NyctisViewData(status: NyctisViewStatus.ready, assets: assets),
           ),
         ],
       );
@@ -1059,7 +1065,13 @@ void main() {
 
       expect(footnote(tester), kNyctisCollectionCountNote);
       expect(disagreement, findsNothing);
-      expect(find.text('Cap in the collection id'), findsNothing);
+      // Since transition-v0 revision 11 every collection id binds a cap and a
+      // zero one is the collection saying it has none, so the cap row is always
+      // listed — and for this collection it states "Uncapped", never a number.
+      expect(_factValue(tester, kNyctisCollectionCapLabel), 'Uncapped');
+      expect(find.text('Uncapped'), findsOneWidget);
+      expect(find.textContaining('At most'), findsNothing);
+      expect(find.textContaining('of at most'), findsNothing);
     });
 
     testWidgets('a capped collection counts against the cap', (tester) async {

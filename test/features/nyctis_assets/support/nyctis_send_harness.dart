@@ -236,6 +236,7 @@ Future<ProviderContainer> pumpNyctisSend(
   MemoryNyctisInFlightSendStore? inFlight,
   String initialLocation = '/host',
   List<RouteBase> extraRoutes = const [],
+  bool settle = true,
 }) async {
   await tester.binding.setSurfaceSize(const Size(900, 2400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -319,7 +320,14 @@ Future<ProviderContainer> pumpNyctisSend(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  // A pane that is busy from its first frame — a status pane whose broadcast
+  // never finishes — draws the shared loader, which repeats for as long as
+  // it is on screen and so never settles. Such a test pumps frames itself.
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
   return container;
 }
 
@@ -354,8 +362,7 @@ class HarnessPlanBuilder {
         onPhase?.call(NyctisBuildPhase.proving);
         final gate = this.gate;
         if (gate != null) await gate.future;
-        return result ??
-            NyctisPayPlanResult.ready(harnessReviewArgs());
+        return result ?? NyctisPayPlanResult.ready(harnessReviewArgs());
       };
 }
 

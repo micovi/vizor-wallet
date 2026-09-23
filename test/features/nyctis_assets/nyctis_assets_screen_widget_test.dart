@@ -98,8 +98,7 @@ Future<void> _pumpPane(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        if (loader != null)
-          nyctisViewLoaderProvider.overrideWithValue(loader),
+        if (loader != null) nyctisViewLoaderProvider.overrideWithValue(loader),
       ],
       child: MaterialApp.router(
         routerConfig: router,
@@ -175,9 +174,21 @@ void main() {
       loader: () async => _mixedView(),
     );
 
-    // One entry for the collection, carrying both counts.
+    // One entry for the collection, carrying both counts: the public one on
+    // the supporting line beside the collection id, this wallet's own in the
+    // right-hand column labelled "held" so it is not read as a balance.
     expect(find.text('Phases of one night'), findsOneWidget);
-    expect(find.textContaining('100 pieces · you hold 3'), findsOneWidget);
+    expect(
+      find.text('${truncateNyctisAssetId(_collectionId)} · 100 pieces'),
+      findsOneWidget,
+    );
+    expect(find.text(kNyctisCollectionOwnedLabel), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(
+        RegExp(r'^Phases of one night, 100 pieces, you hold 3, collection id'),
+      ),
+      findsOneWidget,
+    );
 
     // And not one member row: no piece's own name, and no row saying "1".
     expect(find.text('Phases of one night #0'), findsNothing);
@@ -205,7 +216,7 @@ void main() {
     expect(find.text('1 note'), findsNWidgets(2));
     expect(find.text(kNyctisUniqueItemLabel), findsNothing);
     expect(find.text(kNyctisCollectionsSectionTitle), findsOneWidget);
-    expect(find.text('Public assets'), findsOneWidget);
+    expect(find.text(kNyctisPublicSupplySectionTitle), findsOneWidget);
   });
 
   testWidgets('messages above the cut-off are explained, not hidden', (
@@ -310,15 +321,26 @@ void main() {
     expect(find.text('500,000'), findsOneWidget);
     expect(find.text('Max supply'), findsOneWidget);
     expect(find.text(kNyctisSupplyPrivacyNote), findsOneWidget);
-    // The wallet's own holding is labelled as the wallet's own.
+    // The wallet's own holding is labelled as the wallet's own, and the notes
+    // that make it up are counted under it.
     expect(find.text('Your balance'), findsOneWidget);
-    expect(find.text('Your notes'), findsOneWidget);
-    // The note facts.
-    expect(find.text('Note 1'), findsOneWidget);
-    expect(find.text('Position'), findsOneWidget);
-    expect(find.text('Created at height'), findsOneWidget);
-    expect(find.text('Spendable after height 1,300'), findsOneWidget);
+    expect(find.text(nyctisNotesSummaryText(1)), findsOneWidget);
     expect(find.text('Issuer note'), findsOneWidget);
+    // The note facts, one compact line per note behind "Show notes".
+    expect(
+      find.byKey(const ValueKey('nyctis_asset_detail_note_0')),
+      findsNothing,
+    );
+    await tester.tap(
+      find.byKey(const ValueKey('nyctis_asset_detail_notes_toggle')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'Note 1: 1.25, created at height 1,240, Spendable after height 1,300',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a private asset is not told its supply is public', (
@@ -456,10 +478,7 @@ void main() {
       loader: () async => _readyView(),
     );
 
-    expect(
-      find.text(nyctisUnknownAssetText('missing-asset')),
-      findsOneWidget,
-    );
+    expect(find.text(nyctisUnknownAssetText('missing-asset')), findsOneWidget);
   });
 
   testWidgets('the receive pane shows the address and where it came from', (

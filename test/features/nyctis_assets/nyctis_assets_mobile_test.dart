@@ -17,6 +17,7 @@ import 'package:zcash_wallet/src/features/nyctis_assets/providers/nyctis_assets_
 import 'package:zcash_wallet/src/features/nyctis_assets/screens/mobile/mobile_nyctis_asset_detail_screen.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/screens/mobile/mobile_nyctis_assets_screen.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/screens/mobile/mobile_nyctis_receive_screen.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/screens/mobile/mobile_nyctis_scaffold.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_asset_row_data.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_asset_row_mapper.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_assets_feed.dart';
@@ -192,12 +193,27 @@ void main() {
     ]) {
       await _pump(tester, screen, loader: () async => _readyView());
 
+      // These routes are pushed over the tab shell (they sit outside the
+      // StatefulShellRoute in mobile_routes.dart), so no tab bar is drawn
+      // under them and there is nothing to reserve its height for. The bottom
+      // gap is the pushed-screen token, and the safe area still clears the
+      // home indicator / navigation bar.
+      expect(
+        find.byType(AppMobileTabBar),
+        findsNothing,
+        reason: '${screen.runtimeType}',
+      );
       final safeArea = find.byType(MobileBottomSafeArea);
       expect(safeArea, findsOneWidget, reason: '${screen.runtimeType}');
       expect(
         tester.widget<MobileBottomSafeArea>(safeArea).bottomPadding,
-        kMobileTabBarHeight + AppSpacing.lg,
+        kNyctisMobileBottomPadding,
         reason: '${screen.runtimeType}',
+      );
+      expect(
+        kNyctisMobileBottomPadding,
+        greaterThanOrEqualTo(kIosHomeIndicatorClearance),
+        reason: 'the padding must clear the iOS home indicator on its own',
       );
     }
   });
@@ -248,7 +264,14 @@ void main() {
       loader: () async => _readyView(),
     );
 
-    expect(find.text('Receive Nyctis assets'), findsOneWidget);
+    // The shorter title fits the centred top nav on a 375px phone.
+    expect(
+      find.descendant(
+        of: find.byType(MobileTopNav),
+        matching: find.text(kNyctisMobileReceiveTitle),
+      ),
+      findsOneWidget,
+    );
     expect(find.text(_address), findsOneWidget);
     expect(find.text(kNyctisAddressDerivationNote), findsOneWidget);
   });

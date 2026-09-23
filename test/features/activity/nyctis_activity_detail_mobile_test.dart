@@ -23,6 +23,7 @@ import 'package:zcash_wallet/src/core/widgets/review_list_row.dart';
 import 'package:zcash_wallet/src/features/activity/nyctis_activity_message.dart';
 import 'package:zcash_wallet/src/features/activity/screens/mobile/mobile_nyctis_activity_detail_screen.dart';
 import 'package:zcash_wallet/src/features/activity/screens/nyctis_activity_detail_screen.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_facts_card.dart';
 
 const _assetId =
     'b2c1f7a90e4d3c5b6a8f1e2d3c4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f401';
@@ -106,11 +107,34 @@ Future<void> _pumpScreen(
   await tester.pumpAndSettle();
 }
 
+/// Opens the folded "Technical details" section, where the message id, the
+/// input and output counts and the note cards live.
+Future<void> _openTechnical(WidgetTester tester) async {
+  final toggle = find.byKey(
+    const ValueKey('nyctis_activity_detail_technical_toggle'),
+  );
+  await tester.ensureVisible(toggle);
+  await tester.tap(toggle);
+  await tester.pumpAndSettle();
+}
+
+/// The value drawn beside or under [label], or null when no such fact is on
+/// screen.
+///
+/// Read from the facts cards rather than from [MobileListRow] alone: a fact
+/// whose label and value cannot share one phone-width line is drawn stacked,
+/// label over value, and is still the same fact. The value must be on screen
+/// as text, not only carried as data.
 String? _valueFor(WidgetTester tester, String label) {
-  for (final row in tester.widgetList<MobileListRow>(
-    find.byType(MobileListRow),
+  for (final card in tester.widgetList<NyctisFactsCard>(
+    find.byType(NyctisFactsCard),
   )) {
-    if (row.label == label) return row.value;
+    for (final fact in card.facts) {
+      if (fact.label != label) continue;
+      expect(find.text(fact.label), findsWidgets);
+      expect(find.text(fact.value), findsWidgets);
+      return fact.value;
+    }
   }
   return null;
 }
@@ -126,12 +150,29 @@ void main() {
     expect(find.byType(MobileListRow), findsWidgets);
     expect(find.byType(ReviewListRow), findsNothing);
 
-    expect(_valueFor(tester, 'Event'), 'Sent');
-    expect(_valueFor(tester, 'State'), 'Applied');
-    expect(_valueFor(tester, 'Amount'), '-1.25 HBC');
-    expect(_valueFor(tester, 'Completed at height'), '1,240');
-    expect(_valueFor(tester, 'Inputs owned'), '1 of 1');
-    expect(_valueFor(tester, 'Outputs readable'), '1 of 2');
+    // The event, the amount and the state are the hero above the cards,
+    // built by the same function the desktop receipt uses.
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey('nyctis_activity_detail_title')),
+          )
+          .data,
+      'Sent 1.25 HBC',
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('nyctis_activity_detail_state')),
+        matching: find.text('Final'),
+      ),
+      findsOneWidget,
+    );
+
+    await _openTechnical(tester);
+    expect(find.byType(ReviewListRow), findsNothing);
+    expect(_valueFor(tester, 'Final at block'), '1,240');
+    expect(_valueFor(tester, 'Inputs from this wallet'), '1 of 1');
+    expect(_valueFor(tester, 'Outputs this wallet can read'), '1 of 2');
   });
 
   testWidgets('the top nav names the asset and goes back', (tester) async {
@@ -154,21 +195,63 @@ void main() {
   testWidgets('the asset id is on screen beside the name', (tester) async {
     await _pumpScreen(tester, _sent());
 
-    // spec/asset-metadata-v0.md section 5.
+    // spec/asset-metadata-v0.md section 5: unfolded, beside the name.
     expect(find.text('Asset id'), findsOneWidget);
+
+    await _openTechnical(tester);
     expect(find.text('Message id'), findsOneWidget);
   });
 
   testWidgets('both note cards render', (tester) async {
     await _pumpScreen(tester, _sent());
+    await _openTechnical(tester);
 
     expect(find.text('Note this message spent'), findsOneWidget);
     expect(find.text('Note this message created'), findsOneWidget);
-    expect(_valueFor(tester, 'Policy'), 'pk(ak) && before(1300)');
+    expect(_valueFor(tester, 'Spend condition'), 'pk(ak) && before(1300)');
+  });
+
+  testWidgets('a long spend condition is drawn whole, never cut', (
+    tester,
+  ) async {
+    const policy =
+        'pk(8f2c1a9e7d6b5c4a39281716059483726150f1e2d3c4b5a69788796a5b4c3d2e) '
+        '&& before(1300)';
+    final sent = _sent();
+    await _pumpScreen(
+      tester,
+      NyctisActivityDetailArgs(
+        item: sent.item,
+        notes: [
+          NyctisActivityDetailNote(
+            role: NyctisActivityNoteRole.spent,
+            position: BigInt.from(41),
+            amount: BigInt.from(2000000),
+            decimals: 6,
+            createdHeight: BigInt.from(1180),
+            policyText: policy,
+          ),
+        ],
+      ),
+    );
+    await _openTechnical(tester);
+
+    // Too long for one phone-width line beside its label, so it stacks under
+    // it and wraps rather than ellipsizing into a different condition.
+    expect(_valueFor(tester, 'Spend condition'), policy);
+    expect(
+      tester
+          .widgetList<MobileListRow>(find.byType(MobileListRow))
+          .where((row) => row.label == 'Spend condition'),
+      isEmpty,
+    );
+    expect(find.byKey(const ValueKey('nyctis_fact_stacked')), findsWidgets);
   });
 
   testWidgets('no recipient, no completed, no fee', (tester) async {
     await _pumpScreen(tester, _sent());
+    // Every section open, so an absent row is really absent.
+    await _openTechnical(tester);
 
     expect(find.text('To'), findsNothing);
     expect(find.text('Recipient'), findsNothing);

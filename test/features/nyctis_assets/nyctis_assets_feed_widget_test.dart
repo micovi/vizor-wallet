@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' show MaterialApp;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
+import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_asset_row_data.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_asset_row_mapper.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_assets_feed.dart';
@@ -15,6 +16,7 @@ Future<void> _pump(
   WidgetTester tester,
   Widget child, {
   AppThemeData theme = AppThemeData.dark,
+  bool settle = true,
 }) async {
   await tester.binding.setSurfaceSize(const Size(900, 1400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -29,7 +31,13 @@ Future<void> _pump(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  // The shared loader repeats for as long as it is on screen, so a loading
+  // state never settles; it is pumped one frame instead.
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 TextStyle _styleOf(WidgetTester tester, String text) =>
@@ -69,8 +77,18 @@ void main() {
 
     await _pump(tester, NyctisAssetsFeed(sections: sections));
 
-    expect(find.text('Public assets'), findsOneWidget);
-    expect(find.text('Private assets'), findsOneWidget);
+    // Each card is named for what is public about the asset — its supply —
+    // and says under the heading that the balance is private in both.
+    expect(find.text(kNyctisPublicSupplySectionTitle), findsOneWidget);
+    expect(find.text(kNyctisPrivateSupplySectionTitle), findsOneWidget);
+    expect(find.text(kNyctisPublicSupplySectionSubtitle), findsOneWidget);
+    expect(find.text(kNyctisPrivateSupplySectionSubtitle), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text(kNyctisPublicSupplySectionTitle)).dy,
+      lessThan(
+        tester.getTopLeft(find.text(kNyctisPrivateSupplySectionTitle)).dy,
+      ),
+    );
     expect(find.text('Harbour credit'), findsOneWidget);
     expect(find.text('HBC'), findsOneWidget);
     expect(find.text('1.25'), findsOneWidget);
@@ -116,8 +134,10 @@ void main() {
     await _pump(
       tester,
       const NyctisAssetsFeed(sections: [], isLoading: true),
+      settle: false,
     );
-    expect(find.text('Loading Nyctis assets...'), findsOneWidget);
+    expect(find.text(kNyctisAssetsLoadingText), findsOneWidget);
+    expect(find.byKey(const ValueKey('nyctis_message_loader')), findsOneWidget);
 
     await _pump(
       tester,
@@ -165,18 +185,38 @@ void main() {
       const Column(
         children: [
           NyctisMessageCard(text: 'neutral'),
-          NyctisMessageCard(
-            text: 'warning',
-            tone: NyctisMessageTone.warning,
-          ),
+          NyctisMessageCard(text: 'warning', tone: NyctisMessageTone.warning),
           NyctisMessageCard(text: 'error', tone: NyctisMessageTone.error),
         ],
       ),
     );
 
+    // Warning and error copy stays in text.primary for contrast (the utility
+    // warning and destructive colours fall under WCAG AA on the card); the
+    // tone is carried by a glyph of its own beside the words, never by colour
+    // alone.
     expect(_styleOf(tester, 'neutral').color, colors.colors.text.secondary);
-    expect(_styleOf(tester, 'warning').color, colors.colors.text.warning);
-    expect(_styleOf(tester, 'error').color, colors.colors.text.destructive);
+    expect(_styleOf(tester, 'warning').color, colors.colors.text.primary);
+    expect(_styleOf(tester, 'error').color, colors.colors.text.primary);
+
+    AppIcon? glyphOf(String text) {
+      final icons = tester.widgetList<AppIcon>(
+        find.descendant(
+          of: find.ancestor(
+            of: find.text(text),
+            matching: find.byType(NyctisMessageCard),
+          ),
+          matching: find.byType(AppIcon),
+        ),
+      );
+      return icons.isEmpty ? null : icons.single;
+    }
+
+    expect(glyphOf('neutral'), isNull);
+    expect(glyphOf('warning')!.name, AppIcons.warning);
+    expect(glyphOf('warning')!.color, colors.colors.icon.regular);
+    expect(glyphOf('error')!.name, AppIcons.warningCircle);
+    expect(glyphOf('error')!.color, colors.colors.icon.destructive);
   });
 
   testWidgets('feed text uses design-token styles in either lane', (
@@ -201,10 +241,7 @@ void main() {
       _styleOf(tester, 'Harbour credit').fontSize,
       AppTypography.bodyMediumStrong.fontSize,
     );
-    expect(
-      _styleOf(tester, 'HBC').fontSize,
-      nyctisRowSupportingStyle.fontSize,
-    );
+    expect(_styleOf(tester, 'HBC').fontSize, nyctisRowSupportingStyle.fontSize);
   });
 
   testWidgets('the detail facts card copies the full id behind a short one', (

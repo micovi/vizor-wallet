@@ -15,6 +15,7 @@ import 'package:zcash_wallet/src/core/widgets/review_list_row.dart';
 import 'package:zcash_wallet/src/features/activity/nyctis_activity_message.dart';
 import 'package:zcash_wallet/src/features/activity/screens/nyctis_activity_detail_screen.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_asset_row_data.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_facts_card.dart';
 
 const _assetId =
     'b2c1f7a90e4d3c5b6a8f1e2d3c4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f401';
@@ -99,6 +100,7 @@ Future<void> _pumpBody(
   WidgetTester tester,
   NyctisActivityDetailArgs? args, {
   bool privacyModeEnabled = false,
+  bool openTechnical = false,
 }) async {
   await tester.binding.setSurfaceSize(const Size(900, 3200));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -118,6 +120,28 @@ Future<void> _pumpBody(
     ),
   );
   await tester.pumpAndSettle();
+  if (openTechnical) {
+    // Message ids, heights, the input and output counts and the note cards
+    // live in the folded "Technical details" section.
+    await tester.tap(
+      find.byKey(const ValueKey('nyctis_activity_detail_technical_toggle')),
+    );
+    await tester.pumpAndSettle();
+  }
+}
+
+/// The fact rendered under [label] by any facts card on screen, or null when
+/// no such row exists. The copy target lives on the fact (the whole row is
+/// one pressable), not on the [ReviewListRow] it draws.
+NyctisAssetFactData? _factFor(WidgetTester tester, String label) {
+  for (final card in tester.widgetList<NyctisFactsCard>(
+    find.byType(NyctisFactsCard),
+  )) {
+    for (final fact in card.facts) {
+      if (fact.label == label) return fact;
+    }
+  }
+  return null;
 }
 
 /// The value rendered beside [label], or null when no such row exists.
@@ -135,39 +159,59 @@ void main() {
     testWidgets('a sent message names the event, the state and the amount', (
       tester,
     ) async {
-      await _pumpBody(tester, _sent());
+      await _pumpBody(tester, _sent(), openTechnical: true);
 
-      // The verb and the amount come from the row's own functions, so the
-      // receipt cannot disagree with the feed about one message.
-      expect(_valueFor(tester, 'Event'), 'Sent');
-      expect(_valueFor(tester, 'State'), 'Applied');
-      expect(_valueFor(tester, 'Amount'), '-1.25 HBC');
-      expect(_valueFor(tester, 'Completed at height'), '1,240');
+      // The verb and the amount are the headline, built from the row's own
+      // item, so the receipt cannot disagree with the feed about one message.
+      final headline = tester.widget<Text>(
+        find.byKey(const ValueKey('nyctis_activity_detail_title')),
+      );
+      expect(headline.data, 'Sent 1.25 HBC');
+      expect(headline.data, nyctisActivityHeadline(_sentItem()));
+      // The state sits under the headline, as a word beside its icon.
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('nyctis_activity_detail_state')),
+          matching: find.text('Final'),
+        ),
+        findsOneWidget,
+      );
+      expect(_valueFor(tester, 'Final at block'), '1,240');
     });
 
     testWidgets('the message id and the carrying txid are both copyable', (
       tester,
     ) async {
-      await _pumpBody(tester, _sent());
+      await _pumpBody(tester, _sent(), openTechnical: true);
 
-      final rows = tester.widgetList<ReviewListRow>(find.byType(ReviewListRow));
-      final messageRow = rows.firstWhere((row) => row.label == 'Message id');
-      final txRow = rows.firstWhere((row) => row.label == 'Zcash tx id');
+      final messageFact = _factFor(tester, 'Message id')!;
+      final txFact = _factFor(tester, 'Zcash transaction')!;
       // Truncated on screen, whole on the clipboard: two ids that share six
       // characters must not become indistinguishable once copied.
-      expect(messageRow.copyText, _messageId);
-      expect(txRow.copyText, _txid);
-      expect(messageRow.value, isNot(_messageId));
+      expect(messageFact.copyText, _messageId);
+      expect(txFact.copyText, _txid);
+      expect(messageFact.value, isNot(_messageId));
+      expect(_valueFor(tester, 'Message id'), messageFact.value);
+      // And each is an actual copy control on screen, not only data.
+      expect(
+        find.byKey(const ValueKey('nyctis_fact_copy_Message id')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('nyctis_fact_copy_Zcash transaction')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('a message with no known carrier shows no tx row', (
       tester,
     ) async {
-      await _pumpBody(tester, _received());
+      await _pumpBody(tester, _received(), openTechnical: true);
 
       // This cut is handed message bodies, not transactions, so an absent
       // carrier is the ordinary case and not a failure to report.
-      expect(find.text('Zcash tx id'), findsNothing);
+      expect(find.text('Message id'), findsOneWidget);
+      expect(find.text('Zcash transaction'), findsNothing);
     });
 
     testWidgets('the asset id is shown even when a name is', (tester) async {
@@ -178,10 +222,10 @@ void main() {
       // spec/asset-metadata-v0.md section 5: the id is the identity and has to
       // be visible wherever a name is.
       expect(find.text('Asset id'), findsOneWidget);
-      final rows = tester.widgetList<ReviewListRow>(find.byType(ReviewListRow));
+      expect(_factFor(tester, 'Asset id')!.copyText, _assetId);
       expect(
-        rows.firstWhere((row) => row.label == 'Asset id').copyText,
-        _assetId,
+        find.byKey(const ValueKey('nyctis_fact_copy_Asset id')),
+        findsOneWidget,
       );
     });
 
@@ -199,35 +243,31 @@ void main() {
     testWidgets('each side of the message is a count, never an amount', (
       tester,
     ) async {
-      await _pumpBody(tester, _sent());
+      await _pumpBody(tester, _sent(), openTechnical: true);
 
-      expect(_valueFor(tester, 'Inputs owned'), '1 of 1');
-      expect(_valueFor(tester, 'Outputs readable'), '1 of 2');
+      expect(_valueFor(tester, 'Inputs from this wallet'), '1 of 1');
+      expect(_valueFor(tester, 'Outputs this wallet can read'), '1 of 2');
     });
 
     testWidgets('both sides of the message get a note card', (tester) async {
-      await _pumpBody(tester, _sent());
+      await _pumpBody(tester, _sent(), openTechnical: true);
 
       expect(find.text('Note this message spent'), findsOneWidget);
       expect(find.text('Note this message created'), findsOneWidget);
-      expect(_valueFor(tester, 'Position'), isNotNull);
-      expect(find.text('Created at height'), findsNWidgets(2));
-      expect(_valueFor(tester, 'Spent at height'), '1,240');
-      expect(_valueFor(tester, 'Policy'), 'pk(ak) && before(1300)');
-      expect(
-        tester
-            .widgetList<ReviewListRow>(find.byType(ReviewListRow))
-            .firstWhere((row) => row.label == 'Spent by')
-            .copyText,
-        _messageId,
-      );
+      expect(_valueFor(tester, 'Tree position'), isNotNull);
+      expect(find.text('Created at block'), findsNWidgets(2));
+      expect(_valueFor(tester, 'Spent at block'), '1,240');
+      expect(_valueFor(tester, 'Spend condition'), 'pk(ak) && before(1300)');
+      expect(_factFor(tester, 'Spent by message')!.copyText, _messageId);
     });
 
     testWidgets('a note with no policy shows no policy row', (tester) async {
-      await _pumpBody(tester, _received());
+      await _pumpBody(tester, _received(), openTechnical: true);
 
-      expect(find.text('Policy'), findsNothing);
-      expect(find.text('Spent by'), findsNothing);
+      // The note card is open, so an absent row is really absent.
+      expect(find.text('Note this message created'), findsOneWidget);
+      expect(find.text('Spend condition'), findsNothing);
+      expect(find.text('Spent by message'), findsNothing);
     });
 
     testWidgets('the carrier ZEC row says where the ZEC went', (tester) async {
@@ -247,11 +287,27 @@ void main() {
     testWidgets('privacy mode masks the amount here as it does in the feed', (
       tester,
     ) async {
-      await _pumpBody(tester, _sent(), privacyModeEnabled: true);
+      await _pumpBody(
+        tester,
+        _sent(),
+        privacyModeEnabled: true,
+        openTechnical: true,
+      );
 
-      expect(find.text('-1.25 HBC'), findsNothing);
+      expect(find.textContaining('1.25'), findsNothing);
       expect(find.text('2 HBC'), findsNothing);
-      expect(_valueFor(tester, 'Amount'), '*** HBC');
+      expect(find.text('0.75 HBC'), findsNothing);
+      final headline = tester.widget<Text>(
+        find.byKey(const ValueKey('nyctis_activity_detail_title')),
+      );
+      expect(headline.data, 'Sent *** HBC');
+      // Every note amount on the open note cards is masked too.
+      final amounts = tester
+          .widgetList<ReviewListRow>(find.byType(ReviewListRow))
+          .where((row) => row.label == 'Amount')
+          .map((row) => row.value)
+          .toList();
+      expect(amounts, ['*** HBC', '*** HBC']);
     });
 
     testWidgets('a message reached without arguments invents nothing', (
@@ -266,7 +322,11 @@ void main() {
     testWidgets('a message this wallet holds no note of says so', (
       tester,
     ) async {
-      await _pumpBody(tester, NyctisActivityDetailArgs(item: _sentItem()));
+      await _pumpBody(
+        tester,
+        NyctisActivityDetailArgs(item: _sentItem()),
+        openTechnical: true,
+      );
 
       expect(
         find.byKey(const ValueKey('nyctis_activity_detail_no_notes')),
@@ -293,7 +353,7 @@ void main() {
     testWidgets('the unreadable outputs never become an amount', (
       tester,
     ) async {
-      await _pumpBody(tester, _sent());
+      await _pumpBody(tester, _sent(), openTechnical: true);
 
       // totalOutputs 2 − ownedOutputs 1 = 1 output nobody on this side can
       // name. It appears as part of a count and never as a figure of value.
@@ -308,7 +368,7 @@ void main() {
 
     testWidgets('no ZEC status vocabulary appears anywhere', (tester) async {
       for (final args in [_sent(), _received()]) {
-        await _pumpBody(tester, args);
+        await _pumpBody(tester, args, openTechnical: true);
         expect(find.text('Completed'), findsNothing);
         expect(find.text('Confirmed'), findsNothing);
         expect(find.text('In progress'), findsNothing);
@@ -317,7 +377,7 @@ void main() {
     });
 
     testWidgets('nothing on the screen is labelled a fee', (tester) async {
-      await _pumpBody(tester, _sent());
+      await _pumpBody(tester, _sent(), openTechnical: true);
 
       expect(find.text('Tx fee'), findsNothing);
       expect(find.text('Fee'), findsNothing);
@@ -329,33 +389,48 @@ void main() {
     test('every state has its own word and none of them is ZEC\'s', () {
       expect(
         nyctisActivityStateLabel(NyctisActivityMessageState.applied),
-        'Applied',
+        'Final',
       );
       expect(
         nyctisActivityStateLabel(NyctisActivityMessageState.ignored),
-        'Ignored',
+        'Rejected by the channel',
       );
       expect(
         nyctisActivityStateLabel(NyctisActivityMessageState.belowFinality),
-        'Below finality',
+        'Not final yet',
       );
+      final labels = NyctisActivityMessageState.values
+          .map(nyctisActivityStateLabel)
+          .toSet();
+      expect(labels, hasLength(NyctisActivityMessageState.values.length));
+      for (final zecWord in ['Completed', 'Confirmed', 'In progress']) {
+        expect(labels, isNot(contains(zecWord)));
+      }
     });
 
-    test('an ignored message carries the state machine\'s own reason', () {
-      final facts = buildNyctisActivityMessageFacts(
-        NyctisActivityDetailArgs(
-          item: _receivedItem(),
-          state: NyctisActivityMessageState.ignored,
-          stateReason: 'message already applied',
-        ),
+    testWidgets('an ignored message carries the state machine\'s own reason', (
+      tester,
+    ) async {
+      final args = NyctisActivityDetailArgs(
+        item: _receivedItem(),
+        state: NyctisActivityMessageState.ignored,
+        stateReason: 'message already applied',
       );
+      final facts = buildNyctisActivityMessageFacts(args);
       expect(
         facts.firstWhere((fact) => fact.label == 'Reason').value,
         'message already applied',
       );
+
+      // On screen: the reason row, and the state word under the headline.
+      await _pumpBody(tester, args);
+      expect(_valueFor(tester, 'Reason'), 'message already applied');
       expect(
-        facts.firstWhere((fact) => fact.label == 'State').value,
-        'Ignored',
+        find.descendant(
+          of: find.byKey(const ValueKey('nyctis_activity_detail_state')),
+          matching: find.text('Rejected by the channel'),
+        ),
+        findsOneWidget,
       );
     });
 
@@ -551,19 +626,13 @@ void main() {
     });
 
     test('a settling row names no message and selects nothing', () {
-      expect(
-        buildNyctisActivityDetailNotes(view: view(), msgId: ''),
-        isEmpty,
-      );
+      expect(buildNyctisActivityDetailNotes(view: view(), msgId: ''), isEmpty);
     });
   });
 
   group('routing', () {
     test('the route lives under /activity, not under /nyctis', () {
-      expect(
-        nyctisActivityDetailRoutePattern,
-        '/activity/nyctis/:messageId',
-      );
+      expect(nyctisActivityDetailRoutePattern, '/activity/nyctis/:messageId');
       expect(
         nyctisActivityDetailRouteFor(_messageId),
         '/activity/nyctis/$_messageId',

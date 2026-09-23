@@ -99,6 +99,17 @@ void main() {
           .data,
       contains(truncateNyctisAssetId(_assetId)),
     );
+    // Beside the logo, unfolded: none of it is proof.
+    expect(find.text(kNyctisMetadataNotEvidenceText), findsOneWidget);
+
+    // The host, the pin and what an unpinned document means are behind
+    // "What this means" on mobile as on desktop.
+    final toggle = find.byKey(const ValueKey('nyctis_metadata_details_toggle'));
+    await tester.ensureVisible(toggle);
+    await tester.tap(toggle);
+    await tester.pump();
+    expect(find.text(kNyctisMetadataUnpinnedValue), findsOneWidget);
     expect(find.text(kNyctisMetadataUnpinnedNote), findsOneWidget);
+    expect(find.text(kNyctisMetadataPinnedValue), findsNothing);
   });
 }

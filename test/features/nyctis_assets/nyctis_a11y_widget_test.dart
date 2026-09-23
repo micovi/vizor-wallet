@@ -71,6 +71,7 @@ Future<void> _pump(
   double width = 396,
   double textScale = 1,
   AppThemeData theme = AppThemeData.dark,
+  bool settle = true,
 }) async {
   await tester.binding.setSurfaceSize(Size(width + 32, 1600));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -95,7 +96,13 @@ Future<void> _pump(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  // The shared loader repeats for as long as it is on screen, so a state that
+  // draws it never settles; such a state is pumped one frame instead.
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 void main() {
@@ -274,10 +281,7 @@ void main() {
 
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
-      expect(
-        find.byKey(const ValueKey('nyctis_focus_ring')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('nyctis_focus_ring')), findsOneWidget);
       final ring = tester.widget<DecoratedBox>(
         find.byKey(const ValueKey('nyctis_focus_ring')),
       );
@@ -364,9 +368,7 @@ void main() {
       );
     });
 
-    testWidgets('rows stack at 200% text on a 343px phone row', (
-      tester,
-    ) async {
+    testWidgets('rows stack at 200% text on a 343px phone row', (tester) async {
       await _pump(
         tester,
         NyctisAssetsFeed(
@@ -415,10 +417,8 @@ void main() {
                   slivers: [
                     NyctisCollectionSliverGrid(
                       members: members,
-                      tileBuilder: (context, member) => NyctisCollectionTile(
-                        member: member,
-                        onTap: () {},
-                      ),
+                      tileBuilder: (context, member) =>
+                          NyctisCollectionTile(member: member, onTap: () {}),
                     ),
                   ],
                 ),
@@ -448,10 +448,7 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       expect(find.text('18,446,744,073,709,551,615'), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('nyctis_fact_stacked')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const ValueKey('nyctis_fact_stacked')), findsOneWidget);
     });
   });
 
@@ -467,14 +464,8 @@ void main() {
           tester,
           const Column(
             children: [
-              NyctisMessageCard(
-                text: 'Stale',
-                tone: NyctisMessageTone.warning,
-              ),
-              NyctisMessageCard(
-                text: 'Broken',
-                tone: NyctisMessageTone.error,
-              ),
+              NyctisMessageCard(text: 'Stale', tone: NyctisMessageTone.warning),
+              NyctisMessageCard(text: 'Broken', tone: NyctisMessageTone.error),
             ],
           ),
           theme: theme,
@@ -608,8 +599,20 @@ void main() {
         NyctisCollectionAcceptanceCard(
           data: data(NyctisCollectionWarmupPhase.running),
         ),
+        settle: false,
       );
       expect(find.text(kNyctisCollectionWarmupRunningText), findsOneWidget);
+      // Running is announced as it changes, not only drawn.
+      expect(
+        find.ancestor(
+          of: find.byKey(const ValueKey('nyctis_collection_warmup_running')),
+          matching: find.byWidgetPredicate(
+            (widget) =>
+                widget is Semantics && widget.properties.liveRegion == true,
+          ),
+        ),
+        findsWidgets,
+      );
 
       await _pump(
         tester,

@@ -70,9 +70,7 @@ void main() {
       expect(find.text(kNyctisProvingKeyNotSetText), findsOneWidget);
       expect(reviewButton(tester).onPressed, isNull);
 
-      await tester.tap(
-        find.byKey(const ValueKey('nyctis_send_open_settings')),
-      );
+      await tester.tap(find.byKey(const ValueKey('nyctis_send_open_settings')));
       await tester.pumpAndSettle();
       expect(find.text('nyctis settings route'), findsOneWidget);
     });
@@ -184,6 +182,10 @@ void main() {
       await pumpNyctisSend(
         tester,
         const NyctisSendPane(assetId: kHarnessAssetId),
+        // Two HBC held, so 1.5 is sendable and the review button is live —
+        // while 15, the grouping misreading, is not and would never reach
+        // the plan builder.
+        loader: () async => harnessReadyView(balance: BigInt.from(2000000)),
         planBuilder:
             ({
               required String assetId,
@@ -199,9 +201,7 @@ void main() {
       await _fillValid(tester, amount: '1,5');
 
       expect(find.text('1.5'), findsOneWidget);
-      await tester.tap(
-        find.byKey(const ValueKey('nyctis_send_review_button')),
-      );
+      await tester.tap(find.byKey(const ValueKey('nyctis_send_review_button')));
       await tester.pumpAndSettle();
 
       // 1.5 at six decimals, not 15.
@@ -244,9 +244,7 @@ void main() {
       expect(builder.calls, 0);
     });
 
-    testWidgets('Paste fills the recipient from the clipboard', (
-      tester,
-    ) async {
+    testWidgets('Paste fills the recipient from the clipboard', (tester) async {
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
         (call) async {
@@ -319,9 +317,7 @@ void main() {
         config: harnessConfig.copyWith(enabled: false),
       );
       await _fillValid(tester);
-      await tester.tap(
-        find.byKey(const ValueKey('nyctis_send_review_button')),
-      );
+      await tester.tap(find.byKey(const ValueKey('nyctis_send_review_button')));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('nyctis_send_error')), findsOneWidget);
@@ -610,9 +606,7 @@ void main() {
       );
 
       expect(find.text(kNyctisReviewSendLabel), findsOneWidget);
-      await tester.tap(
-        find.byKey(const ValueKey('nyctis_review_send_button')),
-      );
+      await tester.tap(find.byKey(const ValueKey('nyctis_review_send_button')));
       await tester.pumpAndSettle();
 
       expect(find.text('status route'), findsOneWidget);
@@ -646,9 +640,7 @@ void main() {
         tester,
         NyctisSendReviewPane(args: args),
         chainTip: 6923,
-        inFlight: MemoryNyctisInFlightSendStore([
-          _inFlight(msgId: args.msgId),
-        ]),
+        inFlight: MemoryNyctisInFlightSendStore([_inFlight(msgId: args.msgId)]),
       );
       await tester.pumpAndSettle();
 
@@ -748,10 +740,7 @@ void main() {
       await pumpNyctisSend(tester, const NyctisSendReviewPane(args: null));
 
       expect(find.text(kNyctisReviewNoPlanText), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('nyctis_review_payment')),
-        findsNothing,
-      );
+      expect(find.byKey(const ValueKey('nyctis_review_payment')), findsNothing);
     });
   });
 
@@ -918,6 +907,8 @@ void main() {
           args: harnessReviewArgs(),
           broadcastRunner: harnessRunner(null),
         ),
+        // The broadcast never finishes, so the loader never stops.
+        settle: false,
       );
       await tester.pump();
 
@@ -978,10 +969,7 @@ void main() {
         await tester.pumpAndSettle();
       });
 
-      expect(
-        said,
-        contains(nyctisSendPhaseText(NyctisSendPhase.proposing)),
-      );
+      expect(said, contains(nyctisSendPhaseText(NyctisSendPhase.proposing)));
       expect(said.last, startsWith(kNyctisStatusSentTitle));
     });
 

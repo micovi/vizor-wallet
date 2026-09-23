@@ -14,6 +14,7 @@ import 'package:zcash_wallet/src/features/nyctis_assets/screens/mobile/mobile_ny
 import 'package:zcash_wallet/src/features/nyctis_assets/screens/mobile/mobile_nyctis_send_review_screen.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/screens/mobile/mobile_nyctis_send_screen.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/screens/mobile/mobile_nyctis_send_status_screen.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/screens/nyctis_send_review_screen.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/screens/nyctis_send_screen.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/screens/nyctis_send_status_screen.dart';
 import 'package:zcash_wallet/src/features/nyctis_assets/services/nyctis_send_flow.dart';
@@ -103,9 +104,16 @@ void main() {
     );
 
     expect(find.textContaining('spend the ZEC'), findsOneWidget);
+    // Not a disabled Send: no Send control at all. The one primary action
+    // an expired plan offers is proving it again, as on desktop.
     expect(
-      appButtonWithKey(tester, 'nyctis_review_send_button').onPressed,
-      isNull,
+      find.byKey(const ValueKey('nyctis_review_send_button')),
+      findsNothing,
+    );
+    expect(find.text(kNyctisReviewSendLabel), findsNothing);
+    expect(
+      appButtonWithKey(tester, 'nyctis_review_rebuild_button').onPressed,
+      isNotNull,
     );
   });
 
@@ -143,6 +151,8 @@ void main() {
         args: harnessReviewArgs(),
         broadcastRunner: harnessRunner(null),
       ),
+      // The broadcast never finishes, so the loader never stops.
+      settle: false,
     );
     await tester.pump();
 
@@ -151,6 +161,13 @@ void main() {
       isNull,
     );
     expect(find.text(kMobileNyctisStatusNavTitle), findsOneWidget);
+    expect(find.text(kNyctisStatusSendingTitle), findsOneWidget);
+    // No back arrow is drawn in the top nav.
+    expect(find.bySemanticsLabel('Back'), findsNothing);
+
+    // System back does nothing while the send is live.
+    await tester.binding.handlePopRoute();
+    await tester.pump();
     expect(find.text(kNyctisStatusSendingTitle), findsOneWidget);
   });
 }

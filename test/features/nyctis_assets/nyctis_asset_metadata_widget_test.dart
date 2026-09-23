@@ -67,6 +67,15 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
   await tester.pump();
 }
 
+/// Opens "What this means", where the host, the pin and the longer sentences
+/// sit so that only the lead, the id and the button stand above the fold.
+Future<void> _openDetails(WidgetTester tester) async {
+  await tester.tap(
+    find.byKey(const ValueKey('nyctis_metadata_details_toggle')),
+  );
+  await tester.pump();
+}
+
 void main() {
   testWidgets(
     'before acceptance there is no logo, no description and a button',
@@ -85,20 +94,33 @@ void main() {
         ),
       );
 
-      expect(
-        find.byKey(const ValueKey('nyctis_metadata_not_fetched')),
-        findsOneWidget,
-      );
       expect(find.byKey(const ValueKey('nyctis_logo_image')), findsNothing);
       expect(
         find.byKey(const ValueKey('nyctis_metadata_description')),
         findsNothing,
       );
       expect(find.text(kNyctisMetadataAcceptAction), findsOneWidget);
-      expect(find.text(kNyctisMetadataNotEvidenceText), findsOneWidget);
+      // Above the button, unfolded: what pressing it costs, naming the host.
+      expect(
+        find.text(nyctisMetadataLeadText('example.invalid')),
+        findsOneWidget,
+      );
       // Section 5: the id is on screen wherever the decision is being made.
       expect(find.text(truncateNyctisAssetId(_assetId)), findsOneWidget);
+
+      await _openDetails(tester);
+      expect(
+        find.byKey(const ValueKey('nyctis_metadata_not_fetched')),
+        findsOneWidget,
+      );
+      expect(find.text(kNyctisMetadataNotEvidenceText), findsOneWidget);
       expect(find.text('example.invalid'), findsOneWidget);
+      // Opening the explanation fetched nothing and drew nothing.
+      expect(find.byKey(const ValueKey('nyctis_logo_image')), findsNothing);
+      expect(
+        find.byKey(const ValueKey('nyctis_metadata_description')),
+        findsNothing,
+      );
     },
   );
 
@@ -124,7 +146,35 @@ void main() {
 
     final collision = find.byKey(const ValueKey('nyctis_metadata_collision'));
     expect(collision, findsOneWidget);
-    expect(tester.widget<Text>(collision).data, contains('already accepted'));
+    expect(
+      find.descendant(
+        of: collision,
+        matching: find.textContaining('already show details for'),
+      ),
+      findsOneWidget,
+    );
+    // Both ids are in the warning, so the comparison it asks for can be made.
+    expect(
+      find.descendant(
+        of: collision,
+        matching: find.textContaining(truncateNyctisAssetId(_otherAssetId)),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: collision,
+        matching: find.textContaining(truncateNyctisAssetId(_assetId)),
+      ),
+      findsOneWidget,
+    );
+    // Before the button, in reading order.
+    final button = find.byKey(const ValueKey('nyctis_metadata_accept_button'));
+    expect(button, findsOneWidget);
+    expect(
+      tester.getBottomLeft(collision).dy,
+      lessThanOrEqualTo(tester.getTopLeft(button).dy),
+    );
   });
 
   testWidgets('accepting is an explicit tap', (tester) async {
@@ -210,6 +260,10 @@ void main() {
       ),
     );
 
+    // Beside the logo, unfolded: the line that says none of it is proof.
+    expect(find.text(kNyctisMetadataNotEvidenceText), findsOneWidget);
+
+    await _openDetails(tester);
     expect(find.text(kNyctisMetadataPinnedValue), findsOneWidget);
     expect(find.text(kNyctisMetadataPinnedNote), findsOneWidget);
     expect(find.text(kNyctisMetadataNotEvidenceText), findsOneWidget);

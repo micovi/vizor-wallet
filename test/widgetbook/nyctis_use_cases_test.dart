@@ -11,8 +11,9 @@ import 'package:zcash_wallet/widgetbook/nyctis_use_cases.dart';
 Future<void> _pump(
   WidgetTester tester,
   WidgetBuilder builder,
-  AppThemeData theme,
-) async {
+  AppThemeData theme, {
+  bool settle = true,
+}) async {
   await tester.binding.setSurfaceSize(const Size(900, 1600));
   addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
@@ -23,7 +24,13 @@ Future<void> _pump(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  // The shared loader repeats for as long as it is on screen, so a loading use
+  // case never settles; it is pumped one frame instead.
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
 
 void main() {
@@ -49,7 +56,12 @@ void main() {
 
     for (final theme in themes) {
       for (final builder in builders) {
-        await _pump(tester, builder, theme);
+        await _pump(
+          tester,
+          builder,
+          theme,
+          settle: builder != buildNyctisAssetsFeedLoadingUseCase,
+        );
         expect(tester.takeException(), isNull);
       }
     }
@@ -64,8 +76,21 @@ void main() {
     expect(find.text('Harbour credit'), findsOneWidget);
     expect(find.text('HBC'), findsOneWidget);
     expect(find.text('Unnamed asset'), findsOneWidget);
-    expect(find.text('Public assets'), findsOneWidget);
-    expect(find.text('Private assets'), findsOneWidget);
+    expect(find.text(kNyctisPublicSupplySectionTitle), findsOneWidget);
+    expect(find.text(kNyctisPrivateSupplySectionTitle), findsOneWidget);
+  });
+
+  testWidgets('the loading use case draws the loader and its sentence', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      buildNyctisAssetsFeedLoadingUseCase,
+      AppThemeData.dark,
+      settle: false,
+    );
+    expect(find.text(kNyctisAssetsLoadingText), findsOneWidget);
+    expect(find.byKey(const ValueKey('nyctis_message_loader')), findsOneWidget);
   });
 
   testWidgets('each degraded use case carries its own sentence', (

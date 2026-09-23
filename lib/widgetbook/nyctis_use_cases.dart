@@ -150,10 +150,7 @@ Widget buildNyctisAssetsFeedUseCase(BuildContext context) {
 }
 
 Widget buildNyctisAssetsFeedLoadingUseCase(BuildContext context) {
-  return _stage(
-    context,
-    const NyctisAssetsFeed(sections: [], isLoading: true),
-  );
+  return _stage(context, const NyctisAssetsFeed(sections: [], isLoading: true));
 }
 
 Widget buildNyctisAssetsFeedEmptyUseCase(BuildContext context) {
@@ -279,10 +276,7 @@ Widget buildNyctisReceiveNotConfiguredUseCase(BuildContext context) {
 Widget buildNyctisReceivePanelUseCase(BuildContext context) {
   return _stage(
     context,
-    const NyctisReceivePanel(
-      address: _nyctisAddress,
-      networkLabel: 'Regtest',
-    ),
+    const NyctisReceivePanel(address: _nyctisAddress, networkLabel: 'Regtest'),
   );
 }
 
@@ -363,7 +357,8 @@ Widget buildNyctisUniqueItemRowUseCase(BuildContext context) {
     NyctisAssetsFeed(
       sections: [
         NyctisAssetsSectionData(
-          title: 'Public assets',
+          title: kNyctisPublicSupplySectionTitle,
+          subtitle: kNyctisPublicSupplySectionSubtitle,
           rows: [
             _piece(7, owned: true, index: 7).toRowData(onTap: () {}),
             _piece(8, index: 8).toRowData(onTap: () {}),
@@ -495,10 +490,7 @@ NyctisArtworkData _widgetbookArtwork(int position) {
 /// supply card that says "one, and only one" instead of two rows of 1.
 Widget buildNyctisUniqueItemDetailUseCase(BuildContext context) {
   final asset = _piece(7, owned: true, index: 7);
-  final view = NyctisViewData(
-    status: NyctisViewStatus.ready,
-    assets: [asset],
-  );
+  final view = NyctisViewData(status: NyctisViewStatus.ready, assets: [asset]);
   return _stage(
     context,
     NyctisAssetDetailBody(
@@ -665,11 +657,7 @@ Widget buildNyctisLargeNumbersUseCase(BuildContext context) {
           cardWidth: null,
         ),
         const SizedBox(height: AppSpacing.md),
-        NyctisAssetDetailBody(
-          assetId: huge.assetId,
-          view: view,
-          asset: huge,
-        ),
+        NyctisAssetDetailBody(assetId: huge.assetId, view: view, asset: huge),
       ],
     ),
     width: kNyctisCardWidth,

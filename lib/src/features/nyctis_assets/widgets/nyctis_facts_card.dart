@@ -97,16 +97,32 @@ class _NyctisFactRow extends StatelessWidget {
       // shared rows keep the label whole and squeeze the value to nothing.
       row = _StackedFactRow(fact: fact);
     } else if (kAppFormFactor == AppFormFactor.mobile) {
-      row = MobileListRow(
-        label: fact.label,
-        value: fact.value,
-        trailing: copyText == null
-            ? null
-            : AppIcon(
-                AppIcons.copy,
-                size: AppIconSize.medium,
-                color: context.colors.icon.regular,
-              ),
+      // The shared mobile row keeps its label whole and ellipsizes the
+      // value. On a narrow phone, or inside a nested card, a long label then
+      // overflows the row, and a long value — a spend condition, an amount —
+      // is cut to something it does not say. Such a fact stacks instead, as it
+      // does at large text.
+      row = LayoutBuilder(
+        builder: (context, constraints) {
+          if (!nyctisFactFitsOneLine(
+            context,
+            fact,
+            maxWidth: constraints.maxWidth,
+          )) {
+            return _StackedFactRow(fact: fact);
+          }
+          return MobileListRow(
+            label: fact.label,
+            value: fact.value,
+            trailing: copyText == null
+                ? null
+                : AppIcon(
+                    AppIcons.copy,
+                    size: AppIconSize.medium,
+                    color: context.colors.icon.regular,
+                  ),
+          );
+        },
       );
     } else {
       // The copy glyph without the row's own tap: the whole row is the
@@ -128,6 +144,40 @@ class _NyctisFactRow extends StatelessWidget {
       child: row,
     );
   }
+}
+
+/// Whether [fact]'s label and whole value fit on one [MobileListRow] line of
+/// [maxWidth], at the ambient text scale.
+///
+/// Measured with the row's own style ([AppTypography.bodyMedium] for both
+/// halves) and its own gaps, so the answer is the row's: when it is false the
+/// row would either overflow its label or ellipsize its value.
+bool nyctisFactFitsOneLine(
+  BuildContext context,
+  NyctisAssetFactData fact, {
+  required double maxWidth,
+}) {
+  if (!maxWidth.isFinite) return true;
+  final textDirection = Directionality.of(context);
+  final textScaler = MediaQuery.textScalerOf(context);
+  double widthOf(String text) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: AppTypography.bodyMedium),
+      textDirection: textDirection,
+      textScaler: textScaler,
+      maxLines: 1,
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
+    return width;
+  }
+
+  final trailing = fact.copyText == null
+      ? 0.0
+      : AppSpacing.xs + AppIconSize.medium;
+  final needed =
+      widthOf(fact.label) + AppSpacing.xs + widthOf(fact.value) + trailing;
+  return needed <= maxWidth;
 }
 
 /// Copies a fact's [NyctisAssetFactData.copyText] with the shared toast, and

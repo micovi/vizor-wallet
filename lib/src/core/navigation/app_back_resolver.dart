@@ -65,12 +65,36 @@ abstract final class AppBackResolver {
     '/voting/poll/:roundId/submitted': 'Submitted',
     '/voting/poll/:roundId/results': 'Results',
     '/voting/keystone/scan': 'Keystone',
+    '/nyctis': 'Nyctis',
+    '/nyctis/receive': 'Receive',
+    '/nyctis/collection/:collectionId': 'Collection',
+    '/nyctis/:assetId': 'Asset',
+    '/nyctis/:assetId/send': 'Send',
+    '/nyctis/send/review': 'Review',
+    '/activity/nyctis/:messageId': 'Activity',
+    '/settings/nyctis': 'Nyctis',
+  };
+
+  /// Routes whose back target is fixed rather than "the page underneath".
+  ///
+  /// A send-status screen sits on top of the review of the very plan it is
+  /// broadcasting. Popping to it would offer that plan's Send again, and a
+  /// second broadcast of the same memos spends ZEC on a message the channel
+  /// ignores — so leaving goes to a screen with no plan on it.
+  static const _forcedTargets = <String, AppBackTarget>{
+    '/send/status': _homeTarget,
+    '/nyctis/send/status': AppBackTarget(
+      label: 'Nyctis',
+      fallbackPath: '/nyctis',
+      preferPop: false,
+    ),
   };
 
   static AppBackTarget resolve(BuildContext context) {
     final stack = _routeStackFor(context);
     final current = stack.isEmpty ? null : stack.last;
-    if (_forcesHome(current)) return _homeTarget;
+    final forced = _forcedTargetFor(current);
+    if (forced != null) return forced;
     if (!context.canPop()) return _homeTarget;
 
     final previous = stack.length >= 2 ? stack[stack.length - 2] : null;
@@ -89,10 +113,10 @@ abstract final class AppBackResolver {
     );
   }
 
-  static bool _forcesHome(_RouteStackEntry? current) {
-    if (current == null) return false;
-    return current.routePath == '/send/status' ||
-        current.location == '/send/status';
+  static AppBackTarget? _forcedTargetFor(_RouteStackEntry? current) {
+    if (current == null) return null;
+    return _forcedTargets[current.routePath] ??
+        _forcedTargets[current.location];
   }
 
   static List<_RouteStackEntry> _routeStackFor(BuildContext context) {
@@ -144,6 +168,15 @@ abstract final class AppBackResolver {
   static String? _dynamicRouteLabel(String location) {
     if (location.startsWith('/activity/tx/')) {
       return _routeLabels['/activity/tx/:txid'];
+    }
+    if (location.startsWith('/activity/nyctis/')) {
+      return _routeLabels['/activity/nyctis/:messageId'];
+    }
+    if (location.startsWith('/nyctis/collection/')) {
+      return _routeLabels['/nyctis/collection/:collectionId'];
+    }
+    if (location.startsWith('/nyctis/') && location.endsWith('/send')) {
+      return _routeLabels['/nyctis/:assetId/send'];
     }
     if (location.startsWith('/voting/poll/')) {
       if (location.endsWith('/review')) {

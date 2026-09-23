@@ -23,9 +23,9 @@
 //! [`propose_send_raw`] is the binary-memo twin of step 1. It exists
 //! because `Memo::from_bytes` classifies its input and can only ever
 //! return `Memo::Text` for the UTF-8 that step 1 accepts, so a memo
-//! starting with the ZIP-302 binary marker `0xFF` (every Nightjar
+//! starting with the ZIP-302 binary marker `0xFF` (every Nyctis
 //! message part) has no representation on the text path. It also takes
-//! a list of outputs rather than one, because a Nightjar message is
+//! a list of outputs rather than one, because a Nyctis message is
 //! 1-8 memos that are only reassemblable if they share a txid. Both
 //! variants funnel into [`propose_and_store_request`], so a proposal
 //! from either is the same `StoredProposal` and steps 2 and 3 treat
@@ -771,7 +771,7 @@ fn retry_store_then_pending_migration_policy_rebuild_message(
 /// One recipient of a raw-memo send.
 ///
 /// The text-memo path narrows a memo to a UTF-8 `&str`, which is a dead end
-/// for Nightjar: its messages are 512-byte binary memos whose first byte is
+/// for Nyctis: its messages are 512-byte binary memos whose first byte is
 /// the ZIP-302 binary marker `0xFF`, and a single message is 1-8 of those
 /// memos that all have to land in one transaction. This struct is the
 /// per-output half of that shape; the whole-message half is the slice passed
@@ -801,7 +801,7 @@ pub(crate) fn propose_send(
 /// of `outputs`.
 ///
 /// Every output becomes its own shielded output of a single transaction. That
-/// is the property Nightjar depends on: a reader reassembles a multi-memo
+/// is the property Nyctis depends on: a reader reassembles a multi-memo
 /// message only from parts that share one txid, so splitting the parts across
 /// transactions would produce a message nobody can decode.
 ///
@@ -3592,7 +3592,7 @@ fn build_send_request(
 ///
 /// The difference from [`build_send_request`] is not cosmetic.
 /// `Memo::from_bytes` classifies its input and always produces a `Memo::Text`
-/// for the UTF-8 the text path can supply, so a Nightjar memo — which begins
+/// for the UTF-8 the text path can supply, so a Nyctis memo — which begins
 /// with the ZIP-302 binary marker `0xFF` — cannot be expressed there at all.
 /// `MemoBytes::from_bytes` skips classification and stores the 512-byte field
 /// as given.
@@ -3623,7 +3623,7 @@ fn build_send_request_raw(outputs: &[RawSendOutput]) -> Result<TransactionReques
                 // `MemoBytes::from_bytes` zero-pads a short body up to the
                 // 512-byte field and rejects anything longer. Surfacing that
                 // rejection is the whole point: truncating instead would
-                // broadcast a Nightjar message part whose tail is missing, and
+                // broadcast a Nyctis message part whose tail is missing, and
                 // the reader would fail reassembly with no way to tell which of
                 // the 1-8 parts was damaged.
                 Some(
@@ -3642,7 +3642,7 @@ fn build_send_request_raw(outputs: &[RawSendOutput]) -> Result<TransactionReques
 
     // One `Payment` per output, unlike `build_send_request`'s hardcoded single
     // payment: note selection then emits one shielded output per payment within
-    // one transaction, which is what lets a multi-memo Nightjar message share a
+    // one transaction, which is what lets a multi-memo Nyctis message share a
     // single txid.
     TransactionRequest::new(payments).map_err(|e| format!("{e:?}"))
 }

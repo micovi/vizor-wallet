@@ -22,6 +22,7 @@ import 'package:zcash_wallet/src/features/migration/providers/ironwood_migration
 import 'package:zcash_wallet/src/features/swap/models/swap_models.dart';
 import 'package:zcash_wallet/src/features/swap/providers/pay_selected_asset_store.dart';
 import 'package:zcash_wallet/src/providers/network_privacy_provider.dart';
+import 'package:zcash_wallet/src/providers/nyctis_config_provider.dart';
 import 'package:zcash_wallet/src/providers/account_provider.dart';
 import 'package:zcash_wallet/src/providers/sync_failure.dart';
 import 'package:zcash_wallet/src/providers/sync_provider.dart';
@@ -723,7 +724,6 @@ void main() {
       tester.getTopLeft(find.text('Swap')).dy,
       tester.getTopLeft(find.text('Pay')).dy,
       tester.getTopLeft(find.text('Vote')).dy,
-      tester.getTopLeft(find.text('Nightjar')).dy,
       tester.getTopLeft(find.text('Activity')).dy,
     ];
     final gaps = [
@@ -734,6 +734,35 @@ void main() {
     for (final gap in gaps.skip(1)) {
       expect(gap, moreOrLessEquals(gaps.first, epsilon: 0.1));
     }
+  });
+
+  testWidgets('sidebar shows Nyctis only in a VIZOR_NYCTIS_ENABLED build', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_sidebarHarness(_syncedSyncState));
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('sidebar_nyctis_button')), findsNothing);
+    expect(find.text('Nyctis'), findsNothing);
+
+    await tester.pumpWidget(
+      _sidebarHarness(_syncedSyncState, nyctisEnabled: true),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('sidebar_nyctis_button')),
+      findsOneWidget,
+    );
+    final positions = [
+      tester.getTopLeft(find.text('Vote')).dy,
+      tester.getTopLeft(find.text('Nyctis')).dy,
+      tester.getTopLeft(find.text('Activity')).dy,
+    ];
+    expect(
+      positions[2] - positions[1],
+      moreOrLessEquals(positions[1] - positions[0], epsilon: 0.1),
+    );
   });
 
   testWidgets('sidebar disables primary actions while importing', (
@@ -1235,6 +1264,7 @@ Widget _sidebarHarness(
       const IronwoodMigrationCoordinatorState(),
   NetworkPrivacyState networkPrivacyState = const NetworkPrivacyState.off(),
   bool suppressActiveSelection = false,
+  bool nyctisEnabled = false,
 }) {
   final bootstrap = _bootstrapFor(accountState ?? _singleAccountState);
   final router = GoRouter(
@@ -1341,6 +1371,7 @@ Widget _sidebarHarness(
         () => _FakeNetworkPrivacyNotifier(networkPrivacyState),
       ),
       swapFeatureEnabledProvider.overrideWithValue(swapEnabled),
+      nyctisFeatureEnabledProvider.overrideWithValue(nyctisEnabled),
       paySelectedAssetStoreProvider.overrideWithValue(
         const _FakePaySelectedAssetStore(),
       ),

@@ -308,7 +308,10 @@ void main() {
         .getSize(find.byType(ImportBirthdayCalendarPanel))
         .height;
     final sheetHeight = tester.getSize(find.byType(BottomSheet)).height;
-    expect(sheetHeight, closeTo(panelHeight + AppSpacing.sm * 3, 1.0));
+    expect(
+      sheetHeight,
+      closeTo(panelHeight + AppSpacing.sm * 3, 1.0),
+    );
 
     // The panel is its own card, so the sheet surface stays invisible —
     // only the scrim and the calendar render.

@@ -19,6 +19,7 @@ import 'package:zcash_wallet/src/features/settings/widgets/network_privacy_contr
 import 'package:zcash_wallet/src/features/payment_links/providers/payment_link_cards_provider.dart';
 import 'package:zcash_wallet/src/providers/account_models.dart';
 import 'package:zcash_wallet/src/providers/network_privacy_provider.dart';
+import 'package:zcash_wallet/src/providers/nyctis_config_provider.dart';
 import 'package:zcash_wallet/src/providers/sync_provider.dart';
 import 'package:zcash_wallet/src/providers/windows_update_provider.dart';
 
@@ -237,11 +238,7 @@ void main() {
     await tester.pump();
 
     // The pane stays interactive while the cards load, so the user can open
-    // a modal the late navigation would replace. The row is scrolled into
-    // view first: the settings list is longer than the pane, so its offset
-    // moves whenever a row is added above it.
-    await tester.ensureVisible(find.text('Theme'));
-    await tester.pump();
+    // a modal the late navigation would replace.
     await tester.tap(find.text('Theme'));
     await tester.pumpAndSettle();
     expect(find.text('System (Auto)'), findsOneWidget);
@@ -252,6 +249,26 @@ void main() {
     expect(find.text('System (Auto)'), findsOneWidget);
     expect(find.textContaining('payment links route'), findsNothing);
   });
+
+  for (final enabled in [false, true]) {
+    testWidgets('settings ${enabled ? 'shows' : 'hides'} Nyctis when '
+        'VIZOR_NYCTIS_ENABLED is ${enabled ? 'on' : 'off'}', (tester) async {
+      await tester.pumpWidget(
+        _settingsHarness(
+          extraOverrides: [
+            nyctisFeatureEnabledProvider.overrideWithValue(enabled),
+          ],
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('settings_nyctis_row')),
+        enabled ? findsOneWidget : findsNothing,
+      );
+      expect(find.text('Nyctis'), enabled ? findsWidgets : findsNothing);
+    });
+  }
 
   testWidgets('settings sections are grouped Personal to Danger zone', (
     tester,

@@ -48,6 +48,51 @@ class NetworkHttpRequestCancelledException implements Exception {
   String toString() => 'Network HTTP request cancelled';
 }
 
+/// A response body ran past the `maxBodyBytes` the caller passed to
+/// [NetworkHttpClient.request].
+///
+/// On the direct route the request is aborted as soon as the count passes the
+/// cap, so [receivedBytes] is at most the cap plus one socket read (bounded by
+/// the kernel receive buffer, not by the server), and the chunk that crossed
+/// the cap is never added to the body. On the Tor route the Rust bridge hands
+/// the body over whole, so the check happens on arrival and [receivedBytes] is
+/// the full length.
+class NetworkHttpResponseTooLargeException implements Exception {
+  const NetworkHttpResponseTooLargeException({
+    required this.maxBodyBytes,
+    required this.receivedBytes,
+  });
+
+  final int maxBodyBytes;
+
+  /// Bytes that crossed the wire before the refusal. Zero when a declared
+  /// `Content-Length` already exceeded the cap and nothing was read.
+  final int receivedBytes;
+
+  @override
+  String toString() =>
+      'The response body was refused after $receivedBytes bytes; '
+      'the limit is $maxBodyBytes.';
+}
+
+/// A capped request got a response with a `Content-Encoding` other than
+/// `identity`.
+///
+/// A capped request asks for `identity`, and a compressed answer is refused
+/// before any of it is read: a few kilobytes of gzip can inflate past any cap
+/// faster than the cap can be checked, so the only bounded way to read one is
+/// not to.
+class NetworkHttpCompressedResponseException implements Exception {
+  const NetworkHttpCompressedResponseException(this.encoding);
+
+  final String encoding;
+
+  @override
+  String toString() =>
+      'Refusing a response with Content-Encoding "$encoding" on a '
+      'size-capped request.';
+}
+
 class _DirectRequestOperation<T> {
   _DirectRequestOperation({required this.result, required Future<T> source})
     : drained = source.then<void>((_) {}, onError: (_, _) {});
@@ -271,6 +316,18 @@ class NetworkHttpClient {
     _directRequestsBlocked = false;
   }
 
+  /// Sends one request on the route the process-wide policy selects.
+  ///
+  /// [maxBodyBytes] bounds every response body this request reads, redirects
+  /// included. When it is set the request asks for `Accept-Encoding:
+  /// identity`, a response with any other `Content-Encoding` fails with
+  /// [NetworkHttpCompressedResponseException] before its body is read, and a
+  /// body past the cap fails with [NetworkHttpResponseTooLargeException]. On
+  /// the direct route that happens while streaming, so no more than the cap
+  /// is ever buffered, and no more than one socket read past it is received.
+  /// The Tor bridge returns bodies whole, so there the cap is checked on
+  /// arrival and memory is bounded only by the request's timeout, which the
+  /// bridge applies to the whole exchange.
   Future<NetworkHttpResponse> request(
     String method,
     Uri uri, {
@@ -278,26 +335,39 @@ class NetworkHttpClient {
     List<int> bodyBytes = const [],
     Duration? timeout,
     Future<void>? cancelSignal,
+    int? maxBodyBytes,
   }) {
     _requirePositiveTimeout(timeout);
+    if (maxBodyBytes != null && maxBodyBytes < 0) {
+      throw ArgumentError.value(
+        maxBodyBytes,
+        'maxBodyBytes',
+        'must not be negative',
+      );
+    }
     final normalizedMethod = method.toUpperCase();
+    final requestHeaders = maxBodyBytes == null
+        ? headers
+        : _withIdentityEncoding(headers);
     return _torDesired()
         ? _requestViaTorWithTimeoutRetry(
             normalizedMethod,
             uri,
-            headers: headers,
+            headers: requestHeaders,
             bodyBytes: bodyBytes,
             timeout: timeout,
             cancelSignal: cancelSignal,
+            maxBodyBytes: maxBodyBytes,
           )
         : _runDirectRequest(
             () => _requestDirect(
               normalizedMethod,
               uri,
-              headers: headers,
+              headers: requestHeaders,
               bodyBytes: bodyBytes,
               timeout: timeout,
               cancelSignal: cancelSignal,
+              maxBodyBytes: maxBodyBytes,
             ),
           );
   }
@@ -309,6 +379,7 @@ class NetworkHttpClient {
     required List<int> bodyBytes,
     required Duration? timeout,
     required Future<void>? cancelSignal,
+    required int? maxBodyBytes,
   }) async {
     try {
       return await _requestViaTorWithRedirects(
@@ -318,6 +389,7 @@ class NetworkHttpClient {
         bodyBytes: bodyBytes,
         timeout: timeout,
         cancelSignal: cancelSignal,
+        maxBodyBytes: maxBodyBytes,
       );
     } on TimeoutException {
       if (method != 'GET') rethrow;
@@ -330,6 +402,7 @@ class NetworkHttpClient {
         bodyBytes: bodyBytes,
         timeout: timeout,
         cancelSignal: cancelSignal,
+        maxBodyBytes: maxBodyBytes,
       );
     }
   }
@@ -416,6 +489,7 @@ class NetworkHttpClient {
     String? destinationPath,
     required Duration? timeout,
     required Future<void>? cancelSignal,
+    int? maxBodyBytes,
   }) async {
     if (method != 'GET' && method != 'POST') {
       throw TorUnsupportedHttpMethodException(method);
@@ -455,6 +529,19 @@ class NetworkHttpClient {
               cancelSignal: cancelSignal,
             );
       if (!stopwatch.isRunning) stopwatch.start();
+      if (maxBodyBytes != null) {
+        // The bridge has already buffered this body in full; what the cap can
+        // still do here is keep it from reaching the caller.
+        _checkEncoding(
+          response.headers[HttpHeaders.contentEncodingHeader]?.join(', '),
+        );
+        if (response.bodyBytes.length > maxBodyBytes) {
+          throw NetworkHttpResponseTooLargeException(
+            maxBodyBytes: maxBodyBytes,
+            receivedBytes: response.bodyBytes.length,
+          );
+        }
+      }
       final location = response.header(HttpHeaders.locationHeader);
       if (!_isRedirect(response.statusCode) || location == null) {
         return response;
@@ -489,6 +576,7 @@ class NetworkHttpClient {
     required List<int> bodyBytes,
     required Duration? timeout,
     required Future<void>? cancelSignal,
+    required int? maxBodyBytes,
   }) {
     HttpClientRequest? activeRequest;
     StreamSubscription<List<int>>? responseSubscription;
@@ -523,10 +611,43 @@ class NetworkHttpClient {
         headers.forEach(request.headers.set);
         if (bodyBytes.isNotEmpty) request.add(bodyBytes);
         final response = await request.close();
+        if (maxBodyBytes != null) {
+          final refusal = _refusalBeforeBody(response, maxBodyBytes);
+          if (refusal != null) {
+            terminationError ??= refusal;
+            try {
+              request.abort(refusal);
+            } catch (_) {
+              // The refusal is the public failure; cleanup is best effort.
+            }
+            try {
+              await response.listen(null, onError: (_, _) {}).cancel();
+            } catch (_) {
+              // As above.
+            }
+            throw refusal;
+          }
+        }
         final body = responseBody = Completer<Uint8List>();
         final bytes = BytesBuilder();
+        var received = 0;
         responseSubscription = response.listen(
-          bytes.add,
+          (chunk) {
+            if (body.isCompleted) return;
+            received += chunk.length;
+            if (maxBodyBytes != null && received > maxBodyBytes) {
+              // Abort while streaming: the chunk that crossed the cap is the
+              // last one read, and nothing past it is buffered.
+              final error = NetworkHttpResponseTooLargeException(
+                maxBodyBytes: maxBodyBytes,
+                receivedBytes: received,
+              );
+              terminationError ??= error;
+              unawaited(abort(error));
+              return;
+            }
+            bytes.add(chunk);
+          },
           onError: (Object error, StackTrace stackTrace) {
             if (!body.isCompleted) body.completeError(error, stackTrace);
           },
@@ -616,6 +737,54 @@ class NetworkHttpClient {
 
   static TimeoutException _timeoutException(Duration timeout) =>
       TimeoutException('Network HTTP request timed out', timeout);
+
+  /// [headers] with any caller `Accept-Encoding` replaced by `identity`.
+  static Map<String, String> _withIdentityEncoding(
+    Map<String, String> headers,
+  ) => {
+    for (final entry in headers.entries)
+      if (entry.key.toLowerCase() != HttpHeaders.acceptEncodingHeader)
+        entry.key: entry.value,
+    HttpHeaders.acceptEncodingHeader: 'identity',
+  };
+
+  static void _checkEncoding(String? encoding) {
+    final value = encoding?.trim().toLowerCase();
+    if (value == null || value.isEmpty || value == 'identity') return;
+    throw NetworkHttpCompressedResponseException(encoding!);
+  }
+
+  /// Why a capped direct response must not be read at all, or null.
+  ///
+  /// `compressionState` is checked as well as the header because it is what
+  /// decides whether `dart:io` inflates the stream; an injected client with
+  /// `autoUncompress` left on would otherwise hand the listener inflated
+  /// bytes, and the cap would be counting the wrong thing.
+  static Object? _refusalBeforeBody(
+    HttpClientResponse response,
+    int maxBodyBytes,
+  ) {
+    // `headers.value` throws on a repeated header; a hostile host can repeat
+    // one, so every value is read and any non-identity one refuses.
+    final encodings = response.headers[HttpHeaders.contentEncodingHeader];
+    final encoding = encodings?.join(', ');
+    try {
+      _checkEncoding(encoding);
+    } on NetworkHttpCompressedResponseException catch (error) {
+      return error;
+    }
+    if (response.compressionState !=
+        HttpClientResponseCompressionState.notCompressed) {
+      return NetworkHttpCompressedResponseException(encoding ?? 'unknown');
+    }
+    if (response.contentLength > maxBodyBytes) {
+      return NetworkHttpResponseTooLargeException(
+        maxBodyBytes: maxBodyBytes,
+        receivedBytes: 0,
+      );
+    }
+    return null;
+  }
 
   static Map<String, String> _headersForRedirect(
     Uri from,

@@ -24,10 +24,10 @@ import '../../../../core/widgets/mobile/mobile_surface_card.dart';
 import '../../../../providers/account_provider.dart';
 import '../../../../providers/app_security_provider.dart';
 import '../../../../providers/biometric_unlock_provider.dart';
-import '../../../../core/config/nightjar_config.dart';
+import '../../../../core/config/nyctis_config.dart';
 import '../../../../core/config/zcash_explorer.dart';
 import '../../../../providers/rpc_endpoint_provider.dart';
-import '../../../../providers/nightjar_config_provider.dart';
+import '../../../../providers/nyctis_config_provider.dart';
 import '../../../../providers/zcash_explorer_provider.dart';
 import '../../../../providers/sync_keep_awake_provider.dart';
 import '../../../../providers/theme_mode_provider.dart';
@@ -54,7 +54,9 @@ class MobileSettingsScreen extends ConsumerWidget {
       ref.watch(zcashExplorerProvider),
       networkName: endpointConfig.networkName,
     );
-    final nightjar = _nightjarLabel(ref.watch(nightjarConfigProvider));
+    final nyctis = ref.watch(nyctisFeatureEnabledProvider)
+        ? _nyctisLabel(ref.watch(nyctisConfigProvider))
+        : null;
     final themeMode = ref.watch(themeModeProvider);
     final profilePictureId =
         account?.profilePictureId ?? kDefaultProfilePictureId;
@@ -266,19 +268,20 @@ class MobileSettingsScreen extends ConsumerWidget {
                       showChevron: true,
                       onTap: () => context.push('/settings/explorer'),
                     ),
-                    MobileListRow(
-                      key: const ValueKey('mobile_settings_nightjar_row'),
-                      leading: _RowIcon(AppIcons.coins),
-                      label: 'Nightjar',
-                      value: nightjar,
-                      minRowHeight: _settingsRowHeight,
-                      textStyle: settingsRowStyle,
-                      valueTextStyle: settingsRowStyle,
-                      valueColor: settingsValueColor,
-                      chevronColor: settingsChevronColor,
-                      showChevron: true,
-                      onTap: () => context.push('/settings/nightjar'),
-                    ),
+                    if (nyctis != null)
+                      MobileListRow(
+                        key: const ValueKey('mobile_settings_nyctis_row'),
+                        leading: _RowIcon(AppIcons.coins),
+                        label: 'Nyctis',
+                        value: nyctis,
+                        minRowHeight: _settingsRowHeight,
+                        textStyle: settingsRowStyle,
+                        valueTextStyle: settingsRowStyle,
+                        valueColor: settingsValueColor,
+                        chevronColor: settingsChevronColor,
+                        showChevron: true,
+                        onTap: () => context.push('/settings/nyctis'),
+                      ),
                     MobileListRow(
                       key: const ValueKey('mobile_settings_theme_row'),
                       leading: _RowIcon(AppIcons.theme),
@@ -380,9 +383,9 @@ class MobileSettingsScreen extends ConsumerWidget {
     }
   }
 
-  /// Row value for the Nightjar entry. A network with no channel says so
+  /// Row value for the Nyctis entry. A network with no channel says so
   /// here rather than reading "Off", which would suggest a switch exists.
-  static String _nightjarLabel(NightjarConfig config) {
+  static String _nyctisLabel(NyctisConfig config) {
     if (!config.hasChannel) return 'Not available';
     return config.enabled ? 'On' : 'Off';
   }

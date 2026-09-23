@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -915101642;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -491330664;
 
 // Section: executor
 
@@ -6083,7 +6083,7 @@ fn wire__crate__api__wallet__mnemonic_word_list_impl(
         },
     )
 }
-fn wire__crate__api__nightjar__nightjar_build_pay_impl(
+fn wire__crate__api__nyctis__nyctis_build_pay_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -6091,7 +6091,7 @@ fn wire__crate__api__nightjar__nightjar_build_pay_impl(
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "nightjar_build_pay",
+            debug_name: "nyctis_build_pay",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -6107,29 +6107,32 @@ fn wire__crate__api__nightjar__nightjar_build_pay_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_network = <String>::sse_decode(&mut deserializer);
             let api_channel_uivk = <String>::sse_decode(&mut deserializer);
+            let api_channel_address = <String>::sse_decode(&mut deserializer);
             let api_birthday = <u32>::sse_decode(&mut deserializer);
             let api_chain_tip = <u32>::sse_decode(&mut deserializer);
             let api_vk = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_vk_pin = <String>::sse_decode(&mut deserializer);
             let api_messages =
-                <Vec<crate::api::nightjar::NjMessageInput>>::sse_decode(&mut deserializer);
-            let api_seed = <Vec<u8>>::sse_decode(&mut deserializer);
+                <Vec<crate::api::nyctis::NyMessageInput>>::sse_decode(&mut deserializer);
+            let api_mnemonic = <Vec<u8>>::sse_decode(&mut deserializer);
             let api_keys_dir = <String>::sse_decode(&mut deserializer);
             let api_asset_id = <String>::sse_decode(&mut deserializer);
             let api_amount = <u64>::sse_decode(&mut deserializer);
             let api_recipient = <String>::sse_decode(&mut deserializer);
-            let api_zec_sources =
-                <crate::api::nightjar::NjZecSources>::sse_decode(&mut deserializer);
+            let api_zec_sources = <crate::api::nyctis::NyZecSources>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, String>((move || {
-                    let output_ok = crate::api::nightjar::nightjar_build_pay(
+                    let output_ok = crate::api::nyctis::nyctis_build_pay(
                         api_network,
                         api_channel_uivk,
+                        api_channel_address,
                         api_birthday,
                         api_chain_tip,
                         api_vk,
+                        api_vk_pin,
                         api_messages,
-                        api_seed,
+                        api_mnemonic,
                         api_keys_dir,
                         api_asset_id,
                         api_amount,
@@ -6142,7 +6145,7 @@ fn wire__crate__api__nightjar__nightjar_build_pay_impl(
         },
     )
 }
-fn wire__crate__api__nightjar__nightjar_canonical_height_impl(
+fn wire__crate__api__nyctis__nyctis_canonical_height_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -6150,7 +6153,7 @@ fn wire__crate__api__nightjar__nightjar_canonical_height_impl(
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "nightjar_canonical_height",
+            debug_name: "nyctis_canonical_height",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -6169,17 +6172,15 @@ fn wire__crate__api__nightjar__nightjar_canonical_height_impl(
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, String>((move || {
-                    let output_ok = crate::api::nightjar::nightjar_canonical_height(
-                        api_chain_tip,
-                        api_birthday,
-                    )?;
+                    let output_ok =
+                        crate::api::nyctis::nyctis_canonical_height(api_chain_tip, api_birthday)?;
                     Ok(output_ok)
                 })())
             }
         },
     )
 }
-fn wire__crate__api__nightjar__nightjar_channel_id_impl(
+fn wire__crate__api__nyctis__nyctis_channel_id_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -6187,7 +6188,7 @@ fn wire__crate__api__nightjar__nightjar_channel_id_impl(
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "nightjar_channel_id",
+            debug_name: "nyctis_channel_id",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -6203,18 +6204,22 @@ fn wire__crate__api__nightjar__nightjar_channel_id_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_network = <String>::sse_decode(&mut deserializer);
             let api_channel_uivk = <String>::sse_decode(&mut deserializer);
+            let api_channel_address = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, String>((move || {
-                    let output_ok =
-                        crate::api::nightjar::nightjar_channel_id(api_network, api_channel_uivk)?;
+                    let output_ok = crate::api::nyctis::nyctis_channel_id(
+                        api_network,
+                        api_channel_uivk,
+                        api_channel_address,
+                    )?;
                     Ok(output_ok)
                 })())
             }
         },
     )
 }
-fn wire__crate__api__nightjar__nightjar_check_proving_key_impl(
+fn wire__crate__api__nyctis__nyctis_check_proving_key_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -6222,7 +6227,7 @@ fn wire__crate__api__nightjar__nightjar_check_proving_key_impl(
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "nightjar_check_proving_key",
+            debug_name: "nyctis_check_proving_key",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -6240,14 +6245,14 @@ fn wire__crate__api__nightjar__nightjar_check_proving_key_impl(
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, String>((move || {
-                    let output_ok = crate::api::nightjar::nightjar_check_proving_key(api_keys_dir)?;
+                    let output_ok = crate::api::nyctis::nyctis_check_proving_key(api_keys_dir)?;
                     Ok(output_ok)
                 })())
             }
         },
     )
 }
-fn wire__crate__api__nightjar__nightjar_identity_impl(
+fn wire__crate__api__nyctis__nyctis_check_vk_pin_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -6255,7 +6260,7 @@ fn wire__crate__api__nightjar__nightjar_identity_impl(
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "nightjar_identity",
+            debug_name: "nyctis_check_vk_pin",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -6269,19 +6274,19 @@ fn wire__crate__api__nightjar__nightjar_identity_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_seed = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_network = <String>::sse_decode(&mut deserializer);
+            let api_vk = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_vk_pin = <String>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, String>((move || {
-                    let output_ok = crate::api::nightjar::nightjar_identity(api_seed, api_network)?;
+                    let output_ok = crate::api::nyctis::nyctis_check_vk_pin(api_vk, api_vk_pin)?;
                     Ok(output_ok)
                 })())
             }
         },
     )
 }
-fn wire__crate__api__nightjar__nightjar_replay_impl(
+fn wire__crate__api__nyctis__nyctis_replay_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -6289,7 +6294,7 @@ fn wire__crate__api__nightjar__nightjar_replay_impl(
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "nightjar_replay",
+            debug_name: "nyctis_replay",
             port: Some(port_),
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
         },
@@ -6308,24 +6313,60 @@ fn wire__crate__api__nightjar__nightjar_replay_impl(
             let api_birthday = <u32>::sse_decode(&mut deserializer);
             let api_chain_tip = <u32>::sse_decode(&mut deserializer);
             let api_vk = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_vk_pin = <String>::sse_decode(&mut deserializer);
             let api_messages =
-                <Vec<crate::api::nightjar::NjMessageInput>>::sse_decode(&mut deserializer);
-            let api_seed = <Vec<u8>>::sse_decode(&mut deserializer);
-            let api_zec_sources =
-                <crate::api::nightjar::NjZecSources>::sse_decode(&mut deserializer);
+                <Vec<crate::api::nyctis::NyMessageInput>>::sse_decode(&mut deserializer);
+            let api_viewing_key = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_zec_sources = <crate::api::nyctis::NyZecSources>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| {
                 transform_result_sse::<_, String>((move || {
-                    let output_ok = crate::api::nightjar::nightjar_replay(
+                    let output_ok = crate::api::nyctis::nyctis_replay(
                         api_network,
                         api_channel_uivk,
                         api_birthday,
                         api_chain_tip,
                         api_vk,
+                        api_vk_pin,
                         api_messages,
-                        api_seed,
+                        api_viewing_key,
                         api_zec_sources,
                     )?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__nyctis__nyctis_viewing_key_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "nyctis_viewing_key",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_mnemonic = <Vec<u8>>::sse_decode(&mut deserializer);
+            let api_network = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok =
+                        crate::api::nyctis::nyctis_viewing_key(api_mnemonic, api_network)?;
                     Ok(output_ok)
                 })())
             }
@@ -11586,25 +11627,25 @@ impl SseDecode for Vec<zcash_voting::wire::NextStepView> {
     }
 }
 
-impl SseDecode for Vec<crate::api::nightjar::NjAsset> {
+impl SseDecode for Vec<crate::api::nyctis::NyAsset> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
-            ans_.push(<crate::api::nightjar::NjAsset>::sse_decode(deserializer));
+            ans_.push(<crate::api::nyctis::NyAsset>::sse_decode(deserializer));
         }
         return ans_;
     }
 }
 
-impl SseDecode for Vec<crate::api::nightjar::NjMessageInput> {
+impl SseDecode for Vec<crate::api::nyctis::NyMessageInput> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
-            ans_.push(<crate::api::nightjar::NjMessageInput>::sse_decode(
+            ans_.push(<crate::api::nyctis::NyMessageInput>::sse_decode(
                 deserializer,
             ));
         }
@@ -11612,13 +11653,13 @@ impl SseDecode for Vec<crate::api::nightjar::NjMessageInput> {
     }
 }
 
-impl SseDecode for Vec<crate::api::nightjar::NjNote> {
+impl SseDecode for Vec<crate::api::nyctis::NyNote> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut len_ = <i32>::sse_decode(deserializer);
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
-            ans_.push(<crate::api::nightjar::NjNote>::sse_decode(deserializer));
+            ans_.push(<crate::api::nyctis::NyNote>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -12329,7 +12370,7 @@ impl SseDecode for zcash_voting::wire::NextStepView {
     }
 }
 
-impl SseDecode for crate::api::nightjar::NjAsset {
+impl SseDecode for crate::api::nyctis::NyAsset {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_assetId = <String>::sse_decode(deserializer);
@@ -12342,9 +12383,10 @@ impl SseDecode for crate::api::nightjar::NjAsset {
         let mut var_uri = <String>::sse_decode(deserializer);
         let mut var_issued = <u64>::sse_decode(deserializer);
         let mut var_maxSupply = <Option<u64>>::sse_decode(deserializer);
+        let mut var_collectionMaxSupply = <u64>::sse_decode(deserializer);
         let mut var_balance = <u64>::sse_decode(deserializer);
         let mut var_noteCount = <u32>::sse_decode(deserializer);
-        return crate::api::nightjar::NjAsset {
+        return crate::api::nyctis::NyAsset {
             asset_id: var_assetId,
             collection_id: var_collectionId,
             index: var_index,
@@ -12355,27 +12397,14 @@ impl SseDecode for crate::api::nightjar::NjAsset {
             uri: var_uri,
             issued: var_issued,
             max_supply: var_maxSupply,
+            collection_max_supply: var_collectionMaxSupply,
             balance: var_balance,
             note_count: var_noteCount,
         };
     }
 }
 
-impl SseDecode for crate::api::nightjar::NjIdentity {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_address = <String>::sse_decode(deserializer);
-        let mut var_ak = <String>::sse_decode(deserializer);
-        let mut var_nkc = <String>::sse_decode(deserializer);
-        return crate::api::nightjar::NjIdentity {
-            address: var_address,
-            ak: var_ak,
-            nkc: var_nkc,
-        };
-    }
-}
-
-impl SseDecode for crate::api::nightjar::NjMessageInput {
+impl SseDecode for crate::api::nyctis::NyMessageInput {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_msgId = <String>::sse_decode(deserializer);
@@ -12386,7 +12415,7 @@ impl SseDecode for crate::api::nightjar::NjMessageInput {
         let mut var_fragments = <u16>::sse_decode(deserializer);
         let mut var_txid = <String>::sse_decode(deserializer);
         let mut var_body = <Vec<u8>>::sse_decode(deserializer);
-        return crate::api::nightjar::NjMessageInput {
+        return crate::api::nyctis::NyMessageInput {
             msg_id: var_msgId,
             kind: var_kind,
             height: var_height,
@@ -12399,7 +12428,7 @@ impl SseDecode for crate::api::nightjar::NjMessageInput {
     }
 }
 
-impl SseDecode for crate::api::nightjar::NjNote {
+impl SseDecode for crate::api::nyctis::NyNote {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_position = <u64>::sse_decode(deserializer);
@@ -12416,7 +12445,7 @@ impl SseDecode for crate::api::nightjar::NjNote {
         let mut var_spentHeight = <Option<u32>>::sse_decode(deserializer);
         let mut var_spentInputs = <Option<u32>>::sse_decode(deserializer);
         let mut var_spentOutputs = <Option<u32>>::sse_decode(deserializer);
-        return crate::api::nightjar::NjNote {
+        return crate::api::nyctis::NyNote {
             position: var_position,
             created: var_created,
             asset_id: var_assetId,
@@ -12435,7 +12464,7 @@ impl SseDecode for crate::api::nightjar::NjNote {
     }
 }
 
-impl SseDecode for crate::api::nightjar::NjPayPlan {
+impl SseDecode for crate::api::nyctis::NyPayPlan {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_msgId = <String>::sse_decode(deserializer);
@@ -12453,7 +12482,16 @@ impl SseDecode for crate::api::nightjar::NjPayPlan {
         let mut var_chainTip = <u32>::sse_decode(deserializer);
         let mut var_vkHash = <String>::sse_decode(deserializer);
         let mut var_provedMs = <u32>::sse_decode(deserializer);
-        return crate::api::nightjar::NjPayPlan {
+        let mut var_anchorWindow = <u32>::sse_decode(deserializer);
+        let mut var_channelAddress = <String>::sse_decode(deserializer);
+        let mut var_stateRoot = <String>::sse_decode(deserializer);
+        let mut var_treeRoot = <String>::sse_decode(deserializer);
+        let mut var_applied = <u32>::sse_decode(deserializer);
+        let mut var_ignored = <u32>::sse_decode(deserializer);
+        let mut var_ignoredReasons = <Vec<String>>::sse_decode(deserializer);
+        let mut var_zecUnverifiable = <u32>::sse_decode(deserializer);
+        let mut var_previewMessages = <u32>::sse_decode(deserializer);
+        return crate::api::nyctis::NyPayPlan {
             msg_id: var_msgId,
             asset_id: var_assetId,
             asset_symbol: var_assetSymbol,
@@ -12469,18 +12507,27 @@ impl SseDecode for crate::api::nightjar::NjPayPlan {
             chain_tip: var_chainTip,
             vk_hash: var_vkHash,
             proved_ms: var_provedMs,
+            anchor_window: var_anchorWindow,
+            channel_address: var_channelAddress,
+            state_root: var_stateRoot,
+            tree_root: var_treeRoot,
+            applied: var_applied,
+            ignored: var_ignored,
+            ignored_reasons: var_ignoredReasons,
+            zec_unverifiable: var_zecUnverifiable,
+            preview_messages: var_previewMessages,
         };
     }
 }
 
-impl SseDecode for crate::api::nightjar::NjProvingKey {
+impl SseDecode for crate::api::nyctis::NyProvingKey {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_dir = <String>::sse_decode(deserializer);
         let mut var_circuit = <String>::sse_decode(deserializer);
         let mut var_vkHash = <String>::sse_decode(deserializer);
         let mut var_provingKeyBytes = <u64>::sse_decode(deserializer);
-        return crate::api::nightjar::NjProvingKey {
+        return crate::api::nyctis::NyProvingKey {
             dir: var_dir,
             circuit: var_circuit,
             vk_hash: var_vkHash,
@@ -12489,7 +12536,7 @@ impl SseDecode for crate::api::nightjar::NjProvingKey {
     }
 }
 
-impl SseDecode for crate::api::nightjar::NjView {
+impl SseDecode for crate::api::nyctis::NyView {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_height = <u32>::sse_decode(deserializer);
@@ -12502,9 +12549,9 @@ impl SseDecode for crate::api::nightjar::NjView {
         let mut var_ignoredReasons = <Vec<String>>::sse_decode(deserializer);
         let mut var_zecUnverifiable = <u32>::sse_decode(deserializer);
         let mut var_previewMessages = <u32>::sse_decode(deserializer);
-        let mut var_notes = <Vec<crate::api::nightjar::NjNote>>::sse_decode(deserializer);
-        let mut var_assets = <Vec<crate::api::nightjar::NjAsset>>::sse_decode(deserializer);
-        return crate::api::nightjar::NjView {
+        let mut var_notes = <Vec<crate::api::nyctis::NyNote>>::sse_decode(deserializer);
+        let mut var_assets = <Vec<crate::api::nyctis::NyAsset>>::sse_decode(deserializer);
+        return crate::api::nyctis::NyView {
             height: var_height,
             chain_tip: var_chainTip,
             state_root: var_stateRoot,
@@ -12521,12 +12568,28 @@ impl SseDecode for crate::api::nightjar::NjView {
     }
 }
 
-impl SseDecode for crate::api::nightjar::NjZecSources {
+impl SseDecode for crate::api::nyctis::NyViewingKey {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_address = <String>::sse_decode(deserializer);
+        let mut var_ak = <String>::sse_decode(deserializer);
+        let mut var_nkc = <String>::sse_decode(deserializer);
+        let mut var_key = <Vec<u8>>::sse_decode(deserializer);
+        return crate::api::nyctis::NyViewingKey {
+            address: var_address,
+            ak: var_ak,
+            nkc: var_nkc,
+            key: var_key,
+        };
+    }
+}
+
+impl SseDecode for crate::api::nyctis::NyZecSources {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_dbPath = <String>::sse_decode(deserializer);
         let mut var_lightwalletdUrl = <String>::sse_decode(deserializer);
-        return crate::api::nightjar::NjZecSources {
+        return crate::api::nyctis::NyZecSources {
             db_path: var_dbPath,
             lightwalletd_url: var_lightwalletdUrl,
         };
@@ -14678,71 +14741,72 @@ fn pde_ffi_dispatcher_primary_impl(
 149 => wire__crate__api__sync__migrate_orchard_to_ironwood_impl(port, ptr, rust_vec_len, data_len),
 150 => wire__crate__api__sync__migrate_orchard_to_ironwood_immediately_impl(port, ptr, rust_vec_len, data_len),
 151 => wire__crate__api__sync__migrate_orchard_to_ironwood_with_macos_stored_mnemonic_impl(port, ptr, rust_vec_len, data_len),
-153 => wire__crate__api__nightjar__nightjar_build_pay_impl(port, ptr, rust_vec_len, data_len),
-154 => wire__crate__api__nightjar__nightjar_canonical_height_impl(port, ptr, rust_vec_len, data_len),
-155 => wire__crate__api__nightjar__nightjar_channel_id_impl(port, ptr, rust_vec_len, data_len),
-156 => wire__crate__api__nightjar__nightjar_check_proving_key_impl(port, ptr, rust_vec_len, data_len),
-157 => wire__crate__api__nightjar__nightjar_identity_impl(port, ptr, rust_vec_len, data_len),
-158 => wire__crate__api__nightjar__nightjar_replay_impl(port, ptr, rust_vec_len, data_len),
-160 => wire__crate__api__keystone__pczt_spend_nullifiers_impl(port, ptr, rust_vec_len, data_len),
-161 => wire__crate__api__voting__precompute_delegation_proof_impl(port, ptr, rust_vec_len, data_len),
-162 => wire__crate__api__voting__precompute_snapshot_bundles_impl(port, ptr, rust_vec_len, data_len),
-163 => wire__crate__api__sync__prepare_orchard_migration_batch_pczt_impl(port, ptr, rust_vec_len, data_len),
-164 => wire__crate__api__sync__prepare_orchard_migration_denominations_pczt_impl(port, ptr, rust_vec_len, data_len),
-165 => wire__crate__api__sync__prepare_orchard_migration_immediate_pczt_impl(port, ptr, rust_vec_len, data_len),
-166 => wire__crate__api__sync__prepare_orchard_migration_outbox_impl(port, ptr, rust_vec_len, data_len),
-167 => wire__crate__api__sync__prepare_orchard_migration_single_qr_pczt_impl(port, ptr, rust_vec_len, data_len),
-168 => wire__crate__api__sync__prepare_pczt_for_keystone_batch_impl(port, ptr, rust_vec_len, data_len),
-169 => wire__crate__api__voting__prepare_voting_participation_impl(port, ptr, rust_vec_len, data_len),
-170 => wire__crate__api__wallet__preview_software_account_transparent_balance_impl(port, ptr, rust_vec_len, data_len),
-171 => wire__crate__api__sync__propose_send_impl(port, ptr, rust_vec_len, data_len),
-172 => wire__crate__api__sync__propose_send_raw_impl(port, ptr, rust_vec_len, data_len),
-173 => wire__crate__api__sync__put_subtree_roots_impl(port, ptr, rust_vec_len, data_len),
-174 => wire__crate__api__network_privacy__quiesce_network_privacy_direct_requests_impl(port, ptr, rust_vec_len, data_len),
-175 => wire__crate__api__sync__reconcile_orchard_migration_outbox_receipt_impl(port, ptr, rust_vec_len, data_len),
-176 => wire__crate__api__sync__redact_pczt_for_signer_impl(port, ptr, rust_vec_len, data_len),
-177 => wire__crate__api__gift_card_tracking__register_gift_card_observer_impl(port, ptr, rust_vec_len, data_len),
-178 => wire__crate__api__gift_card_tracking__remove_gift_card_observer_impl(port, ptr, rust_vec_len, data_len),
-180 => wire__crate__api__voting__reset_vote_tree_impl(port, ptr, rust_vec_len, data_len),
-181 => wire__crate__api__voting__reset_voting_session_state_impl(port, ptr, rust_vec_len, data_len),
-182 => wire__crate__api__voting__resolve_pir_snapshot_endpoint_impl(port, ptr, rust_vec_len, data_len),
-183 => wire__crate__api__voting__resolve_static_voting_config_impl(port, ptr, rust_vec_len, data_len),
-184 => wire__crate__api__voting__resolve_voting_config_from_attempts_impl(port, ptr, rust_vec_len, data_len),
-185 => wire__crate__api__sync__retain_proposal_lock_until_expiry_impl(port, ptr, rust_vec_len, data_len),
-186 => wire__crate__api__sync__retire_unbroadcast_orchard_migration_impl(port, ptr, rust_vec_len, data_len),
-187 => wire__crate__api__sync__rewind_to_height_impl(port, ptr, rust_vec_len, data_len),
-188 => wire__zcash_voting__wire__round_work_tally_view_default_impl(port, ptr, rust_vec_len, data_len),
-189 => wire__crate__api__sync__run_full_sync_blocking_impl(port, ptr, rust_vec_len, data_len),
-190 => wire__crate__api__sync__run_payment_link_claim_sync_impl(port, ptr, rust_vec_len, data_len),
-191 => wire__crate__api__sync__scan_blocks_impl(port, ptr, rust_vec_len, data_len),
-195 => wire__crate__api__sync__set_transaction_status_impl(port, ptr, rust_vec_len, data_len),
-196 => wire__crate__api__voting__set_voting_observability_sink_impl(port, ptr, rust_vec_len, data_len),
-197 => wire__crate__api__voting__setup_delegation_bundles_impl(port, ptr, rust_vec_len, data_len),
-198 => wire__zcash_voting__wire__share_tracking_pass_report_view_default_impl(port, ptr, rust_vec_len, data_len),
-199 => wire__crate__api__sync__shield_transparent_balance_impl(port, ptr, rust_vec_len, data_len),
-200 => wire__crate__api__sync__shield_transparent_balance_with_macos_stored_mnemonic_impl(port, ptr, rust_vec_len, data_len),
-201 => wire__crate__api__sync__shutdown_signing_reservations_impl(port, ptr, rust_vec_len, data_len),
-202 => wire__crate__api__sync__start_full_sync_impl(port, ptr, rust_vec_len, data_len),
-203 => wire__crate__api__sync__start_mempool_observer_impl(port, ptr, rust_vec_len, data_len),
-204 => wire__crate__api__network_privacy__start_tor_update_relay_impl(port, ptr, rust_vec_len, data_len),
-206 => wire__crate__api__network_privacy__stop_tor_update_relay_impl(port, ptr, rust_vec_len, data_len),
-207 => wire__crate__api__sync__store_and_broadcast_pczts_with_keystone_signatures_for_proposal_impl(port, ptr, rust_vec_len, data_len),
-208 => wire__crate__api__sync__store_and_broadcast_signed_pczts_for_proposal_impl(port, ptr, rust_vec_len, data_len),
-209 => wire__crate__api__voting__store_keystone_signatures_batch_impl(port, ptr, rust_vec_len, data_len),
-210 => wire__crate__api__sync__suggest_scan_ranges_impl(port, ptr, rust_vec_len, data_len),
-211 => wire__crate__api__gift_card_tracking__sync_gift_card_observers_impl(port, ptr, rust_vec_len, data_len),
-212 => wire__crate__api__voting__sync_vote_tree_impl(port, ptr, rust_vec_len, data_len),
-215 => wire__crate__api__network_privacy__tor_http_download_impl(port, ptr, rust_vec_len, data_len),
-216 => wire__crate__api__network_privacy__tor_http_get_impl(port, ptr, rust_vec_len, data_len),
-217 => wire__crate__api__network_privacy__tor_http_post_impl(port, ptr, rust_vec_len, data_len),
-218 => wire__crate__api__voting__trusted_voting_round_params_from_config_impl(port, ptr, rust_vec_len, data_len),
-219 => wire__crate__api__sync__update_chain_tip_impl(port, ptr, rust_vec_len, data_len),
-220 => wire__crate__api__sync__validate_address_impl(port, ptr, rust_vec_len, data_len),
-221 => wire__crate__api__wallet__validate_gift_address_impl(port, ptr, rust_vec_len, data_len),
-223 => wire__crate__api__voting__voting_proposal_id_range_impl(port, ptr, rust_vec_len, data_len),
-226 => wire__crate__api__voting__warm_pir_proof_cache_impl(port, ptr, rust_vec_len, data_len),
-228 => wire__crate__api__sync__write_block_metadata_impl(port, ptr, rust_vec_len, data_len),
-229 => wire__crate__api__keystone__zcash_sign_batch_round_message_counts_impl(port, ptr, rust_vec_len, data_len),
+153 => wire__crate__api__nyctis__nyctis_build_pay_impl(port, ptr, rust_vec_len, data_len),
+154 => wire__crate__api__nyctis__nyctis_canonical_height_impl(port, ptr, rust_vec_len, data_len),
+155 => wire__crate__api__nyctis__nyctis_channel_id_impl(port, ptr, rust_vec_len, data_len),
+156 => wire__crate__api__nyctis__nyctis_check_proving_key_impl(port, ptr, rust_vec_len, data_len),
+157 => wire__crate__api__nyctis__nyctis_check_vk_pin_impl(port, ptr, rust_vec_len, data_len),
+158 => wire__crate__api__nyctis__nyctis_replay_impl(port, ptr, rust_vec_len, data_len),
+159 => wire__crate__api__nyctis__nyctis_viewing_key_impl(port, ptr, rust_vec_len, data_len),
+161 => wire__crate__api__keystone__pczt_spend_nullifiers_impl(port, ptr, rust_vec_len, data_len),
+162 => wire__crate__api__voting__precompute_delegation_proof_impl(port, ptr, rust_vec_len, data_len),
+163 => wire__crate__api__voting__precompute_snapshot_bundles_impl(port, ptr, rust_vec_len, data_len),
+164 => wire__crate__api__sync__prepare_orchard_migration_batch_pczt_impl(port, ptr, rust_vec_len, data_len),
+165 => wire__crate__api__sync__prepare_orchard_migration_denominations_pczt_impl(port, ptr, rust_vec_len, data_len),
+166 => wire__crate__api__sync__prepare_orchard_migration_immediate_pczt_impl(port, ptr, rust_vec_len, data_len),
+167 => wire__crate__api__sync__prepare_orchard_migration_outbox_impl(port, ptr, rust_vec_len, data_len),
+168 => wire__crate__api__sync__prepare_orchard_migration_single_qr_pczt_impl(port, ptr, rust_vec_len, data_len),
+169 => wire__crate__api__sync__prepare_pczt_for_keystone_batch_impl(port, ptr, rust_vec_len, data_len),
+170 => wire__crate__api__voting__prepare_voting_participation_impl(port, ptr, rust_vec_len, data_len),
+171 => wire__crate__api__wallet__preview_software_account_transparent_balance_impl(port, ptr, rust_vec_len, data_len),
+172 => wire__crate__api__sync__propose_send_impl(port, ptr, rust_vec_len, data_len),
+173 => wire__crate__api__sync__propose_send_raw_impl(port, ptr, rust_vec_len, data_len),
+174 => wire__crate__api__sync__put_subtree_roots_impl(port, ptr, rust_vec_len, data_len),
+175 => wire__crate__api__network_privacy__quiesce_network_privacy_direct_requests_impl(port, ptr, rust_vec_len, data_len),
+176 => wire__crate__api__sync__reconcile_orchard_migration_outbox_receipt_impl(port, ptr, rust_vec_len, data_len),
+177 => wire__crate__api__sync__redact_pczt_for_signer_impl(port, ptr, rust_vec_len, data_len),
+178 => wire__crate__api__gift_card_tracking__register_gift_card_observer_impl(port, ptr, rust_vec_len, data_len),
+179 => wire__crate__api__gift_card_tracking__remove_gift_card_observer_impl(port, ptr, rust_vec_len, data_len),
+181 => wire__crate__api__voting__reset_vote_tree_impl(port, ptr, rust_vec_len, data_len),
+182 => wire__crate__api__voting__reset_voting_session_state_impl(port, ptr, rust_vec_len, data_len),
+183 => wire__crate__api__voting__resolve_pir_snapshot_endpoint_impl(port, ptr, rust_vec_len, data_len),
+184 => wire__crate__api__voting__resolve_static_voting_config_impl(port, ptr, rust_vec_len, data_len),
+185 => wire__crate__api__voting__resolve_voting_config_from_attempts_impl(port, ptr, rust_vec_len, data_len),
+186 => wire__crate__api__sync__retain_proposal_lock_until_expiry_impl(port, ptr, rust_vec_len, data_len),
+187 => wire__crate__api__sync__retire_unbroadcast_orchard_migration_impl(port, ptr, rust_vec_len, data_len),
+188 => wire__crate__api__sync__rewind_to_height_impl(port, ptr, rust_vec_len, data_len),
+189 => wire__zcash_voting__wire__round_work_tally_view_default_impl(port, ptr, rust_vec_len, data_len),
+190 => wire__crate__api__sync__run_full_sync_blocking_impl(port, ptr, rust_vec_len, data_len),
+191 => wire__crate__api__sync__run_payment_link_claim_sync_impl(port, ptr, rust_vec_len, data_len),
+192 => wire__crate__api__sync__scan_blocks_impl(port, ptr, rust_vec_len, data_len),
+196 => wire__crate__api__sync__set_transaction_status_impl(port, ptr, rust_vec_len, data_len),
+197 => wire__crate__api__voting__set_voting_observability_sink_impl(port, ptr, rust_vec_len, data_len),
+198 => wire__crate__api__voting__setup_delegation_bundles_impl(port, ptr, rust_vec_len, data_len),
+199 => wire__zcash_voting__wire__share_tracking_pass_report_view_default_impl(port, ptr, rust_vec_len, data_len),
+200 => wire__crate__api__sync__shield_transparent_balance_impl(port, ptr, rust_vec_len, data_len),
+201 => wire__crate__api__sync__shield_transparent_balance_with_macos_stored_mnemonic_impl(port, ptr, rust_vec_len, data_len),
+202 => wire__crate__api__sync__shutdown_signing_reservations_impl(port, ptr, rust_vec_len, data_len),
+203 => wire__crate__api__sync__start_full_sync_impl(port, ptr, rust_vec_len, data_len),
+204 => wire__crate__api__sync__start_mempool_observer_impl(port, ptr, rust_vec_len, data_len),
+205 => wire__crate__api__network_privacy__start_tor_update_relay_impl(port, ptr, rust_vec_len, data_len),
+207 => wire__crate__api__network_privacy__stop_tor_update_relay_impl(port, ptr, rust_vec_len, data_len),
+208 => wire__crate__api__sync__store_and_broadcast_pczts_with_keystone_signatures_for_proposal_impl(port, ptr, rust_vec_len, data_len),
+209 => wire__crate__api__sync__store_and_broadcast_signed_pczts_for_proposal_impl(port, ptr, rust_vec_len, data_len),
+210 => wire__crate__api__voting__store_keystone_signatures_batch_impl(port, ptr, rust_vec_len, data_len),
+211 => wire__crate__api__sync__suggest_scan_ranges_impl(port, ptr, rust_vec_len, data_len),
+212 => wire__crate__api__gift_card_tracking__sync_gift_card_observers_impl(port, ptr, rust_vec_len, data_len),
+213 => wire__crate__api__voting__sync_vote_tree_impl(port, ptr, rust_vec_len, data_len),
+216 => wire__crate__api__network_privacy__tor_http_download_impl(port, ptr, rust_vec_len, data_len),
+217 => wire__crate__api__network_privacy__tor_http_get_impl(port, ptr, rust_vec_len, data_len),
+218 => wire__crate__api__network_privacy__tor_http_post_impl(port, ptr, rust_vec_len, data_len),
+219 => wire__crate__api__voting__trusted_voting_round_params_from_config_impl(port, ptr, rust_vec_len, data_len),
+220 => wire__crate__api__sync__update_chain_tip_impl(port, ptr, rust_vec_len, data_len),
+221 => wire__crate__api__sync__validate_address_impl(port, ptr, rust_vec_len, data_len),
+222 => wire__crate__api__wallet__validate_gift_address_impl(port, ptr, rust_vec_len, data_len),
+224 => wire__crate__api__voting__voting_proposal_id_range_impl(port, ptr, rust_vec_len, data_len),
+227 => wire__crate__api__voting__warm_pir_proof_cache_impl(port, ptr, rust_vec_len, data_len),
+229 => wire__crate__api__sync__write_block_metadata_impl(port, ptr, rust_vec_len, data_len),
+230 => wire__crate__api__keystone__zcash_sign_batch_round_message_counts_impl(port, ptr, rust_vec_len, data_len),
                         _ => unreachable!(),
                     }
 }
@@ -14816,36 +14880,36 @@ fn pde_ffi_dispatcher_sync_impl(
         }
         131 => wire__crate__api__ledger__ledger_cancel_operation_impl(ptr, rust_vec_len, data_len),
         152 => wire__crate__api__wallet__mnemonic_word_list_impl(ptr, rust_vec_len, data_len),
-        159 => wire__crate__api__voting_session__open_voting_round_session_impl(
+        160 => wire__crate__api__voting_session__open_voting_round_session_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        179 => wire__crate__api__keystone__reset_ur_session_impl(ptr, rust_vec_len, data_len),
-        192 => wire__crate__api__sync__set_active_sync_account_impl(ptr, rust_vec_len, data_len),
-        193 => wire__crate__api__network_privacy__set_network_privacy_dormant_impl(
+        180 => wire__crate__api__keystone__reset_ur_session_impl(ptr, rust_vec_len, data_len),
+        193 => wire__crate__api__sync__set_active_sync_account_impl(ptr, rust_vec_len, data_len),
+        194 => wire__crate__api__network_privacy__set_network_privacy_dormant_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        194 => wire__crate__api__sync__set_sync_mode_impl(ptr, rust_vec_len, data_len),
-        205 => wire__crate__api__sync__stop_mempool_observer_impl(ptr, rust_vec_len, data_len),
-        213 => wire__crate__api__network_privacy__tor_http_begin_request_impl(
+        195 => wire__crate__api__sync__set_sync_mode_impl(ptr, rust_vec_len, data_len),
+        206 => wire__crate__api__sync__stop_mempool_observer_impl(ptr, rust_vec_len, data_len),
+        214 => wire__crate__api__network_privacy__tor_http_begin_request_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        214 => wire__crate__api__network_privacy__tor_http_cancel_request_impl(
+        215 => wire__crate__api__network_privacy__tor_http_cancel_request_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        222 => wire__crate__api__wallet__validate_mnemonic_impl(ptr, rust_vec_len, data_len),
-        224 => wire__crate__api__wallet__wallet_exists_impl(ptr, rust_vec_len, data_len),
-        225 => {
+        223 => wire__crate__api__wallet__validate_mnemonic_impl(ptr, rust_vec_len, data_len),
+        225 => wire__crate__api__wallet__wallet_exists_impl(ptr, rust_vec_len, data_len),
+        226 => {
             wire__crate__api__sync__warm_orchard_proving_key_cache_impl(ptr, rust_vec_len, data_len)
         }
-        227 => {
+        228 => {
             wire__crate__api__voting__warm_voting_proving_caches_impl(ptr, rust_vec_len, data_len)
         }
         _ => unreachable!(),
@@ -17340,7 +17404,7 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<zcash_voting::wire::NextStepVi
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjAsset {
+impl flutter_rust_bridge::IntoDart for crate::api::nyctis::NyAsset {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.asset_id.into_into_dart().into_dart(),
@@ -17353,44 +17417,23 @@ impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjAsset {
             self.uri.into_into_dart().into_dart(),
             self.issued.into_into_dart().into_dart(),
             self.max_supply.into_into_dart().into_dart(),
+            self.collection_max_supply.into_into_dart().into_dart(),
             self.balance.into_into_dart().into_dart(),
             self.note_count.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::nightjar::NjAsset {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::nightjar::NjAsset>
-    for crate::api::nightjar::NjAsset
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::nyctis::NyAsset {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::nyctis::NyAsset>
+    for crate::api::nyctis::NyAsset
 {
-    fn into_into_dart(self) -> crate::api::nightjar::NjAsset {
+    fn into_into_dart(self) -> crate::api::nyctis::NyAsset {
         self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjIdentity {
-    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
-        [
-            self.address.into_into_dart().into_dart(),
-            self.ak.into_into_dart().into_dart(),
-            self.nkc.into_into_dart().into_dart(),
-        ]
-        .into_dart()
-    }
-}
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::nightjar::NjIdentity
-{
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::nightjar::NjIdentity>
-    for crate::api::nightjar::NjIdentity
-{
-    fn into_into_dart(self) -> crate::api::nightjar::NjIdentity {
-        self
-    }
-}
-// Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjMessageInput {
+impl flutter_rust_bridge::IntoDart for crate::api::nyctis::NyMessageInput {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.msg_id.into_into_dart().into_dart(),
@@ -17406,18 +17449,18 @@ impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjMessageInput {
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::nightjar::NjMessageInput
+    for crate::api::nyctis::NyMessageInput
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::nightjar::NjMessageInput>
-    for crate::api::nightjar::NjMessageInput
+impl flutter_rust_bridge::IntoIntoDart<crate::api::nyctis::NyMessageInput>
+    for crate::api::nyctis::NyMessageInput
 {
-    fn into_into_dart(self) -> crate::api::nightjar::NjMessageInput {
+    fn into_into_dart(self) -> crate::api::nyctis::NyMessageInput {
         self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjNote {
+impl flutter_rust_bridge::IntoDart for crate::api::nyctis::NyNote {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.position.into_into_dart().into_dart(),
@@ -17438,16 +17481,14 @@ impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjNote {
         .into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::nightjar::NjNote {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::nightjar::NjNote>
-    for crate::api::nightjar::NjNote
-{
-    fn into_into_dart(self) -> crate::api::nightjar::NjNote {
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::nyctis::NyNote {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::nyctis::NyNote> for crate::api::nyctis::NyNote {
+    fn into_into_dart(self) -> crate::api::nyctis::NyNote {
         self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjPayPlan {
+impl flutter_rust_bridge::IntoDart for crate::api::nyctis::NyPayPlan {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.msg_id.into_into_dart().into_dart(),
@@ -17465,23 +17506,29 @@ impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjPayPlan {
             self.chain_tip.into_into_dart().into_dart(),
             self.vk_hash.into_into_dart().into_dart(),
             self.proved_ms.into_into_dart().into_dart(),
+            self.anchor_window.into_into_dart().into_dart(),
+            self.channel_address.into_into_dart().into_dart(),
+            self.state_root.into_into_dart().into_dart(),
+            self.tree_root.into_into_dart().into_dart(),
+            self.applied.into_into_dart().into_dart(),
+            self.ignored.into_into_dart().into_dart(),
+            self.ignored_reasons.into_into_dart().into_dart(),
+            self.zec_unverifiable.into_into_dart().into_dart(),
+            self.preview_messages.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::nightjar::NjPayPlan
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::nyctis::NyPayPlan {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::nyctis::NyPayPlan>
+    for crate::api::nyctis::NyPayPlan
 {
-}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::nightjar::NjPayPlan>
-    for crate::api::nightjar::NjPayPlan
-{
-    fn into_into_dart(self) -> crate::api::nightjar::NjPayPlan {
+    fn into_into_dart(self) -> crate::api::nyctis::NyPayPlan {
         self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjProvingKey {
+impl flutter_rust_bridge::IntoDart for crate::api::nyctis::NyProvingKey {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.dir.into_into_dart().into_dart(),
@@ -17493,18 +17540,18 @@ impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjProvingKey {
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::nightjar::NjProvingKey
+    for crate::api::nyctis::NyProvingKey
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::nightjar::NjProvingKey>
-    for crate::api::nightjar::NjProvingKey
+impl flutter_rust_bridge::IntoIntoDart<crate::api::nyctis::NyProvingKey>
+    for crate::api::nyctis::NyProvingKey
 {
-    fn into_into_dart(self) -> crate::api::nightjar::NjProvingKey {
+    fn into_into_dart(self) -> crate::api::nyctis::NyProvingKey {
         self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjView {
+impl flutter_rust_bridge::IntoDart for crate::api::nyctis::NyView {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.height.into_into_dart().into_dart(),
@@ -17523,16 +17570,37 @@ impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjView {
         .into_dart()
     }
 }
-impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::nightjar::NjView {}
-impl flutter_rust_bridge::IntoIntoDart<crate::api::nightjar::NjView>
-    for crate::api::nightjar::NjView
-{
-    fn into_into_dart(self) -> crate::api::nightjar::NjView {
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::nyctis::NyView {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::nyctis::NyView> for crate::api::nyctis::NyView {
+    fn into_into_dart(self) -> crate::api::nyctis::NyView {
         self
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
-impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjZecSources {
+impl flutter_rust_bridge::IntoDart for crate::api::nyctis::NyViewingKey {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.address.into_into_dart().into_dart(),
+            self.ak.into_into_dart().into_dart(),
+            self.nkc.into_into_dart().into_dart(),
+            self.key.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::nyctis::NyViewingKey
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::nyctis::NyViewingKey>
+    for crate::api::nyctis::NyViewingKey
+{
+    fn into_into_dart(self) -> crate::api::nyctis::NyViewingKey {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::nyctis::NyZecSources {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.db_path.into_into_dart().into_dart(),
@@ -17542,13 +17610,13 @@ impl flutter_rust_bridge::IntoDart for crate::api::nightjar::NjZecSources {
     }
 }
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
-    for crate::api::nightjar::NjZecSources
+    for crate::api::nyctis::NyZecSources
 {
 }
-impl flutter_rust_bridge::IntoIntoDart<crate::api::nightjar::NjZecSources>
-    for crate::api::nightjar::NjZecSources
+impl flutter_rust_bridge::IntoIntoDart<crate::api::nyctis::NyZecSources>
+    for crate::api::nyctis::NyZecSources
 {
-    fn into_into_dart(self) -> crate::api::nightjar::NjZecSources {
+    fn into_into_dart(self) -> crate::api::nyctis::NyZecSources {
         self
     }
 }
@@ -20936,32 +21004,32 @@ impl SseEncode for Vec<zcash_voting::wire::NextStepView> {
     }
 }
 
-impl SseEncode for Vec<crate::api::nightjar::NjAsset> {
+impl SseEncode for Vec<crate::api::nyctis::NyAsset> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <crate::api::nightjar::NjAsset>::sse_encode(item, serializer);
+            <crate::api::nyctis::NyAsset>::sse_encode(item, serializer);
         }
     }
 }
 
-impl SseEncode for Vec<crate::api::nightjar::NjMessageInput> {
+impl SseEncode for Vec<crate::api::nyctis::NyMessageInput> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <crate::api::nightjar::NjMessageInput>::sse_encode(item, serializer);
+            <crate::api::nyctis::NyMessageInput>::sse_encode(item, serializer);
         }
     }
 }
 
-impl SseEncode for Vec<crate::api::nightjar::NjNote> {
+impl SseEncode for Vec<crate::api::nyctis::NyNote> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
-            <crate::api::nightjar::NjNote>::sse_encode(item, serializer);
+            <crate::api::nyctis::NyNote>::sse_encode(item, serializer);
         }
     }
 }
@@ -21498,7 +21566,7 @@ impl SseEncode for zcash_voting::wire::NextStepView {
     }
 }
 
-impl SseEncode for crate::api::nightjar::NjAsset {
+impl SseEncode for crate::api::nyctis::NyAsset {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.asset_id, serializer);
@@ -21511,21 +21579,13 @@ impl SseEncode for crate::api::nightjar::NjAsset {
         <String>::sse_encode(self.uri, serializer);
         <u64>::sse_encode(self.issued, serializer);
         <Option<u64>>::sse_encode(self.max_supply, serializer);
+        <u64>::sse_encode(self.collection_max_supply, serializer);
         <u64>::sse_encode(self.balance, serializer);
         <u32>::sse_encode(self.note_count, serializer);
     }
 }
 
-impl SseEncode for crate::api::nightjar::NjIdentity {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <String>::sse_encode(self.address, serializer);
-        <String>::sse_encode(self.ak, serializer);
-        <String>::sse_encode(self.nkc, serializer);
-    }
-}
-
-impl SseEncode for crate::api::nightjar::NjMessageInput {
+impl SseEncode for crate::api::nyctis::NyMessageInput {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.msg_id, serializer);
@@ -21539,7 +21599,7 @@ impl SseEncode for crate::api::nightjar::NjMessageInput {
     }
 }
 
-impl SseEncode for crate::api::nightjar::NjNote {
+impl SseEncode for crate::api::nyctis::NyNote {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u64>::sse_encode(self.position, serializer);
@@ -21559,7 +21619,7 @@ impl SseEncode for crate::api::nightjar::NjNote {
     }
 }
 
-impl SseEncode for crate::api::nightjar::NjPayPlan {
+impl SseEncode for crate::api::nyctis::NyPayPlan {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.msg_id, serializer);
@@ -21577,10 +21637,19 @@ impl SseEncode for crate::api::nightjar::NjPayPlan {
         <u32>::sse_encode(self.chain_tip, serializer);
         <String>::sse_encode(self.vk_hash, serializer);
         <u32>::sse_encode(self.proved_ms, serializer);
+        <u32>::sse_encode(self.anchor_window, serializer);
+        <String>::sse_encode(self.channel_address, serializer);
+        <String>::sse_encode(self.state_root, serializer);
+        <String>::sse_encode(self.tree_root, serializer);
+        <u32>::sse_encode(self.applied, serializer);
+        <u32>::sse_encode(self.ignored, serializer);
+        <Vec<String>>::sse_encode(self.ignored_reasons, serializer);
+        <u32>::sse_encode(self.zec_unverifiable, serializer);
+        <u32>::sse_encode(self.preview_messages, serializer);
     }
 }
 
-impl SseEncode for crate::api::nightjar::NjProvingKey {
+impl SseEncode for crate::api::nyctis::NyProvingKey {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.dir, serializer);
@@ -21590,7 +21659,7 @@ impl SseEncode for crate::api::nightjar::NjProvingKey {
     }
 }
 
-impl SseEncode for crate::api::nightjar::NjView {
+impl SseEncode for crate::api::nyctis::NyView {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u32>::sse_encode(self.height, serializer);
@@ -21603,12 +21672,22 @@ impl SseEncode for crate::api::nightjar::NjView {
         <Vec<String>>::sse_encode(self.ignored_reasons, serializer);
         <u32>::sse_encode(self.zec_unverifiable, serializer);
         <u32>::sse_encode(self.preview_messages, serializer);
-        <Vec<crate::api::nightjar::NjNote>>::sse_encode(self.notes, serializer);
-        <Vec<crate::api::nightjar::NjAsset>>::sse_encode(self.assets, serializer);
+        <Vec<crate::api::nyctis::NyNote>>::sse_encode(self.notes, serializer);
+        <Vec<crate::api::nyctis::NyAsset>>::sse_encode(self.assets, serializer);
     }
 }
 
-impl SseEncode for crate::api::nightjar::NjZecSources {
+impl SseEncode for crate::api::nyctis::NyViewingKey {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.address, serializer);
+        <String>::sse_encode(self.ak, serializer);
+        <String>::sse_encode(self.nkc, serializer);
+        <Vec<u8>>::sse_encode(self.key, serializer);
+    }
+}
+
+impl SseEncode for crate::api::nyctis::NyZecSources {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.db_path, serializer);

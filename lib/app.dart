@@ -12,6 +12,7 @@ import 'src/app_bootstrap.dart';
 import 'src/core/lifecycle/signing_shutdown_host.dart';
 import 'src/core/config/swap_feature_config.dart';
 import 'src/core/config/network_config.dart';
+import 'src/core/config/nyctis_config.dart' show kNyctisFeatureAvailable;
 import 'src/core/layout/app_layout.dart';
 import 'src/core/navigation/mobile_exit_back_guard.dart';
 import 'src/core/navigation/mobile_onboarding_routes.dart';
@@ -35,7 +36,7 @@ import 'src/core/widgets/network_fallback_toast.dart';
 import 'src/core/zcash/zip321_payment_request.dart';
 import 'src/features/activity/screens/activity_screen.dart';
 import 'src/features/activity/screens/activity_transaction_status_screen.dart';
-import 'src/features/activity/screens/nightjar_activity_detail_screen.dart';
+import 'src/features/activity/screens/nyctis_activity_detail_screen.dart';
 import 'src/features/activity/screens/swap_activity_detail_screen.dart';
 import 'src/features/accounts/screens/accounts_screen.dart';
 import 'src/features/address_book/screens/address_book_screen.dart';
@@ -80,14 +81,14 @@ import 'src/features/payment_links/providers/payment_link_claim_coordinator_prov
 import 'src/features/payment_links/providers/payment_link_intake_provider.dart';
 import 'src/features/payment_links/screens/payment_links_screen.dart';
 import 'src/features/payment_links/services/payment_link_entry_policy.dart';
-import 'src/features/nightjar_assets/screens/nightjar_asset_detail_screen.dart';
-import 'src/features/nightjar_assets/screens/nightjar_assets_screen.dart';
-import 'src/features/nightjar_assets/screens/nightjar_collection_screen.dart';
-import 'src/features/nightjar_assets/screens/nightjar_receive_screen.dart';
-import 'src/features/nightjar_assets/screens/nightjar_send_review_screen.dart';
-import 'src/features/nightjar_assets/screens/nightjar_send_screen.dart';
-import 'src/features/nightjar_assets/screens/nightjar_send_status_screen.dart';
-import 'src/features/nightjar_assets/services/nightjar_send_flow.dart';
+import 'src/features/nyctis_assets/screens/nyctis_asset_detail_screen.dart';
+import 'src/features/nyctis_assets/screens/nyctis_assets_screen.dart';
+import 'src/features/nyctis_assets/screens/nyctis_collection_screen.dart';
+import 'src/features/nyctis_assets/screens/nyctis_receive_screen.dart';
+import 'src/features/nyctis_assets/screens/nyctis_send_review_screen.dart';
+import 'src/features/nyctis_assets/screens/nyctis_send_screen.dart';
+import 'src/features/nyctis_assets/screens/nyctis_send_status_screen.dart';
+import 'src/features/nyctis_assets/services/nyctis_send_flow.dart';
 import 'src/features/receive/screens/receive_screen.dart';
 import 'src/features/send/screens/keystone_send_scan_screen.dart';
 import 'src/features/send/models/send_prefill_args.dart';
@@ -107,7 +108,7 @@ import 'src/features/settings/screens/settings_screen.dart';
 import 'src/features/settings/screens/settings_change_password_screen.dart';
 import 'src/features/settings/screens/settings_endpoint_screen.dart';
 import 'src/features/settings/screens/settings_explorer_screen.dart';
-import 'src/features/settings/screens/settings_nightjar_screen.dart';
+import 'src/features/settings/screens/settings_nyctis_screen.dart';
 import 'src/features/settings/screens/settings_seed_phrase_screen.dart';
 import 'src/features/settings/screens/settings_uninstall_screen.dart';
 import 'src/features/settings/screens/settings_viewing_key_screen.dart';
@@ -1218,68 +1219,72 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
   ),
   GoRoute(path: '/about', builder: (_, _) => const AboutScreen()),
   GoRoute(path: '/address-book', builder: (_, _) => const AddressBookScreen()),
-  GoRoute(path: '/nightjar', builder: (_, _) => const NightjarAssetsScreen()),
-  // Registered before the `:assetId` route so the literal path wins; an
-  // asset id is a hash and could never equal 'receive', but ordering it
-  // here means nobody has to rely on that.
-  GoRoute(
-    path: '/nightjar/receive',
-    builder: (_, _) => const NightjarReceiveScreen(),
-  ),
-  // Three segments with a literal second one, registered before
-  // `/nightjar/:assetId/send` so the literal wins. A collection id is a hash
-  // and an asset id could never equal 'collection', but ordering it here
-  // means nobody has to rely on that either.
-  GoRoute(
-    path: '/nightjar/collection/:collectionId',
-    builder: (_, state) {
-      final collectionId = state.pathParameters['collectionId'];
-      if (collectionId == null || collectionId.isEmpty) {
-        return const NightjarAssetsScreen();
-      }
-      return NightjarCollectionScreen(collectionId: collectionId);
-    },
-  ),
-  // Three segments, so neither can be mistaken for `/nightjar/:assetId`.
-  // Both carry a built plan in `extra`; reaching either without one is a
-  // router refresh or a deep link, and both screens say so rather than
-  // inventing a payment.
-  GoRoute(
-    path: nightjarSendReviewRoute,
-    builder: (_, state) => NightjarSendReviewScreen(
-      args: state.extra is NightjarSendReviewArgs
-          ? state.extra! as NightjarSendReviewArgs
-          : null,
+  // Nyctis routes exist only in a VIZOR_NYCTIS_ENABLED build; without it
+  // the route table is upstream's and a /nyctis path is an unknown route.
+  if (kNyctisFeatureAvailable) ...[
+    GoRoute(path: '/nyctis', builder: (_, _) => const NyctisAssetsScreen()),
+    // Registered before the `:assetId` route so the literal path wins; an
+    // asset id is a hash and could never equal 'receive', but ordering it
+    // here means nobody has to rely on that.
+    GoRoute(
+      path: '/nyctis/receive',
+      builder: (_, _) => const NyctisReceiveScreen(),
     ),
-  ),
-  GoRoute(
-    path: nightjarSendStatusRoute,
-    builder: (_, state) => NightjarSendStatusScreen(
-      args: state.extra is NightjarSendReviewArgs
-          ? state.extra! as NightjarSendReviewArgs
-          : null,
+    // Three segments with a literal second one, registered before
+    // `/nyctis/:assetId/send` so the literal wins. A collection id is a hash
+    // and an asset id could never equal 'collection', but ordering it here
+    // means nobody has to rely on that either.
+    GoRoute(
+      path: '/nyctis/collection/:collectionId',
+      builder: (_, state) {
+        final collectionId = state.pathParameters['collectionId'];
+        if (collectionId == null || collectionId.isEmpty) {
+          return const NyctisAssetsScreen();
+        }
+        return NyctisCollectionScreen(collectionId: collectionId);
+      },
     ),
-  ),
-  GoRoute(
-    path: '/nightjar/:assetId',
-    builder: (_, state) {
-      final assetId = state.pathParameters['assetId'];
-      if (assetId == null || assetId.isEmpty) {
-        return const NightjarAssetsScreen();
-      }
-      return NightjarAssetDetailScreen(assetId: assetId);
-    },
-  ),
-  GoRoute(
-    path: '/nightjar/:assetId/send',
-    builder: (_, state) {
-      final assetId = state.pathParameters['assetId'];
-      if (assetId == null || assetId.isEmpty) {
-        return const NightjarAssetsScreen();
-      }
-      return NightjarSendScreen(assetId: assetId);
-    },
-  ),
+    // Three segments, so neither can be mistaken for `/nyctis/:assetId`.
+    // Both carry a built plan in `extra`; reaching either without one is a
+    // router refresh or a deep link, and both screens say so rather than
+    // inventing a payment.
+    GoRoute(
+      path: nyctisSendReviewRoute,
+      builder: (_, state) => NyctisSendReviewScreen(
+        args: state.extra is NyctisSendReviewArgs
+            ? state.extra! as NyctisSendReviewArgs
+            : null,
+      ),
+    ),
+    GoRoute(
+      path: nyctisSendStatusRoute,
+      builder: (_, state) => NyctisSendStatusScreen(
+        args: state.extra is NyctisSendReviewArgs
+            ? state.extra! as NyctisSendReviewArgs
+            : null,
+      ),
+    ),
+    GoRoute(
+      path: '/nyctis/:assetId',
+      builder: (_, state) {
+        final assetId = state.pathParameters['assetId'];
+        if (assetId == null || assetId.isEmpty) {
+          return const NyctisAssetsScreen();
+        }
+        return NyctisAssetDetailScreen(assetId: assetId);
+      },
+    ),
+    GoRoute(
+      path: '/nyctis/:assetId/send',
+      builder: (_, state) {
+        final assetId = state.pathParameters['assetId'];
+        if (assetId == null || assetId.isEmpty) {
+          return const NyctisAssetsScreen();
+        }
+        return NyctisSendScreen(assetId: assetId);
+      },
+    ),
+  ],
   GoRoute(path: '/activity', builder: (_, _) => const ActivityScreen()),
   GoRoute(
     path: '/activity/swap/:swapId',
@@ -1299,17 +1304,19 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
       );
     },
   ),
-  // Under `/activity`, not under `/nightjar`: this is an activity receipt,
-  // and a message id and an asset id are both 32-byte hex, so registering it
-  // beside `/nightjar/:assetId` would mean guessing which one a path holds.
-  GoRoute(
-    path: nightjarActivityDetailRoutePattern,
-    builder: (_, state) => NightjarActivityDetailScreen(
-      args: state.extra is NightjarActivityDetailArgs
-          ? state.extra! as NightjarActivityDetailArgs
-          : null,
+  if (kNyctisFeatureAvailable) ...[
+    // Under `/activity`, not under `/nyctis`: this is an activity receipt,
+    // and a message id and an asset id are both 32-byte hex, so registering it
+    // beside `/nyctis/:assetId` would mean guessing which one a path holds.
+    GoRoute(
+      path: nyctisActivityDetailRoutePattern,
+      builder: (_, state) => NyctisActivityDetailScreen(
+        args: state.extra is NyctisActivityDetailArgs
+            ? state.extra! as NyctisActivityDetailArgs
+            : null,
+      ),
     ),
-  ),
+  ],
   GoRoute(
     path: '/activity/tx/:txid',
     builder: (_, state) {
@@ -1423,10 +1430,12 @@ List<RouteBase> _desktopRoutes(Ref ref) => [
     path: '/settings/explorer',
     builder: (_, _) => const SettingsExplorerScreen(),
   ),
-  GoRoute(
-    path: '/settings/nightjar',
-    builder: (_, _) => const SettingsNightjarScreen(),
-  ),
+  if (kNyctisFeatureAvailable) ...[
+    GoRoute(
+      path: '/settings/nyctis',
+      builder: (_, _) => const SettingsNyctisScreen(),
+    ),
+  ],
   GoRoute(
     path: '/settings/link-mobile',
     builder: (_, _) => const WalletLinkDesktopScreen(),

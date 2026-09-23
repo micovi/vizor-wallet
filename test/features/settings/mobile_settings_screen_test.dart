@@ -27,6 +27,7 @@ import 'package:zcash_wallet/src/features/settings/screens/mobile/mobile_setting
 import 'package:zcash_wallet/src/providers/account_provider.dart';
 import 'package:zcash_wallet/src/providers/biometric_unlock_provider.dart';
 import 'package:zcash_wallet/src/providers/network_privacy_provider.dart';
+import 'package:zcash_wallet/src/providers/nyctis_config_provider.dart';
 import 'package:zcash_wallet/src/providers/sync_keep_awake_provider.dart';
 import 'package:zcash_wallet/src/providers/sync_provider.dart';
 import 'package:zcash_wallet/src/providers/theme_mode_provider.dart';
@@ -154,6 +155,7 @@ Widget _app({
   bool withTabBar = false,
   double textScale = 1,
   GoRouter? router,
+  bool nyctisEnabled = false,
 }) {
   Widget themedBuilder(BuildContext context, Widget? child) => AppTheme(
     data: themeData ?? AppThemeData.dark,
@@ -188,6 +190,7 @@ Widget _app({
   return ProviderScope(
     overrides: [
       appBootstrapProvider.overrideWithValue(_bootstrap(accountState)),
+      nyctisFeatureEnabledProvider.overrideWithValue(nyctisEnabled),
       if (networkPrivacyState != null)
         networkPrivacyProvider.overrideWith(
           () => _FakeNetworkPrivacyNotifier(
@@ -911,6 +914,33 @@ void main() {
     expect(find.text('Explorer'), findsOneWidget);
     expect(find.text('CipherScan'), findsOneWidget);
   });
+
+  testWidgets(
+    'settings shows Nyctis only in a VIZOR_NYCTIS_ENABLED build',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(800, 2000));
+      addTearDown(() async {
+        await tester.binding.setSurfaceSize(null);
+      });
+
+      await tester.pumpWidget(_app());
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('mobile_settings_nyctis_row')),
+        findsNothing,
+      );
+      expect(find.text('Nyctis'), findsNothing);
+
+      await tester.pumpWidget(_app(nyctisEnabled: true));
+      await tester.pump();
+
+      expect(
+        find.byKey(const ValueKey('mobile_settings_nyctis_row')),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('settings groups run Personal, Account, System, Privacy', (
     tester,

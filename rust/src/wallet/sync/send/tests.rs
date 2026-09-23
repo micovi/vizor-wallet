@@ -3480,9 +3480,9 @@ fn raw_memo_test_address(seed: u8) -> String {
         .to_string()
 }
 
-/// A stand-in for one Nightjar message part: the ZIP-302 binary marker, a
+/// A stand-in for one Nyctis message part: the ZIP-302 binary marker, a
 /// recognisable body, and zero padding out to the full memo field.
-fn nightjar_shaped_memo(tag: u8) -> Vec<u8> {
+fn nyctis_shaped_memo(tag: u8) -> Vec<u8> {
     let mut memo = vec![0u8; 512];
     memo[0] = 0xFF;
     memo[1] = tag;
@@ -3493,7 +3493,7 @@ fn nightjar_shaped_memo(tag: u8) -> Vec<u8> {
 
 #[test]
 fn build_send_request_raw_round_trips_a_binary_memo() {
-    let memo = nightjar_shaped_memo(1);
+    let memo = nyctis_shaped_memo(1);
     let request = build_send_request_raw(&[RawSendOutput {
         to_address: raw_memo_test_address(11),
         amount_zatoshi: 10_000,
@@ -3506,7 +3506,7 @@ fn build_send_request_raw_round_trips_a_binary_memo() {
     let payment = payments.values().next().unwrap();
     assert_eq!(payment.amount(), Some(Zatoshis::const_from_u64(10_000)));
     // `as_array`, not `as_slice`: the latter strips trailing zeros, and a
-    // Nightjar part's padding is part of the 512 bytes the reader parses.
+    // Nyctis part's padding is part of the 512 bytes the reader parses.
     assert_eq!(
         payment.memo().expect("memo present").as_array().as_slice(),
         memo.as_slice(),
@@ -3533,20 +3533,20 @@ fn build_send_request_raw_rejects_an_over_long_memo() {
 /// **Not an ordering guarantee, and nothing downstream may read it as one.** The Orchard builder
 /// shuffles outputs before it builds actions (`zakura-orchard-1.2.0/src/builder.rs:1461` and
 /// `:1520-1521`), so the index a part ends up at on chain is unrelated to its position here. That
-/// is harmless for Nightjar because a fragment is self-indexing — `frame` writes the fragment
+/// is harmless for Nyctis because a fragment is self-indexing — `frame` writes the fragment
 /// index at memo bytes 40..42 and the count at 42..44, and `Reassembler` files fragments by that
 /// index, never by arrival order. What this test does pin is that the request does not merge,
 /// drop or cross-wire the memos: three outputs stay three payments and each keeps its own bytes.
 #[test]
 fn build_send_request_raw_makes_one_payment_per_output() {
-    // Same recipient for every part: a Nightjar message addresses one channel
+    // Same recipient for every part: a Nyctis message addresses one channel
     // and is only reassemblable if all parts share a transaction.
     let to_address = raw_memo_test_address(11);
     let outputs: Vec<RawSendOutput> = (0u8..3)
         .map(|part| RawSendOutput {
             to_address: to_address.clone(),
             amount_zatoshi: 10_000,
-            memo_bytes: Some(nightjar_shaped_memo(part)),
+            memo_bytes: Some(nyctis_shaped_memo(part)),
         })
         .collect();
 

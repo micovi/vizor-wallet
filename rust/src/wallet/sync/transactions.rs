@@ -1554,7 +1554,7 @@ pub(crate) struct RawMemoOutput {
 ///
 /// `decode_text_memo` above maps `Memo::Future` and `Memo::Arbitrary` to
 /// `None`, and those are exactly the ZIP-302 encodings a binary memo uses — a
-/// Nightjar message part begins with the marker byte `0xFF` — so a caller that
+/// Nyctis message part begins with the marker byte `0xFF` — so a caller that
 /// needs those bytes cannot get at them through the text path at any point.
 /// This accessor is additive: it reads the same rows `get_transaction_detail`
 /// reads and changes nothing about how the text memo is derived.
@@ -1590,10 +1590,10 @@ pub(crate) fn get_transaction_raw_memos(
     // (`zakura-orchard-1.2.0/src/builder.rs:1461` and `:1520-1521`), so
     // sorting by it gives a random permutation of the parts the sender
     // framed. Concatenating `memo_bytes` in this order corrupts every
-    // multi-fragment message — which is every Nightjar transition.
+    // multi-fragment message — which is every Nyctis transition.
     //
-    // It does not matter here because a Nightjar fragment is self-indexing:
-    // `nightjar_codec::transport::frame` writes the fragment index at memo
+    // It does not matter here because a Nyctis fragment is self-indexing:
+    // `nyctis_codec::transport::frame` writes the fragment index at memo
     // bytes 40..42 and the count at 42..44, and `Reassembler` files each
     // fragment under the index it carries, never under its arrival position.
     // So a consumer hands these memos to the reassembler and lets it do the

@@ -35,6 +35,7 @@ import 'zip321_prefill_use_cases.dart';
 import 'gift_card_usage_use_cases.dart';
 import 'mobile_method_selection_capture.dart';
 import 'ledger_recovery_capture.dart';
+import 'nyctis_use_cases.dart';
 
 typedef FigmaCompareScenarioBuilder = Widget Function(BuildContext context);
 
@@ -2113,6 +2114,7 @@ const figmaCompareScenarios = <FigmaCompareScenario>[
     desktop: false,
     mobile: true,
   ),
+  ...nyctisFigmaCompareScenarios,
 ];
 
 Widget _buildLedgerOnboardingSidebar(BuildContext context) => ProviderScope(

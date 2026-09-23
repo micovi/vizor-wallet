@@ -90,7 +90,7 @@ pub(crate) use send::{
     shield_transparent_balance,
 };
 pub(crate) use send::{get_orchard_migration_immediate_plan, get_orchard_migration_private_plan};
-// Binary-memo send path (Nightjar). Same lifecycle as `propose_send`; the
+// Binary-memo send path (Nyctis). Same lifecycle as `propose_send`; the
 // output struct travels with it so `api::sync` can convert its flat FRB
 // struct without reaching into the private `send` module.
 pub(crate) use send::{propose_send_raw, RawSendOutput};

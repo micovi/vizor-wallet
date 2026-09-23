@@ -15,7 +15,7 @@ import '../src/core/widgets/app_icon.dart';
 import '../src/features/activity/activity_feed_sections.dart';
 import '../src/features/activity/models/activity_row_data.dart';
 import '../src/features/activity/gift_card_activity_index.dart';
-import '../src/features/activity/nightjar_activity_row_mapper.dart';
+import '../src/features/activity/nyctis_activity_row_mapper.dart';
 import '../src/features/activity/widgets/activity_feed.dart';
 import '../src/features/activity/widgets/gift_card_activity_detail_view.dart';
 import '../src/features/payment_links/widgets/payment_link_gift_card.dart';
@@ -87,7 +87,7 @@ Widget buildActivityPageUseCase(BuildContext context) {
   );
 }
 
-/// Nightjar messages beside ZEC transactions, through the real mapper.
+/// Nyctis messages beside ZEC transactions, through the real mapper.
 ///
 /// Four cases the copy has to survive, all in one feed: the send this feature
 /// exists for (1 000 in, 988 back as change, so the row is the 12 that left
@@ -95,16 +95,16 @@ Widget buildActivityPageUseCase(BuildContext context) {
 /// of an asset the issuer never named (truncated id, no ticker), and a message
 /// whose block the indexer could not date — which sorts last and groups under
 /// "Earlier" rather than being given a time it has not got.
-Widget buildNightjarActivityUseCase(BuildContext context) {
+Widget buildNyctisActivityUseCase(BuildContext context) {
   final now = DateTime.now();
   final items = [
-    NightjarActivityItem(
+    NyctisActivityItem(
       msgId: '2f1d4c6b8a097e53',
       assetId:
           'a3f1c0d29b8e47a5f6031d8c2b7e4906aa11bb22cc33dd44ee55ff6600778899',
       name: 'Devnet Mint',
       symbol: 'DMT',
-      kind: NightjarActivityKind.sent,
+      kind: NyctisActivityKind.sent,
       delta: BigInt.from(-1200),
       moved: BigInt.from(100000),
       decimals: 2,
@@ -115,13 +115,13 @@ Widget buildNightjarActivityUseCase(BuildContext context) {
       totalOutputs: 2,
       timestamp: now.subtract(const Duration(hours: 2)),
     ),
-    NightjarActivityItem(
+    NyctisActivityItem(
       msgId: '9c8b7a6f5e4d3c2b',
       assetId:
           'a3f1c0d29b8e47a5f6031d8c2b7e4906aa11bb22cc33dd44ee55ff6600778899',
       name: 'Devnet Mint',
       symbol: 'DMT',
-      kind: NightjarActivityKind.received,
+      kind: NyctisActivityKind.received,
       delta: BigInt.from(100),
       moved: BigInt.zero,
       decimals: 2,
@@ -130,11 +130,11 @@ Widget buildNightjarActivityUseCase(BuildContext context) {
       totalOutputs: 1,
       timestamp: now.subtract(const Duration(hours: 3)),
     ),
-    NightjarActivityItem(
+    NyctisActivityItem(
       msgId: '00112233445566aa',
       assetId:
           '00ff11ee22dd33cc44bb55aa6699778800112233445566778899aabbccddeeff',
-      kind: NightjarActivityKind.received,
+      kind: NyctisActivityKind.received,
       delta: BigInt.from(5),
       moved: BigInt.zero,
       decimals: 0,
@@ -143,13 +143,13 @@ Widget buildNightjarActivityUseCase(BuildContext context) {
       totalOutputs: 1,
       timestamp: now.subtract(const Duration(days: 40)),
     ),
-    NightjarActivityItem(
+    NyctisActivityItem(
       msgId: 'bbccddee00112233',
       assetId:
           'a3f1c0d29b8e47a5f6031d8c2b7e4906aa11bb22cc33dd44ee55ff6600778899',
       name: 'Devnet Mint',
       symbol: 'DMT',
-      kind: NightjarActivityKind.received,
+      kind: NyctisActivityKind.received,
       delta: BigInt.from(2550),
       moved: BigInt.zero,
       decimals: 2,
@@ -172,7 +172,7 @@ Widget buildNightjarActivityUseCase(BuildContext context) {
         amountColor: context.colors.text.positiveStrong,
       ),
     ),
-    ...buildNightjarActivityEntries(context: context, items: items),
+    ...buildNyctisActivityEntries(context: context, items: items),
   ];
 
   return SizedBox(
@@ -184,7 +184,7 @@ Widget buildNightjarActivityUseCase(BuildContext context) {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: ActivityFeed(
           sections: buildActivityFeedSections(entries),
-          rowKeyPrefix: 'nightjar_activity',
+          rowKeyPrefix: 'nyctis_activity',
         ),
       ),
     ),
@@ -201,21 +201,21 @@ Widget buildNightjarActivityUseCase(BuildContext context) {
 ///   supporting line. `spec/asset-metadata-v0.md` section 5: a name and a
 ///   picture are the impersonation, so the id goes wherever the logo goes.
 /// * **Not accepted** — the unnamed asset has no bytes in the logo map,
-///   because `nightjarAssetLogosProvider` is built from the accepted set. It
+///   because `nyctisAssetLogosProvider` is built from the accepted set. It
 ///   falls back to the icon with nothing else changed, and its truncated id
 ///   is on the supporting line either way, where the asset is named.
 ///
 /// Both rows are messages rather than notes: a receipt and a send, the send
 /// showing the difference that left rather than the change that came back.
-Widget buildNightjarActivityLogoUseCase(BuildContext context) {
+Widget buildNyctisActivityLogoUseCase(BuildContext context) {
   final now = DateTime.now();
   final items = [
-    NightjarActivityItem(
+    NyctisActivityItem(
       msgId: 'a1b2c3d4e5f60718',
       assetId: _acceptedAssetId,
       name: 'Devnet Mint',
       symbol: 'DMT',
-      kind: NightjarActivityKind.sent,
+      kind: NyctisActivityKind.sent,
       // 1 000 in, 988 back as change: the row is the 12 that left, and the
       // change is not a row at all.
       delta: BigInt.from(-1200),
@@ -228,10 +228,10 @@ Widget buildNightjarActivityLogoUseCase(BuildContext context) {
       totalOutputs: 2,
       timestamp: now.subtract(const Duration(hours: 3)),
     ),
-    NightjarActivityItem(
+    NyctisActivityItem(
       msgId: 'f0e1d2c3b4a59687',
       assetId: _unacceptedAssetId,
-      kind: NightjarActivityKind.received,
+      kind: NyctisActivityKind.received,
       delta: BigInt.from(5),
       moved: BigInt.zero,
       decimals: 0,
@@ -242,12 +242,12 @@ Widget buildNightjarActivityLogoUseCase(BuildContext context) {
     ),
   ];
 
-  // What `nightjarAssetLogosProvider` would answer with one asset accepted.
+  // What `nyctisAssetLogosProvider` would answer with one asset accepted.
   final logos = <String, Uint8List>{_acceptedAssetId: _sampleLogoPng};
 
   final entries = <ActivityEntry>[
     for (final item in items)
-      nightjarActivityEntry(context: context, item: item, logos: logos),
+      nyctisActivityEntry(context: context, item: item, logos: logos),
   ];
 
   return SizedBox(
@@ -259,7 +259,7 @@ Widget buildNightjarActivityLogoUseCase(BuildContext context) {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: ActivityFeed(
           sections: buildActivityFeedSections(entries),
-          rowKeyPrefix: 'nightjar_activity_logo',
+          rowKeyPrefix: 'nyctis_activity_logo',
         ),
       ),
     ),

@@ -6,7 +6,7 @@ import 'package:flutter/widgets.dart';
 import '../../../core/layout/app_form_factor.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_icon.dart';
-import '../../nightjar_assets/widgets/nightjar_asset_logo.dart';
+import '../../nyctis_assets/widgets/nyctis_asset_logo.dart';
 import '../models/activity_row_data.dart';
 
 const _activityFeedActivationShortcuts = <ShortcutActivator, Intent>{
@@ -1157,9 +1157,9 @@ class _ActivityRowIcon extends StatelessWidget {
       // transparency, and it is what the glyph sits on when bytes that passed
       // the metadata layer's sniff turn out not to decode.
       //
-      // `NightjarAssetLogoImage` rather than a second `Image.memory` here on
+      // `NyctisAssetLogoImage` rather than a second `Image.memory` here on
       // purpose — it is the audited bounded decode (`cacheWidth`/`cacheHeight`
-      // capped at `kNightjarLogoMaxDecodePixels`, section 4.2), and a copy of
+      // capped at `kNyctisLogoMaxDecodePixels`, section 4.2), and a copy of
       // it in this file would be a second decode path to keep correct.
       return SizedBox.square(
         dimension: _avatarSize,
@@ -1168,7 +1168,7 @@ class _ActivityRowIcon extends StatelessWidget {
             color: row.leadingBackgroundColor,
             shape: BoxShape.circle,
           ),
-          child: NightjarAssetLogoImage(
+          child: NyctisAssetLogoImage(
             bytes: image.bytes,
             size: _avatarSize,
             fallback: _ActivityIconGlyph(row: row),

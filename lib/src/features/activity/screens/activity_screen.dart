@@ -20,18 +20,18 @@ import '../../../providers/sync_provider.dart';
 import '../../../rust/api/sync.dart' as rust_sync;
 import '../../swap/models/swap_activity_navigation.dart';
 import '../../swap/providers/swap_activity_tracker.dart';
-import '../../nightjar_assets/providers/nightjar_asset_metadata_provider.dart';
-import '../../nightjar_assets/providers/nightjar_assets_view_provider.dart';
+import '../../nyctis_assets/providers/nyctis_asset_metadata_provider.dart';
+import '../../nyctis_assets/providers/nyctis_assets_view_provider.dart';
 import '../activity_row_mapper.dart';
 import '../gift_card_activity_index.dart';
 import '../models/activity_row_data.dart';
-import '../nightjar_activity_provider.dart';
-import '../nightjar_activity_row_mapper.dart';
+import '../nyctis_activity_provider.dart';
+import '../nyctis_activity_row_mapper.dart';
 import '../swap_activity_row_items_provider.dart';
 import '../swap_activity_row_mapper.dart';
 import '../widgets/activity_feed.dart';
 import 'activity_transaction_status_screen.dart';
-import 'nightjar_activity_detail_screen.dart';
+import 'nyctis_activity_detail_screen.dart';
 
 /// Loads the full transaction history for one account; injectable so
 /// widget tests can avoid the Rust FFI.
@@ -207,18 +207,18 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
     );
   }
 
-  /// A Nightjar row has no *transaction* receipt to open — a channel message
+  /// A Nyctis row has no *transaction* receipt to open — a channel message
   /// is state, not a transaction this wallet ever saw — so it opens the
   /// message receipt instead. The classified row travels in `extra`: a
   /// `msg_id` in a path does not say whether this wallet signed the message,
   /// and deciding that twice is how a receipt ends up disagreeing with the row
   /// that opened it.
-  void _openNightjarActivityItem(NightjarActivityItem item) {
+  void _openNyctisActivityItem(NyctisActivityItem item) {
     context.push(
-      nightjarActivityDetailRouteFor(item.msgId),
-      extra: nightjarActivityDetailArgsFor(
+      nyctisActivityDetailRouteFor(item.msgId),
+      extra: nyctisActivityDetailArgsFor(
         item,
-        view: ref.read(nightjarAssetsViewProvider).value,
+        view: ref.read(nyctisAssetsViewProvider).value,
       ),
     );
   }
@@ -392,27 +392,27 @@ class _ActivityScreenState extends ConsumerState<ActivityScreen> {
         );
       }
     }
-    // Nightjar notes. Watched through a synchronous provider that answers an
+    // Nyctis notes. Watched through a synchronous provider that answers an
     // empty list for every degraded case, so an unconfigured, unreachable or
-    // unverifiable Nightjar leaves this feed exactly as it is without it.
+    // unverifiable Nyctis leaves this feed exactly as it is without it.
     // Logos for assets the user explicitly accepted, and only those: the
     // provider is built from the acceptance set, so an unaccepted asset has no
     // bytes here and its row keeps the generic icon
     // (`spec/asset-metadata-v0.md` section 5).
-    final nightjarLogos = ref.watch(nightjarAssetLogosProvider);
-    for (final item in ref.watch(nightjarActivityItemsProvider)) {
+    final nyctisLogos = ref.watch(nyctisAssetLogosProvider);
+    for (final item in ref.watch(nyctisActivityItemsProvider)) {
       entries.add(
         _ActivityEntry(
-          sortKey: activitySortKeyForNightjarItem(
+          sortKey: activitySortKeyForNyctisItem(
             item,
             sourceOrder: sourceOrder++,
           ),
-          row: nightjarActivityEntry(
+          row: nyctisActivityEntry(
             context: context,
             item: item,
-            logos: nightjarLogos,
+            logos: nyctisLogos,
             privacyModeEnabled: privacyModeEnabled,
-            onTap: () => _openNightjarActivityItem(item),
+            onTap: () => _openNyctisActivityItem(item),
           ).row,
         ),
       );
@@ -513,7 +513,7 @@ ActivityEntrySortKey activitySortKeyForSwapItem(
   );
 }
 
-/// A Nightjar row sorts by the time its block was mined, or last when the
+/// A Nyctis row sorts by the time its block was mined, or last when the
 /// indexer could not say — and `sourceOrder` then keeps the block-height order
 /// the items already came in, which is the only order this devnet's two-second
 /// block times could not be trusted to reproduce.
@@ -523,8 +523,8 @@ ActivityEntrySortKey activitySortKeyForSwapItem(
 /// settling row is about the messages it *cannot* see and carries the time it
 /// was built, so it sorts to the top where a fresh send would be looked for.
 @visibleForTesting
-ActivityEntrySortKey activitySortKeyForNightjarItem(
-  NightjarActivityItem item, {
+ActivityEntrySortKey activitySortKeyForNyctisItem(
+  NyctisActivityItem item, {
   required int sourceOrder,
 }) {
   return ActivityEntrySortKey(

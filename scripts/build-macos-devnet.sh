@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the Nightjar devnet wallet for local macOS, with a signing configuration
+# Build the Nyctis devnet wallet for local macOS, with a signing configuration
 # that does not change between builds.
 #
 # WHY THIS SCRIPT EXISTS. macOS ties a keychain item to the identity of the app
@@ -13,7 +13,7 @@
 # So: do not edit these flags to fix something else. If they must change, expect
 # to recreate the devnet wallet, and say so before doing it.
 #
-# Prerequisites: the Nightjar devnet running (infra/README.md), the indexer on
+# Prerequisites: the Nyctis devnet running (infra/README.md), the indexer on
 # 8787, and a signing identity in the login keychain.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -26,31 +26,49 @@ echo "signing as: $IDENTITY"
 ENTITLEMENTS="$PWD/macos/Runner/LocalDev.entitlements"
 DERIVED=${VIZOR_DERIVED_DATA:-$PWD/build/macos-adhoc}
 
-# The Nightjar channel the build is pointed at. A channel is born from a wallet's `uivk`, so every
+# The Nyctis channel the build is pointed at. A channel is born from a wallet's `uivk`, so every
 # devnet rebuild makes a new one — and `channel_id` feeds `collection_id` and so `asset_id`, so the
 # assets change with it. Read it from the live devnet wallet when it is there, and otherwise leave
 # the defines empty so the compiled-in defaults stand.
-NJ_REPO=${NIGHTJAR_REPO:-$PWD/../..}
-NJ_BIN="$NJ_REPO/target/release/nightjar"
+# The Nyctis repository sits beside this one (../nyctis relative to the
+# wallet root); set NYCTIS_REPO to point elsewhere.
+NY_REPO=${NYCTIS_REPO:-$PWD/../nyctis}
+NY_BIN="$NY_REPO/target/release/nyctis"
 #
 # An *empty* define is not the same as an absent one — it would override the compiled-in default
 # with the empty string and leave the wallet with no channel at all, so the pair is only added
 # when both values are actually there.
-CH_UIVK=${NIGHTJAR_CHANNEL_UIVK:-}
-CH_ADDR=${NIGHTJAR_CHANNEL_ADDRESS:-}
-if [ -z "$CH_UIVK" ] && [ -x "$NJ_BIN" ] && [ -d "$NJ_REPO/.devnet/channel" ]; then
-  CH_UIVK=$("$NJ_BIN" wallet --dir "$NJ_REPO/.devnet/channel" uivk 2>/dev/null | tail -1)
-  CH_ADDR=$("$NJ_BIN" wallet --dir "$NJ_REPO/.devnet/channel" address 2>/dev/null | tail -1)
+CH_UIVK=${NYCTIS_CHANNEL_UIVK:-}
+CH_ADDR=${NYCTIS_CHANNEL_ADDRESS:-}
+if [ -z "$CH_UIVK" ] && [ -x "$NY_BIN" ] && [ -d "$NY_REPO/.devnet/channel" ]; then
+  CH_UIVK=$("$NY_BIN" wallet --dir "$NY_REPO/.devnet/channel" uivk 2>/dev/null | tail -1)
+  CH_ADDR=$("$NY_BIN" wallet --dir "$NY_REPO/.devnet/channel" address 2>/dev/null | tail -1)
 fi
 CHANNEL_DEFINES=()
 if [ -n "$CH_UIVK" ] && [ -n "$CH_ADDR" ]; then
   CHANNEL_DEFINES=(
-    "--dart-define=NIGHTJAR_REGTEST_CHANNEL_UIVK=$CH_UIVK"
-    "--dart-define=NIGHTJAR_REGTEST_CHANNEL_ADDRESS=$CH_ADDR"
+    "--dart-define=NYCTIS_REGTEST_CHANNEL_UIVK=$CH_UIVK"
+    "--dart-define=NYCTIS_REGTEST_CHANNEL_ADDRESS=$CH_ADDR"
   )
-  echo "nightjar channel: ${CH_UIVK:0:28}..."
+  echo "nyctis channel: ${CH_UIVK:0:28}..."
 else
-  echo "nightjar channel: using the compiled-in default (no live devnet found)"
+  echo "nyctis channel: using the compiled-in default (no live devnet found)"
+fi
+
+# The verifying-key pin: the hash every proof's key must have, whatever the indexer says. A new
+# `zk-setup` makes a new key, so it is read from the live devnet's key manifest (`vk_hash=` on the
+# one line of `interpreter-v0.circuit`) the same way the channel is — and, like the channel, only
+# passed when there is a value, so an absent devnet leaves the compiled-in default standing.
+VK_PIN=${NYCTIS_VK_PIN:-}
+NY_CIRCUIT="$NY_REPO/.devnet/keys/interpreter-v0.circuit"
+if [ -z "$VK_PIN" ] && [ -f "$NY_CIRCUIT" ]; then
+  VK_PIN=$(sed -n 's/.*vk_hash=\([0-9a-fA-F]\{64\}\).*/\1/p' "$NY_CIRCUIT" | head -1)
+fi
+if [ -n "$VK_PIN" ]; then
+  CHANNEL_DEFINES+=("--dart-define=NYCTIS_REGTEST_VK_PIN=$VK_PIN")
+  echo "nyctis vk pin: $VK_PIN"
+else
+  echo "nyctis vk pin: using the compiled-in default (no devnet key manifest found)"
 fi
 
 # `ZCASH_E2E_LIGHTWALLETD_URL` below MUST be lightwalletd (19067), not Zaino (28137).
@@ -63,6 +81,7 @@ fvm flutter build macos --config-only --debug \
   --dart-define=ZCASH_DEFAULT_NETWORK=regtest \
   --dart-define=ZCASH_REGTEST_IRONWOOD_ACTIVATION_HEIGHT=2 \
   --dart-define=VIZOR_FORM_FACTOR=desktop \
+  --dart-define=VIZOR_NYCTIS_ENABLED=true \
   --dart-define=VIZOR_LOCAL_UNSIGNED_MACOS_KEYCHAIN=true \
   --dart-define=ZCASH_E2E_LIGHTWALLETD_URL=${VIZOR_DEVNET_LWD:-http://127.0.0.1:19067} \
   "${CHANNEL_DEFINES[@]}"

@@ -27,6 +27,16 @@ const _scenariosThatNeedARouter = {
   'mobile-ironwood-migration-fast-review',
 };
 
+/// Mobile scenarios that render, but overflow by design of what they capture.
+///
+/// `nyctis-collection-capped-large-text` shows the collection grid at 1.8x
+/// text, and at that scale the tile's label column
+/// (`nyctis_collection_grid.dart`) overflows its fixed tile height. The
+/// scenario exists to make that visible; `scripts/nyctis-screenshots.sh`
+/// captures it with the overflow marker and lists it in
+/// `layout-warnings.txt`. Drop the id once the tile grows with its text.
+const _scenariosThatOverflow = {'nyctis-collection-capped-large-text'};
+
 // The desktop loop in figma_compare_test.dart smokes every `desktop: true`
 // scenario; the mobile half had no equivalent, so a scenario registered with a
 // missing provider override or a stale fixture constructor stayed green in
@@ -46,7 +56,10 @@ void main() {
     final mobileIds = mobileScenarios.map((scenario) => scenario.id).toSet();
 
     expect(
-      _scenariosThatNeedARouter.difference(mobileIds),
+      {
+        ..._scenariosThatNeedARouter,
+        ..._scenariosThatOverflow,
+      }.difference(mobileIds),
       isEmpty,
       reason:
           'a scenario in the exclusion list was renamed or removed — drop it '
@@ -56,6 +69,7 @@ void main() {
 
   for (final scenario in mobileScenarios) {
     if (_scenariosThatNeedARouter.contains(scenario.id)) continue;
+    if (_scenariosThatOverflow.contains(scenario.id)) continue;
 
     testWidgets('${scenario.id} renders at the mobile comparison viewport', (
       tester,

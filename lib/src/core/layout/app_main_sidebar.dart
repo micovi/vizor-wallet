@@ -11,6 +11,7 @@ import '../../../main.dart' show log;
 import '../../providers/account_provider.dart';
 import '../../providers/app_security_provider.dart';
 import '../../providers/network_privacy_provider.dart';
+import '../../providers/nyctis_config_provider.dart';
 import '../../providers/privacy_mode_provider.dart';
 import '../../providers/receive_address_provider.dart';
 import '../../providers/sync_display_progress_provider.dart';
@@ -440,6 +441,7 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
       privacyModeEnabled: privacyModeEnabled,
     );
     final swapFeatureEnabled = ref.watch(swapFeatureEnabledProvider);
+    final nyctisFeatureEnabled = ref.watch(nyctisFeatureEnabledProvider);
     final ironwoodHomeMigrationPresentation = ref.watch(
       ironwoodHomeMigrationPresentationProvider,
     );
@@ -579,18 +581,20 @@ class _AppMainSidebarState extends ConsumerState<AppMainSidebar> {
                           : () => _navigateTo('/voting'),
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    AppSidebarItem(
-                      key: const ValueKey('sidebar_nightjar_button'),
-                      label: 'Nightjar',
-                      iconName: AppIcons.coins,
-                      active: _routeShouldBeActive('/nightjar'),
-                      // Stays tappable on the detail and receive subroutes
-                      // as a way back to the assets list.
-                      onTap: isImporting
-                          ? null
-                          : () => _navigateTo('/nightjar'),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
+                    if (nyctisFeatureEnabled) ...[
+                      AppSidebarItem(
+                        key: const ValueKey('sidebar_nyctis_button'),
+                        label: 'Nyctis',
+                        iconName: AppIcons.coins,
+                        active: _routeShouldBeActive('/nyctis'),
+                        // Stays tappable on the detail and receive subroutes
+                        // as a way back to the assets list.
+                        onTap: isImporting
+                            ? null
+                            : () => _navigateTo('/nyctis'),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                    ],
                     AppSidebarItem(
                       key: const ValueKey('sidebar_activity_button'),
                       label: 'Activity',

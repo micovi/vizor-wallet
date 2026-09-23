@@ -46,7 +46,10 @@ int? _verifyChecksum(String hrp, List<int> data) {
   return null;
 }
 
-({String hrp, List<int> data, int spec})? _bech32Decode(String bech) {
+({String hrp, List<int> data, int spec})? _bech32Decode(
+  String bech, {
+  int maxLength = 90,
+}) {
   for (final c in bech.codeUnits) {
     if (c < 33 || c > 126) return null;
   }
@@ -54,7 +57,7 @@ int? _verifyChecksum(String hrp, List<int> data) {
   final upper = bech.toUpperCase();
   if (bech != lower && bech != upper) return null; // mixed case
   final s = lower;
-  if (s.length > 90) return null;
+  if (s.length > maxLength) return null;
   final pos = s.lastIndexOf('1');
   if (pos < 1 || pos + 7 > s.length) return null;
   final hrp = s.substring(0, pos);
@@ -117,4 +120,23 @@ List<int>? _convertBits(List<int> data, int from, int to, {required bool pad}) {
   final expected = version == 0 ? _bech32Const : _bech32mConst;
   if (decoded.spec != expected) return null;
   return (version: version, program: program);
+}
+
+/// Decodes a Bech32m string with an arbitrary human-readable part, verifying
+/// its checksum and its 5-to-8-bit padding.
+///
+/// BIP-173's 90-character limit is a SegWit rule, not a Bech32m one: formats
+/// that reuse the checksum for longer payloads (Zcash unified addresses,
+/// Nyctis addresses) lift it, so [maxLength] defaults far above it. Returns
+/// the lower-cased HRP and the payload bytes, or null when the string is not
+/// valid Bech32m.
+({String hrp, List<int> bytes})? decodeBech32m(
+  String value, {
+  int maxLength = 4096,
+}) {
+  final decoded = _bech32Decode(value.trim(), maxLength: maxLength);
+  if (decoded == null || decoded.spec != _bech32mConst) return null;
+  final bytes = _convertBits(decoded.data, 5, 8, pad: false);
+  if (bytes == null) return null;
+  return (hrp: decoded.hrp, bytes: bytes);
 }

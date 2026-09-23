@@ -83,30 +83,30 @@ prost13 = { package = "prost", version = "0.13" }
 tendermint = "0.40.4"
 tendermint-light-client-verifier = "0.40.4"
 
-# Nightjar: the client-verified private-asset overlay. Three Nightjar crates are
+# Nyctis: the client-verified private-asset overlay. Three Nyctis crates are
 # linked here, the ones that carry NO zcash dependency at all — codec (wire
 # format), state (the deterministic verifier) and zk (keys, notes, Groth16) —
 # plus decaf377-rdsa and bech32 below, which those three need. There is no
-# nightjar-tx here: this comment used to claim one, and nothing in the tree ever
+# nyctis-tx here: this comment used to claim one, and nothing in the tree ever
 # depended on it.
 #
 # The scanner, chain and wallet crates are deliberately left out: they pull
 # upstream librustzcash, which would put a second, incompatible Zcash stack
 # beside the Zakura forks this wallet is built on. Everything Zcash-shaped that
-# Nightjar needs (fetching blocks, decrypting memos, sending a transaction) is
+# Nyctis needs (fetching blocks, decrypting memos, sending a transaction) is
 # done with this wallet's own stack instead.
 #
-# These are path dependencies into the Nightjar repo three levels up, so this
+# These are path dependencies into the Nyctis repo three levels up, so this
 # directory is not a standalone checkout: `cargo build` here needs
-# `../../../crates/` to exist.
-[dependencies.nightjar-codec]
-path = "../../../crates/nightjar-codec"
+# `../../nyctis/crates/` to exist.
+[dependencies.nyctis-codec]
+path = "../../nyctis/crates/nyctis-codec"
 
-[dependencies.nightjar-state]
-path = "../../../crates/nightjar-state"
+[dependencies.nyctis-state]
+path = "../../nyctis/crates/nyctis-state"
 
-[dependencies.nightjar-zk]
-path = "../../../crates/nightjar-zk"
+[dependencies.nyctis-zk]
+path = "../../nyctis/crates/nyctis-zk"
 
 [dependencies.decaf377-rdsa]
 version = "0.11"

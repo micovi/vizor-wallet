@@ -19,8 +19,8 @@ import 'icon_use_cases.dart';
 import 'keystone_use_cases.dart';
 import 'ledger_use_cases.dart';
 import 'mobile_pay_use_cases.dart';
-import 'nightjar_activity_detail_use_cases.dart';
-import 'nightjar_use_cases.dart';
+import 'nyctis_activity_detail_use_cases.dart';
+import 'nyctis_use_cases.dart';
 import 'mobile_shell_use_cases.dart';
 import 'payment_request_use_cases.dart';
 import 'request_amount_use_cases.dart';
@@ -1935,38 +1935,38 @@ class WidgetbookApp extends StatelessWidget {
               ],
             ),
             WidgetbookFolder(
-              name: 'Nightjar',
+              name: 'Nyctis',
               children: [
                 WidgetbookComponent(
                   name: 'Assets feed',
                   useCases: [
                     WidgetbookUseCase(
                       name: 'Default',
-                      builder: buildNightjarAssetsFeedUseCase,
+                      builder: buildNyctisAssetsFeedUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Loading',
-                      builder: buildNightjarAssetsFeedLoadingUseCase,
+                      builder: buildNyctisAssetsFeedLoadingUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Empty',
-                      builder: buildNightjarAssetsFeedEmptyUseCase,
+                      builder: buildNyctisAssetsFeedEmptyUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Not configured',
-                      builder: buildNightjarAssetsFeedNotConfiguredUseCase,
+                      builder: buildNyctisAssetsFeedNotConfiguredUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Indexer unreachable',
-                      builder: buildNightjarAssetsFeedUnreachableUseCase,
+                      builder: buildNyctisAssetsFeedUnreachableUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Indexer stale',
-                      builder: buildNightjarAssetsFeedStaleUseCase,
+                      builder: buildNyctisAssetsFeedStaleUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Pending notes notice',
-                      builder: buildNightjarPendingNoticeUseCase,
+                      builder: buildNyctisPendingNoticeUseCase,
                     ),
                   ],
                 ),
@@ -1975,27 +1975,60 @@ class WidgetbookApp extends StatelessWidget {
                   useCases: [
                     WidgetbookUseCase(
                       name: 'Assets list with a collection',
-                      builder: buildNightjarCollectionsFeedUseCase,
+                      builder: buildNyctisCollectionsFeedUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Unique item rows',
-                      builder: buildNightjarUniqueItemRowUseCase,
+                      builder: buildNyctisUniqueItemRowUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Grid, nothing accepted',
-                      builder: buildNightjarCollectionGridUseCase,
+                      builder: buildNyctisCollectionGridUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Grid, artwork accepted',
-                      builder: buildNightjarCollectionGridArtworkUseCase,
+                      builder: buildNyctisCollectionGridArtworkUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Accept the collection',
-                      builder: buildNightjarCollectionAcceptUseCase,
+                      builder: buildNyctisCollectionAcceptUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Partly accepted',
-                      builder: buildNightjarCollectionPartialUseCase,
+                      builder: buildNyctisCollectionPartialUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Name collision',
+                      builder: buildNyctisCollectionCollisionUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Capped',
+                      builder: buildNyctisCollectionCappedUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Uncapped',
+                      builder: buildNyctisCollectionUncappedUseCase,
+                    ),
+                  ],
+                ),
+                WidgetbookComponent(
+                  name: 'Issuer details',
+                  useCases: [
+                    WidgetbookUseCase(
+                      name: 'Before showing',
+                      builder: buildNyctisMetadataCardBeforeUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Name collision',
+                      builder: buildNyctisMetadataCardCollisionUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Shown',
+                      builder: buildNyctisMetadataCardAcceptedUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Refused pointer',
+                      builder: buildNyctisMetadataCardRefusedUseCase,
                     ),
                   ],
                 ),
@@ -2004,23 +2037,31 @@ class WidgetbookApp extends StatelessWidget {
                   useCases: [
                     WidgetbookUseCase(
                       name: 'Public named asset',
-                      builder: buildNightjarAssetDetailUseCase,
+                      builder: buildNyctisAssetDetailUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Unique item',
-                      builder: buildNightjarUniqueItemDetailUseCase,
+                      builder: buildNyctisUniqueItemDetailUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Unnamed asset',
-                      builder: buildNightjarUnnamedAssetDetailUseCase,
+                      builder: buildNyctisUnnamedAssetDetailUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Private asset',
-                      builder: buildNightjarPrivateAssetDetailUseCase,
+                      builder: buildNyctisPrivateAssetDetailUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Facts card',
-                      builder: buildNightjarFactsCardUseCase,
+                      builder: buildNyctisFactsCardUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Largest balance',
+                      builder: buildNyctisLargeNumbersUseCase,
+                    ),
+                    WidgetbookUseCase(
+                      name: 'Text at 200%',
+                      builder: buildNyctisLargeTextUseCase,
                     ),
                   ],
                 ),
@@ -2029,19 +2070,19 @@ class WidgetbookApp extends StatelessWidget {
                   useCases: [
                     WidgetbookUseCase(
                       name: 'Sent',
-                      builder: buildNightjarActivityDetailSentUseCase,
+                      builder: buildNyctisActivityDetailSentUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Received, unnamed asset',
-                      builder: buildNightjarActivityDetailReceivedUseCase,
+                      builder: buildNyctisActivityDetailReceivedUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Net change',
-                      builder: buildNightjarActivityDetailNetChangeUseCase,
+                      builder: buildNyctisActivityDetailNetChangeUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'No message',
-                      builder: buildNightjarActivityDetailNoMessageUseCase,
+                      builder: buildNyctisActivityDetailNoMessageUseCase,
                     ),
                   ],
                 ),
@@ -2050,15 +2091,15 @@ class WidgetbookApp extends StatelessWidget {
                   useCases: [
                     WidgetbookUseCase(
                       name: 'Default',
-                      builder: buildNightjarReceiveUseCase,
+                      builder: buildNyctisReceiveUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Not configured',
-                      builder: buildNightjarReceiveNotConfiguredUseCase,
+                      builder: buildNyctisReceiveNotConfiguredUseCase,
                     ),
                     WidgetbookUseCase(
                       name: 'Panel only',
-                      builder: buildNightjarReceivePanelUseCase,
+                      builder: buildNyctisReceivePanelUseCase,
                     ),
                   ],
                 ),
@@ -2079,12 +2120,12 @@ class WidgetbookApp extends StatelessWidget {
                       builder: buildSwapReceiveAbsorbUseCase,
                     ),
                     WidgetbookUseCase(
-                      name: 'Nightjar notes',
-                      builder: buildNightjarActivityUseCase,
+                      name: 'Nyctis notes',
+                      builder: buildNyctisActivityUseCase,
                     ),
                     WidgetbookUseCase(
-                      name: 'Nightjar notes with logo',
-                      builder: buildNightjarActivityLogoUseCase,
+                      name: 'Nyctis notes with logo',
+                      builder: buildNyctisActivityLogoUseCase,
                     ),
                   ],
                 ),

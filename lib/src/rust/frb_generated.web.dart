@@ -10,7 +10,7 @@ import 'api/gift_card_tracking.dart';
 import 'api/keystone.dart';
 import 'api/ledger.dart';
 import 'api/network_privacy.dart';
-import 'api/nightjar.dart';
+import 'api/nyctis.dart';
 import 'api/secret.dart';
 import 'api/simple.dart';
 import 'api/sync.dart';
@@ -279,7 +279,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   NextStepView dco_decode_box_autoadd_next_step_view(dynamic raw);
 
   @protected
-  NjZecSources dco_decode_box_autoadd_nj_zec_sources(dynamic raw);
+  NyZecSources dco_decode_box_autoadd_ny_zec_sources(dynamic raw);
 
   @protected
   OrchardMigrationImmediatePlan
@@ -697,13 +697,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<NextStepView> dco_decode_list_next_step_view(dynamic raw);
 
   @protected
-  List<NjAsset> dco_decode_list_nj_asset(dynamic raw);
+  List<NyAsset> dco_decode_list_ny_asset(dynamic raw);
 
   @protected
-  List<NjMessageInput> dco_decode_list_nj_message_input(dynamic raw);
+  List<NyMessageInput> dco_decode_list_ny_message_input(dynamic raw);
 
   @protected
-  List<NjNote> dco_decode_list_nj_note(dynamic raw);
+  List<NyNote> dco_decode_list_ny_note(dynamic raw);
 
   @protected
   List<PirSnapshotEndpointDiagnosticView>
@@ -872,28 +872,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   NextStepView dco_decode_next_step_view(dynamic raw);
 
   @protected
-  NjAsset dco_decode_nj_asset(dynamic raw);
+  NyAsset dco_decode_ny_asset(dynamic raw);
 
   @protected
-  NjIdentity dco_decode_nj_identity(dynamic raw);
+  NyMessageInput dco_decode_ny_message_input(dynamic raw);
 
   @protected
-  NjMessageInput dco_decode_nj_message_input(dynamic raw);
+  NyNote dco_decode_ny_note(dynamic raw);
 
   @protected
-  NjNote dco_decode_nj_note(dynamic raw);
+  NyPayPlan dco_decode_ny_pay_plan(dynamic raw);
 
   @protected
-  NjPayPlan dco_decode_nj_pay_plan(dynamic raw);
+  NyProvingKey dco_decode_ny_proving_key(dynamic raw);
 
   @protected
-  NjProvingKey dco_decode_nj_proving_key(dynamic raw);
+  NyView dco_decode_ny_view(dynamic raw);
 
   @protected
-  NjView dco_decode_nj_view(dynamic raw);
+  NyViewingKey dco_decode_ny_viewing_key(dynamic raw);
 
   @protected
-  NjZecSources dco_decode_nj_zec_sources(dynamic raw);
+  NyZecSources dco_decode_ny_zec_sources(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -1646,7 +1646,7 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  NjZecSources sse_decode_box_autoadd_nj_zec_sources(
+  NyZecSources sse_decode_box_autoadd_ny_zec_sources(
     SseDeserializer deserializer,
   );
 
@@ -2190,15 +2190,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  List<NjAsset> sse_decode_list_nj_asset(SseDeserializer deserializer);
+  List<NyAsset> sse_decode_list_ny_asset(SseDeserializer deserializer);
 
   @protected
-  List<NjMessageInput> sse_decode_list_nj_message_input(
+  List<NyMessageInput> sse_decode_list_ny_message_input(
     SseDeserializer deserializer,
   );
 
   @protected
-  List<NjNote> sse_decode_list_nj_note(SseDeserializer deserializer);
+  List<NyNote> sse_decode_list_ny_note(SseDeserializer deserializer);
 
   @protected
   List<PirSnapshotEndpointDiagnosticView>
@@ -2407,28 +2407,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   NextStepView sse_decode_next_step_view(SseDeserializer deserializer);
 
   @protected
-  NjAsset sse_decode_nj_asset(SseDeserializer deserializer);
+  NyAsset sse_decode_ny_asset(SseDeserializer deserializer);
 
   @protected
-  NjIdentity sse_decode_nj_identity(SseDeserializer deserializer);
+  NyMessageInput sse_decode_ny_message_input(SseDeserializer deserializer);
 
   @protected
-  NjMessageInput sse_decode_nj_message_input(SseDeserializer deserializer);
+  NyNote sse_decode_ny_note(SseDeserializer deserializer);
 
   @protected
-  NjNote sse_decode_nj_note(SseDeserializer deserializer);
+  NyPayPlan sse_decode_ny_pay_plan(SseDeserializer deserializer);
 
   @protected
-  NjPayPlan sse_decode_nj_pay_plan(SseDeserializer deserializer);
+  NyProvingKey sse_decode_ny_proving_key(SseDeserializer deserializer);
 
   @protected
-  NjProvingKey sse_decode_nj_proving_key(SseDeserializer deserializer);
+  NyView sse_decode_ny_view(SseDeserializer deserializer);
 
   @protected
-  NjView sse_decode_nj_view(SseDeserializer deserializer);
+  NyViewingKey sse_decode_ny_viewing_key(SseDeserializer deserializer);
 
   @protected
-  NjZecSources sse_decode_nj_zec_sources(SseDeserializer deserializer);
+  NyZecSources sse_decode_ny_zec_sources(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -3369,8 +3369,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_box_autoadd_nj_zec_sources(
-    NjZecSources self,
+  void sse_encode_box_autoadd_ny_zec_sources(
+    NyZecSources self,
     SseSerializer serializer,
   );
 
@@ -4026,16 +4026,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
-  void sse_encode_list_nj_asset(List<NjAsset> self, SseSerializer serializer);
+  void sse_encode_list_ny_asset(List<NyAsset> self, SseSerializer serializer);
 
   @protected
-  void sse_encode_list_nj_message_input(
-    List<NjMessageInput> self,
+  void sse_encode_list_ny_message_input(
+    List<NyMessageInput> self,
     SseSerializer serializer,
   );
 
   @protected
-  void sse_encode_list_nj_note(List<NjNote> self, SseSerializer serializer);
+  void sse_encode_list_ny_note(List<NyNote> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_pir_snapshot_endpoint_diagnostic_view(
@@ -4299,31 +4299,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_next_step_view(NextStepView self, SseSerializer serializer);
 
   @protected
-  void sse_encode_nj_asset(NjAsset self, SseSerializer serializer);
+  void sse_encode_ny_asset(NyAsset self, SseSerializer serializer);
 
   @protected
-  void sse_encode_nj_identity(NjIdentity self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_nj_message_input(
-    NjMessageInput self,
+  void sse_encode_ny_message_input(
+    NyMessageInput self,
     SseSerializer serializer,
   );
 
   @protected
-  void sse_encode_nj_note(NjNote self, SseSerializer serializer);
+  void sse_encode_ny_note(NyNote self, SseSerializer serializer);
 
   @protected
-  void sse_encode_nj_pay_plan(NjPayPlan self, SseSerializer serializer);
+  void sse_encode_ny_pay_plan(NyPayPlan self, SseSerializer serializer);
 
   @protected
-  void sse_encode_nj_proving_key(NjProvingKey self, SseSerializer serializer);
+  void sse_encode_ny_proving_key(NyProvingKey self, SseSerializer serializer);
 
   @protected
-  void sse_encode_nj_view(NjView self, SseSerializer serializer);
+  void sse_encode_ny_view(NyView self, SseSerializer serializer);
 
   @protected
-  void sse_encode_nj_zec_sources(NjZecSources self, SseSerializer serializer);
+  void sse_encode_ny_viewing_key(NyViewingKey self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ny_zec_sources(NyZecSources self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);

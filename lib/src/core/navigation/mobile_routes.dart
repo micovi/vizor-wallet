@@ -18,15 +18,15 @@ import '../../features/migration/screens/ironwood_migration_flow_screen.dart'
         MobileIronwoodMigrationKeystoneBatchSignScreen,
         MobileIronwoodMigrationKeystoneDenominationSignEntry,
         MobileIronwoodMigrationKeystoneDenominationSignScreen;
-import '../../features/nightjar_assets/screens/mobile/mobile_nightjar_asset_detail_screen.dart';
-import '../../features/nightjar_assets/screens/mobile/mobile_nightjar_assets_screen.dart';
-import '../../features/nightjar_assets/screens/mobile/mobile_nightjar_collection_screen.dart';
-import '../../features/nightjar_assets/screens/mobile/mobile_nightjar_receive_screen.dart';
-import '../../features/nightjar_assets/screens/mobile/mobile_nightjar_send_review_screen.dart';
-import '../../features/nightjar_assets/screens/mobile/mobile_nightjar_send_screen.dart';
-import '../../features/nightjar_assets/screens/mobile/mobile_nightjar_send_status_screen.dart';
-import '../../features/nightjar_assets/screens/nightjar_send_review_screen.dart';
-import '../../features/nightjar_assets/services/nightjar_send_flow.dart';
+import '../../features/nyctis_assets/screens/mobile/mobile_nyctis_asset_detail_screen.dart';
+import '../../features/nyctis_assets/screens/mobile/mobile_nyctis_assets_screen.dart';
+import '../../features/nyctis_assets/screens/mobile/mobile_nyctis_collection_screen.dart';
+import '../../features/nyctis_assets/screens/mobile/mobile_nyctis_receive_screen.dart';
+import '../../features/nyctis_assets/screens/mobile/mobile_nyctis_send_review_screen.dart';
+import '../../features/nyctis_assets/screens/mobile/mobile_nyctis_send_screen.dart';
+import '../../features/nyctis_assets/screens/mobile/mobile_nyctis_send_status_screen.dart';
+import '../../features/nyctis_assets/screens/nyctis_send_review_screen.dart';
+import '../../features/nyctis_assets/services/nyctis_send_flow.dart';
 import '../../features/pay/screens/mobile/mobile_pay_screen.dart';
 import '../../features/pay/screens/mobile/mobile_pay_submitted_screen.dart';
 import '../../features/pay/models/pay_recent_recipients.dart';
@@ -34,10 +34,10 @@ import '../../features/payment_links/providers/payment_link_cards_provider.dart'
 import '../../features/payment_links/screens/payment_links_screen.dart';
 import '../../features/receive/screens/mobile/mobile_receive_screen.dart';
 import '../../features/address_book/screens/mobile/mobile_address_book_screen.dart';
-import '../../features/activity/screens/mobile/mobile_nightjar_activity_detail_screen.dart';
+import '../../features/activity/screens/mobile/mobile_nyctis_activity_detail_screen.dart';
 import '../../features/activity/screens/mobile/mobile_swap_activity_detail_screen.dart';
 import '../../features/activity/screens/mobile/mobile_transaction_status_screen.dart';
-import '../../features/activity/screens/nightjar_activity_detail_screen.dart';
+import '../../features/activity/screens/nyctis_activity_detail_screen.dart';
 import '../../features/send/screens/mobile/mobile_keystone_sign_screen.dart';
 import '../../features/send/screens/mobile/mobile_ledger_send_sign_screen.dart';
 import '../../features/swap/models/swap_activity_navigation.dart';
@@ -59,12 +59,13 @@ import '../../features/about/screens/mobile/mobile_about_screens.dart';
 import '../../features/settings/screens/mobile/mobile_change_passcode_screen.dart';
 import '../../features/settings/screens/mobile/mobile_endpoint_screen.dart';
 import '../../features/settings/screens/mobile/mobile_explorer_screen.dart';
-import '../../features/settings/screens/mobile/mobile_nightjar_screen.dart';
+import '../../features/settings/screens/mobile/mobile_nyctis_screen.dart';
 import '../../features/settings/screens/mobile/mobile_seed_phrase_screen.dart';
 import '../../features/settings/screens/mobile/mobile_settings_screen.dart';
 import '../../features/settings/screens/mobile/mobile_viewing_key_screen.dart';
 import '../../features/swap/screens/mobile/mobile_swap_screen.dart';
 import '../../features/voting/screens/mobile/mobile_voting_screens.dart';
+import '../config/nyctis_config.dart' show kNyctisFeatureAvailable;
 import '../config/swap_feature_config.dart';
 import '../layout/mobile/app_mobile_shell.dart';
 import '../layout/mobile/app_mobile_tab_bar.dart';
@@ -161,13 +162,15 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
         child: const MobileExplorerScreen(),
       ),
     ),
-    GoRoute(
-      path: '/settings/nightjar',
-      pageBuilder: (context, state) => CupertinoPage(
-        key: state.pageKey,
-        child: const MobileNightjarScreen(),
+    if (kNyctisFeatureAvailable) ...[
+      GoRoute(
+        path: '/settings/nyctis',
+        pageBuilder: (context, state) => CupertinoPage(
+          key: state.pageKey,
+          child: const MobileNyctisScreen(),
+        ),
       ),
-    ),
+    ],
     // The Set New Passcode frames also drop the tab bar — same
     // full-screen push pattern.
     GoRoute(
@@ -338,21 +341,23 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
         );
       },
     ),
-    // Same path as the desktop transaction status route so the shared
-    // redirect guard and deep links treat them identically.
-    // Same path as the desktop tree. Under `/activity` rather than beside
-    // `/nightjar/:assetId`, which a message id is shaped exactly like.
-    GoRoute(
-      path: nightjarActivityDetailRoutePattern,
-      pageBuilder: (context, state) => CupertinoPage(
-        key: state.pageKey,
-        child: MobileNightjarActivityDetailScreen(
-          args: state.extra is NightjarActivityDetailArgs
-              ? state.extra! as NightjarActivityDetailArgs
-              : null,
+    if (kNyctisFeatureAvailable) ...[
+      // Same path as the desktop tree. Under `/activity` rather than beside
+      // `/nyctis/:assetId`, which a message id is shaped exactly like.
+      GoRoute(
+        path: nyctisActivityDetailRoutePattern,
+        pageBuilder: (context, state) => CupertinoPage(
+          key: state.pageKey,
+          child: MobileNyctisActivityDetailScreen(
+            args: state.extra is NyctisActivityDetailArgs
+                ? state.extra! as NyctisActivityDetailArgs
+                : null,
+          ),
         ),
       ),
-    ),
+    ],
+    // Same path as the desktop transaction status route so the shared
+    // redirect guard and deep links treat them identically.
     GoRoute(
       path: '/activity/tx/:txid',
       pageBuilder: (context, state) {
@@ -496,85 +501,88 @@ List<RouteBase> buildMobileRoutes({required List<RouteBase> entryRoutes}) {
       pageBuilder: (context, state) =>
           CupertinoPage(key: state.pageKey, child: const MobileReceiveScreen()),
     ),
-    // Paths match the desktop tree so the shared redirect guard and deep
-    // links treat them identically. `/nightjar/receive` is registered
-    // before `/nightjar/:assetId` so the literal segment wins.
-    GoRoute(
-      path: '/nightjar',
-      pageBuilder: (context, state) => CupertinoPage(
-        key: state.pageKey,
-        child: const MobileNightjarAssetsScreen(),
-      ),
-    ),
-    GoRoute(
-      path: '/nightjar/receive',
-      pageBuilder: (context, state) => CupertinoPage(
-        key: state.pageKey,
-        child: const MobileNightjarReceiveScreen(),
-      ),
-    ),
-    // Three segments with a literal second one, registered before
-    // `/nightjar/:assetId/send` so the literal wins.
-    GoRoute(
-      path: '/nightjar/collection/:collectionId',
-      pageBuilder: (context, state) {
-        final collectionId = state.pathParameters['collectionId'] ?? '';
-        return CupertinoPage(
+    // Registered only in a VIZOR_NYCTIS_ENABLED build, like the desktop tree.
+    if (kNyctisFeatureAvailable) ...[
+      // Paths match the desktop tree so the shared redirect guard and deep
+      // links treat them identically. `/nyctis/receive` is registered
+      // before `/nyctis/:assetId` so the literal segment wins.
+      GoRoute(
+        path: '/nyctis',
+        pageBuilder: (context, state) => CupertinoPage(
           key: state.pageKey,
-          child: collectionId.isEmpty
-              ? const MobileNightjarAssetsScreen()
-              : MobileNightjarCollectionScreen(collectionId: collectionId),
-        );
-      },
-    ),
-    // Three segments, so neither can be mistaken for `/nightjar/:assetId`.
-    // Paths match the desktop tree, and both carry a built plan in `extra`.
-    GoRoute(
-      path: nightjarSendReviewRoute,
-      pageBuilder: (context, state) => CupertinoPage(
-        key: state.pageKey,
-        child: MobileNightjarSendReviewScreen(
-          args: state.extra is NightjarSendReviewArgs
-              ? state.extra! as NightjarSendReviewArgs
-              : null,
+          child: const MobileNyctisAssetsScreen(),
         ),
       ),
-    ),
-    GoRoute(
-      path: nightjarSendStatusRoute,
-      pageBuilder: (context, state) => CupertinoPage(
-        key: state.pageKey,
-        child: MobileNightjarSendStatusScreen(
-          args: state.extra is NightjarSendReviewArgs
-              ? state.extra! as NightjarSendReviewArgs
-              : null,
+      GoRoute(
+        path: '/nyctis/receive',
+        pageBuilder: (context, state) => CupertinoPage(
+          key: state.pageKey,
+          child: const MobileNyctisReceiveScreen(),
         ),
       ),
-    ),
-    GoRoute(
-      path: '/nightjar/:assetId',
-      pageBuilder: (context, state) {
-        final assetId = state.pathParameters['assetId'] ?? '';
-        return CupertinoPage(
+      // Three segments with a literal second one, registered before
+      // `/nyctis/:assetId/send` so the literal wins.
+      GoRoute(
+        path: '/nyctis/collection/:collectionId',
+        pageBuilder: (context, state) {
+          final collectionId = state.pathParameters['collectionId'] ?? '';
+          return CupertinoPage(
+            key: state.pageKey,
+            child: collectionId.isEmpty
+                ? const MobileNyctisAssetsScreen()
+                : MobileNyctisCollectionScreen(collectionId: collectionId),
+          );
+        },
+      ),
+      // Three segments, so neither can be mistaken for `/nyctis/:assetId`.
+      // Paths match the desktop tree, and both carry a built plan in `extra`.
+      GoRoute(
+        path: nyctisSendReviewRoute,
+        pageBuilder: (context, state) => CupertinoPage(
           key: state.pageKey,
-          child: assetId.isEmpty
-              ? const MobileNightjarAssetsScreen()
-              : MobileNightjarAssetDetailScreen(assetId: assetId),
-        );
-      },
-    ),
-    GoRoute(
-      path: '/nightjar/:assetId/send',
-      pageBuilder: (context, state) {
-        final assetId = state.pathParameters['assetId'] ?? '';
-        return CupertinoPage(
+          child: MobileNyctisSendReviewScreen(
+            args: state.extra is NyctisSendReviewArgs
+                ? state.extra! as NyctisSendReviewArgs
+                : null,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: nyctisSendStatusRoute,
+        pageBuilder: (context, state) => CupertinoPage(
           key: state.pageKey,
-          child: assetId.isEmpty
-              ? const MobileNightjarAssetsScreen()
-              : MobileNightjarSendScreen(assetId: assetId),
-        );
-      },
-    ),
+          child: MobileNyctisSendStatusScreen(
+            args: state.extra is NyctisSendReviewArgs
+                ? state.extra! as NyctisSendReviewArgs
+                : null,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/nyctis/:assetId',
+        pageBuilder: (context, state) {
+          final assetId = state.pathParameters['assetId'] ?? '';
+          return CupertinoPage(
+            key: state.pageKey,
+            child: assetId.isEmpty
+                ? const MobileNyctisAssetsScreen()
+                : MobileNyctisAssetDetailScreen(assetId: assetId),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/nyctis/:assetId/send',
+        pageBuilder: (context, state) {
+          final assetId = state.pathParameters['assetId'] ?? '';
+          return CupertinoPage(
+            key: state.pageKey,
+            child: assetId.isEmpty
+                ? const MobileNyctisAssetsScreen()
+                : MobileNyctisSendScreen(assetId: assetId),
+          );
+        },
+      ),
+    ],
     GoRoute(
       path: '/migration',
       pageBuilder: (context, state) => CupertinoPage(

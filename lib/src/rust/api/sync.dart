@@ -269,7 +269,7 @@ Future<ProposalResult> proposeSend({
 /// Step 1, binary-memo variant: propose a transfer with one output per entry
 /// in `outputs` and memos passed through byte for byte.
 ///
-/// All outputs land in one transaction. A Nightjar message is 1-8 memos that
+/// All outputs land in one transaction. A Nyctis message is 1-8 memos that
 /// a reader can only reassemble from a single txid, so proposing them
 /// separately would produce parts nobody can put back together.
 ///
@@ -960,7 +960,7 @@ Future<TransactionDetail> getTransactionDetail({
 /// outputs, in output order.
 ///
 /// `get_transaction_detail().memo` decodes only `Memo::Text` and reports
-/// `None` for the binary ZIP-302 encodings, so an incoming Nightjar message —
+/// `None` for the binary ZIP-302 encodings, so an incoming Nyctis message —
 /// whose parts start with the marker byte `0xFF` — is invisible through it.
 /// Read the bytes here and parse them on the caller's side.
 Future<List<RawMemoOutput>> getTransactionRawMemos({
@@ -2372,7 +2372,7 @@ class RawMemoOutput {
 
 /// One recipient of a raw-memo send. `memo_bytes` is written into the
 /// 512-byte memo field unchanged, so callers that need a binary memo — a
-/// Nightjar message part starts with the ZIP-302 marker `0xFF` — can reach
+/// Nyctis message part starts with the ZIP-302 marker `0xFF` — can reach
 /// the send path at all. A body longer than 512 bytes is rejected, never
 /// truncated.
 class RawSendOutput {

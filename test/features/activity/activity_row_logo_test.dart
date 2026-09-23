@@ -19,25 +19,26 @@ import 'package:zcash_wallet/src/app_bootstrap.dart';
 import 'package:zcash_wallet/src/core/theme/app_theme.dart';
 import 'package:zcash_wallet/src/core/widgets/app_icon.dart';
 import 'package:zcash_wallet/src/features/activity/models/activity_row_data.dart';
-import 'package:zcash_wallet/src/features/activity/nightjar_activity_row_mapper.dart';
+import 'package:zcash_wallet/src/features/activity/nyctis_activity_row_mapper.dart';
 import 'package:zcash_wallet/src/features/activity/widgets/activity_feed.dart';
-import 'package:zcash_wallet/src/features/nightjar_assets/providers/nightjar_asset_acceptance_provider.dart';
-import 'package:zcash_wallet/src/features/nightjar_assets/providers/nightjar_asset_metadata_provider.dart';
-import 'package:zcash_wallet/src/features/nightjar_assets/providers/nightjar_assets_view_provider.dart';
-import 'package:zcash_wallet/src/features/nightjar_assets/providers/nightjar_metadata_fetcher_provider.dart';
-import 'package:zcash_wallet/src/features/nightjar_assets/services/nightjar_metadata_fetcher.dart';
-import 'package:zcash_wallet/src/features/nightjar_assets/services/nightjar_metadata_transport.dart';
-import 'package:zcash_wallet/src/features/nightjar_assets/widgets/nightjar_asset_logo.dart';
-import 'package:zcash_wallet/src/features/nightjar_assets/widgets/nightjar_asset_row_data.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/providers/nyctis_asset_acceptance_provider.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/providers/nyctis_asset_metadata_provider.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/providers/nyctis_assets_view_provider.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/providers/nyctis_metadata_fetcher_provider.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/services/nyctis_metadata_fetcher.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/services/nyctis_metadata_transport.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_asset_logo.dart';
+import 'package:zcash_wallet/src/features/nyctis_assets/widgets/nyctis_asset_row_data.dart';
+import 'package:zcash_wallet/src/providers/nyctis_config_provider.dart';
 
-import '../nightjar_assets/support/nightjar_metadata_fixtures.dart';
+import '../nyctis_assets/support/nyctis_metadata_fixtures.dart';
 
 const _acceptedId =
     'a3f1c0d29b8e47a5f6031d8c2b7e4906aa11bb22cc33dd44ee55ff6600778899';
 const _unacceptedId =
     '00ff11ee22dd33cc44bb55aa6699778800112233445566778899aabbccddeeff';
-final _documentUri = Uri.parse('https://example.invalid/nj.json');
-final _logoUri = Uri.parse('https://example.invalid/nj.png');
+final _documentUri = Uri.parse('https://example.invalid/ny.json');
+final _logoUri = Uri.parse('https://example.invalid/ny.png');
 
 void main() {
   group('the row draws an image when it is given one', () {
@@ -82,8 +83,8 @@ void main() {
       provider as ResizeImage;
       expect(provider.width, isNotNull);
       expect(provider.height, isNotNull);
-      expect(provider.width!, lessThanOrEqualTo(kNightjarLogoMaxDecodePixels));
-      expect(provider.height!, lessThanOrEqualTo(kNightjarLogoMaxDecodePixels));
+      expect(provider.width!, lessThanOrEqualTo(kNyctisLogoMaxDecodePixels));
+      expect(provider.height!, lessThanOrEqualTo(kNyctisLogoMaxDecodePixels));
     });
 
     testWidgets('in the same circular frame, at the same size', (tester) async {
@@ -97,19 +98,19 @@ void main() {
         ),
       ]);
 
-      final logo = tester.widget<NightjarAssetLogoImage>(
-        find.byType(NightjarAssetLogoImage),
+      final logo = tester.widget<NyctisAssetLogoImage>(
+        find.byType(NyctisAssetLogoImage),
       );
       expect(logo.size, AppAssetSize.size);
       expect(
-        tester.getSize(find.byType(NightjarAssetLogoImage)),
+        tester.getSize(find.byType(NyctisAssetLogoImage)),
         const Size(AppAssetSize.size, AppAssetSize.size),
       );
       // The background the icon sat on is still behind the picture, which is
       // what a logo with transparency and the decode fallback both need.
       final decorated = tester.widgetList<DecoratedBox>(
         find.ancestor(
-          of: find.byType(NightjarAssetLogoImage),
+          of: find.byType(NyctisAssetLogoImage),
           matching: find.byType(DecoratedBox),
         ),
       );
@@ -132,7 +133,7 @@ void main() {
       await _pumpRows(tester, [
         _row(
           title: 'Devnet Mint',
-          subtitle: 'Held Nightjar note',
+          subtitle: 'Held Nyctis note',
           image: ActivityRowLeadingImage(
             bytes: kOnePixelPng,
             identityLabel: 'a3f1c0…778899',
@@ -145,18 +146,18 @@ void main() {
       // The id leads the supporting line, so a narrow row shortens the
       // description rather than the identifier.
       expect(
-        find.text('a3f1c0…778899 \u00b7 Held Nightjar note'),
+        find.text('a3f1c0…778899 \u00b7 Held Nyctis note'),
         findsOneWidget,
       );
     });
 
     testWidgets('a row with no picture prints no id', (tester) async {
       await _pumpRows(tester, [
-        _row(title: 'Devnet Mint', subtitle: 'Held Nightjar note'),
+        _row(title: 'Devnet Mint', subtitle: 'Held Nyctis note'),
       ]);
 
       expect(find.textContaining('a3f1c0…778899'), findsNothing);
-      expect(find.text('Held Nightjar note'), findsOneWidget);
+      expect(find.text('Held Nyctis note'), findsOneWidget);
     });
 
     testWidgets('an unnamed asset, already titled by its id, does not repeat '
@@ -164,7 +165,7 @@ void main() {
       await _pumpRows(tester, [
         _row(
           title: '00ff11…ddeeff',
-          subtitle: 'Held Nightjar note',
+          subtitle: 'Held Nyctis note',
           image: ActivityRowLeadingImage(
             bytes: kOnePixelPng,
             identityLabel: '00ff11…ddeeff',
@@ -172,7 +173,7 @@ void main() {
         ),
       ]);
 
-      expect(find.text('Held Nightjar note'), findsOneWidget);
+      expect(find.text('Held Nyctis note'), findsOneWidget);
       expect(find.textContaining('00ff11…ddeeff \u00b7'), findsNothing);
       expect(find.text('00ff11…ddeeff'), findsOneWidget);
       expect(find.byType(Image), findsOneWidget);
@@ -191,21 +192,21 @@ void main() {
       tester,
     ) async {
       final harness = _harness();
-      // Let the view load settle first. `nightjarAssetLogosProvider` watches the
+      // Let the view load settle first. `nyctisAssetLogosProvider` watches the
       // grouped-ids provider, which hangs off the async view; reading it
       // synchronously starts that load and the test would otherwise end with it
       // still in flight, leaving a timer pending after the tree is disposed.
       // The other tests here await a provider future and so drain it already.
-      await harness.container.read(nightjarAssetsViewProvider.future);
+      await harness.container.read(nyctisAssetsViewProvider.future);
 
       // The wallet holds the asset and the asset carries a document uri. The
-      // user has not accepted it, so `nightjarAssetLogosProvider` answers
+      // user has not accepted it, so `nyctisAssetLogosProvider` answers
       // nothing for it — no bytes to leak into a row, and no fetch either.
-      final logos = harness.container.read(nightjarAssetLogosProvider);
+      final logos = harness.container.read(nyctisAssetLogosProvider);
       expect(logos, isEmpty);
       expect(harness.transport.requested, isEmpty);
 
-      final row = await _nightjarRow(
+      final row = await _nyctisRow(
         tester,
         assetId: _acceptedId,
         name: 'Devnet Mint',
@@ -218,7 +219,7 @@ void main() {
       expect(find.byType(Image), findsNothing);
       expect(find.byType(AppIcon), findsOneWidget);
       expect(
-        find.textContaining(truncateNightjarAssetId(_acceptedId)),
+        find.textContaining(truncateNyctisAssetId(_acceptedId)),
         findsNothing,
         reason: 'No logo, so section 5 asks for nothing extra on the row.',
       );
@@ -229,22 +230,22 @@ void main() {
     ) async {
       final harness = _harness();
       await harness.container
-          .read(nightjarAssetAcceptanceProvider.notifier)
+          .read(nyctisAssetAcceptanceProvider.notifier)
           .accept(assetId: _acceptedId, name: 'Devnet Mint', symbol: 'DMT');
       await harness.container.read(
-        nightjarAssetMetadataProvider(_acceptedId).future,
+        nyctisAssetMetadataProvider(_acceptedId).future,
       );
 
-      final logos = harness.container.read(nightjarAssetLogosProvider);
+      final logos = harness.container.read(nyctisAssetLogosProvider);
       expect(logos.keys, [_acceptedId]);
 
-      final accepted = await _nightjarRow(
+      final accepted = await _nyctisRow(
         tester,
         assetId: _acceptedId,
         name: 'Devnet Mint',
         logos: logos,
       );
-      final unaccepted = await _nightjarRow(
+      final unaccepted = await _nyctisRow(
         tester,
         assetId: _unacceptedId,
         logos: logos,
@@ -253,7 +254,7 @@ void main() {
       expect(accepted.leadingImage, isNotNull);
       expect(
         accepted.leadingImage!.identityLabel,
-        truncateNightjarAssetId(_acceptedId),
+        truncateNyctisAssetId(_acceptedId),
       );
       expect(unaccepted.leadingImage, isNull);
 
@@ -261,7 +262,7 @@ void main() {
 
       expect(find.byType(Image), findsOneWidget);
       expect(
-        find.textContaining(truncateNightjarAssetId(_acceptedId)),
+        find.textContaining(truncateNyctisAssetId(_acceptedId)),
         findsOneWidget,
       );
     });
@@ -278,7 +279,7 @@ ActivityRowData _row({
   ActivityRowLeadingImage? image,
 }) {
   return ActivityRowData(
-    stableId: 'nightjar-note:$title:${_rowSeq++}',
+    stableId: 'nyctis-note:$title:${_rowSeq++}',
     title: title,
     leadingIconName: AppIcons.shieldAsset,
     leadingImage: image,
@@ -291,10 +292,10 @@ ActivityRowData _row({
   );
 }
 
-/// A Nightjar activity row through the real mapper, which is the only place
+/// A Nyctis activity row through the real mapper, which is the only place
 /// the logo lookup lives: an asset with no bytes in [logos] keeps its icon,
 /// and an asset with bytes gets them with its id attached.
-Future<ActivityRowData> _nightjarRow(
+Future<ActivityRowData> _nyctisRow(
   WidgetTester tester, {
   required String assetId,
   required Map<String, Uint8List> logos,
@@ -307,14 +308,14 @@ Future<ActivityRowData> _nightjarRow(
         data: AppThemeData.light,
         child: Builder(
           builder: (context) {
-            row = nightjarActivityEntry(
+            row = nyctisActivityEntry(
               context: context,
-              item: NightjarActivityItem(
+              item: NyctisActivityItem(
                 msgId: 'a1b2c3d4e5f60718',
                 assetId: assetId,
                 name: name,
                 symbol: name == null ? null : 'DMT',
-                kind: NightjarActivityKind.received,
+                kind: NyctisActivityKind.received,
                 delta: BigInt.from(100),
                 moved: BigInt.zero,
                 decimals: 2,
@@ -353,10 +354,10 @@ Future<void> _pumpRows(WidgetTester tester, List<ActivityRowData> rows) {
   );
 }
 
-NightjarViewData _view() => NightjarViewData(
-  status: NightjarViewStatus.ready,
+NyctisViewData _view() => NyctisViewData(
+  status: NyctisViewStatus.ready,
   assets: [
-    NightjarAssetDetailData(
+    NyctisAssetDetailData(
       assetId: _acceptedId,
       name: 'Devnet Mint',
       symbol: 'DMT',
@@ -364,7 +365,7 @@ NightjarViewData _view() => NightjarViewData(
       decimals: 2,
       metadataUri: _documentUri.toString(),
     ),
-    NightjarAssetDetailData(
+    NyctisAssetDetailData(
       assetId: _unacceptedId,
       balance: BigInt.from(5),
       decimals: 0,
@@ -376,34 +377,36 @@ NightjarViewData _view() => NightjarViewData(
 Uint8List _documentBytes() => Uint8List.fromList(
   utf8.encode(
     jsonEncode({
-      'schema': 'nightjar-asset-metadata/1',
+      'schema': 'nyctis-asset-metadata/1',
       'logo': {'uri': _logoUri.toString()},
     }),
   ),
 );
 
-({ProviderContainer container, FakeNightjarTransport transport}) _harness() {
-  final transport = FakeNightjarTransport({
-    _documentUri: NightjarHttpReply(statusCode: 200, body: _documentBytes()),
-    _logoUri: NightjarHttpReply(statusCode: 200, body: kOnePixelPng),
+({ProviderContainer container, FakeNyctisTransport transport}) _harness() {
+  final transport = FakeNyctisTransport({
+    _documentUri: NyctisHttpReply(statusCode: 200, body: _documentBytes()),
+    _logoUri: NyctisHttpReply(statusCode: 200, body: kOnePixelPng),
   });
   final container = ProviderContainer(
     overrides: [
+      // Nyctis ships only in VIZOR_NYCTIS_ENABLED builds.
+      nyctisFeatureEnabledProvider.overrideWithValue(true),
       appBootstrapProvider.overrideWithValue(AppBootstrapState.empty),
-      nightjarAcceptanceStoreProvider.overrideWithValue(
+      nyctisAcceptanceStoreProvider.overrideWithValue(
         _MemoryAcceptanceStore(),
       ),
-      nightjarMetadataFetcherProvider.overrideWithValue(
-        NightjarAssetMetadataFetcher(transport: transport),
+      nyctisMetadataFetcherProvider.overrideWithValue(
+        NyctisAssetMetadataFetcher(transport: transport),
       ),
-      nightjarViewLoaderProvider.overrideWithValue(() async => _view()),
+      nyctisViewLoaderProvider.overrideWithValue(() async => _view()),
     ],
   );
   addTearDown(container.dispose);
   return (container: container, transport: transport);
 }
 
-class _MemoryAcceptanceStore implements NightjarAcceptanceStore {
+class _MemoryAcceptanceStore implements NyctisAcceptanceStore {
   String? value;
 
   @override

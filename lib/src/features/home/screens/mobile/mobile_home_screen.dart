@@ -39,9 +39,9 @@ import '../../../accounts/widgets/mobile/mobile_accounts_sheet.dart';
 import '../../../activity/activity_feed_sections.dart';
 import '../../../activity/gift_card_activity_index.dart';
 import '../../../activity/activity_row_mapper.dart';
-import '../../../activity/nightjar_activity_provider.dart';
-import '../../../activity/nightjar_activity_row_mapper.dart';
-import '../../../activity/screens/nightjar_activity_detail_screen.dart';
+import '../../../activity/nyctis_activity_provider.dart';
+import '../../../activity/nyctis_activity_row_mapper.dart';
+import '../../../activity/screens/nyctis_activity_detail_screen.dart';
 import '../../../activity/screens/mobile/mobile_transaction_status_screen.dart';
 import '../../../activity/swap_activity_row_items_provider.dart';
 import '../../../activity/swap_activity_row_mapper.dart';
@@ -52,14 +52,15 @@ import '../../../migration/providers/ironwood_migration_announcement_provider.da
 import '../../../migration/widgets/mobile/mobile_ironwood_migration_attention.dart';
 import '../../../migration/providers/ironwood_migration_coordinator_provider.dart';
 import '../../../migration/widgets/mobile/mobile_ironwood_migration_announcement_sheet.dart';
-import '../../../nightjar_assets/providers/nightjar_asset_metadata_provider.dart';
-import '../../../nightjar_assets/providers/nightjar_assets_view_provider.dart';
+import '../../../nyctis_assets/providers/nyctis_asset_metadata_provider.dart';
+import '../../../nyctis_assets/providers/nyctis_assets_view_provider.dart';
 import '../../../swap/models/swap_activity_navigation.dart';
 import '../../../swap/providers/swap_state_provider.dart';
 import '../../../swap/widgets/swap_activity_status_auto_refresh.dart';
 import '../../services/transparent_shielding_service.dart';
 import 'mobile_keystone_shield_screen.dart';
 import 'mobile_ledger_shield_screen.dart';
+import '../../widgets/home_nyctis_activity.dart';
 
 /// Mobile home tab: shielded balance card, send/receive actions, and
 /// up to ten recent activity rows — Figma `HOME` section frames
@@ -1117,26 +1118,34 @@ class _HomeContentState extends ConsumerState<_HomeContent> {
             },
           ),
         ),
-      // Nightjar messages. The provider is synchronous and answers an empty
+      // Nyctis messages. The provider is synchronous and answers an empty
       // list for every degraded case, so an unconfigured or unreachable
-      // Nightjar leaves this list exactly as it is without it.
-      for (final item in ref.watch(nightjarActivityItemsProvider))
-        nightjarActivityEntry(
+      // Nyctis leaves this list exactly as it is without it.
+      //
+      // Home shows what happened to this wallet and nothing else. The settling
+      // row counts channel messages above the finality cut-off, which are
+      // mostly other people's, so on Home it was a permanent spinner claiming
+      // a payment of the user's was pending. It stays on the assets screen's
+      // notice and the full activity feed, where it is read as channel state.
+      for (final item in homeNyctisActivityItems(
+        ref.watch(nyctisActivityItemsProvider),
+      ))
+        nyctisActivityEntry(
           context: context,
           item: item,
           // Accepted assets only — see the provider. An unaccepted asset has
           // no bytes and keeps the icon (asset-metadata-v0 section 5).
-          logos: ref.watch(nightjarAssetLogosProvider),
+          logos: ref.watch(nyctisAssetLogosProvider),
           privacyModeEnabled: privacyModeEnabled,
           dateOnlyTimestamp: true,
           // The message receipt, with the classified row travelling in
           // `extra`. A settling row is not a message and the mapper drops this
           // callback for it.
           onTap: () => context.push(
-            nightjarActivityDetailRouteFor(item.msgId),
-            extra: nightjarActivityDetailArgsFor(
+            nyctisActivityDetailRouteFor(item.msgId),
+            extra: nyctisActivityDetailArgsFor(
               item,
-              view: ref.read(nightjarAssetsViewProvider).value,
+              view: ref.read(nyctisAssetsViewProvider).value,
             ),
           ),
         ),

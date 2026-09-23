@@ -351,7 +351,7 @@ void main() {
       final candidates = fallbackRpcEndpointCandidatesFor(
         const RpcEndpointConfig(
           networkName: 'regtest',
-          lightwalletdUrl: 'http://127.0.0.1:19070',
+          lightwalletdUrl: 'http://127.0.0.1:19067',
           presetId: kRegtestUnavailableRpcEndpointPresetId,
         ),
       );

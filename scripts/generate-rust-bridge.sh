@@ -17,7 +17,8 @@
 #     Error: unexpected token, expected `;`
 #
 # `super let` is not written anywhere in this project. It is how rustc 1.95.0
-# (the stable toolchain pinned by the repo-root rust-toolchain.toml) desugars
+# (the current stable; this repository pins no toolchain, and cargokit builds
+# with `stable` unless VIZOR_RUST_TOOLCHAIN names an exact release) desugars
 # `std::pin::pin!`. As of zcash_voting 5.1.0 it reaches the expanded text
 # exactly once, inside the body of `observe_helper_http`.
 #
@@ -48,8 +49,8 @@
 #
 # If that exits 0, delete this shim, replace it with a plain call to that
 # command, and update README.md, CONTRIBUTING.md and AGENTS.md, which all point
-# here. Downgrading rustc is not an alternative: the toolchain pin lives at the
-# repo root and is load-bearing for reproducible wasm builds.
+# here. Downgrading rustc is not an alternative: builds follow `stable` (see
+# above), so a local downgrade would only move the failure to the next machine.
 # ---------------------------------------------------------------------------
 set -euo pipefail
 cd "$(dirname "$0")/.."

@@ -8,18 +8,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart' show log;
 import 'core/profile_pictures.dart';
 import 'core/config/app_version_config.dart';
-import 'core/config/nightjar_config.dart';
+import 'core/config/nyctis_config.dart';
 import 'core/config/rpc_endpoint_config.dart';
 import 'core/config/swap_remote_enable_config.dart';
 import 'core/config/zcash_explorer.dart';
 import 'core/storage/app_secure_store.dart';
 import 'core/storage/wallet_paths.dart';
 import 'core/storage/secure_storage_diagnostics.dart';
-// The only feature import in this file. The accepted-asset set is a Nightjar
+// The only feature import in this file. The accepted-asset set is a Nyctis
 // model and belongs with the feature that enforces it; hydrating it here is
 // what keeps the first frame from drawing an asset row with no logo and then
 // popping one in a beat later.
-import 'features/nightjar_assets/models/nightjar_asset_acceptance.dart';
+import 'features/nyctis_assets/models/nyctis_asset_acceptance.dart';
 import 'providers/account_models.dart';
 import 'rust/api/sync.dart' as rust_sync;
 import 'rust/api/wallet.dart' as rust_wallet;
@@ -57,8 +57,8 @@ class AppBootstrapState {
     required this.initialSyncSnapshot,
     required this.network,
     required this.rpcEndpointConfig,
-    NightjarConfig? nightjarConfig,
-    this.nightjarAcceptedAssets = const NightjarAssetAcceptance.empty(),
+    NyctisConfig? nyctisConfig,
+    this.nyctisAcceptedAssets = const NyctisAssetAcceptance.empty(),
     this.explorerUrlTemplate = '',
     required this.themeMode,
     required this.privacyModeEnabled,
@@ -71,21 +71,21 @@ class AppBootstrapState {
     this.syncKeepAwakePromptSeen = false,
     this.failureKind,
     this.failureMessage,
-  }) : _nightjarConfig = nightjarConfig;
+  }) : _nyctisConfig = nyctisConfig;
 
   final String initialLocation;
   final AccountState initialAccountState;
   final AppSyncSnapshot initialSyncSnapshot;
   final String network;
   final RpcEndpointConfig rpcEndpointConfig;
-  final NightjarConfig? _nightjarConfig;
+  final NyctisConfig? _nyctisConfig;
 
   /// Assets whose issuer metadata the user accepted, read at startup.
   ///
   /// Empty is the safe default and the default a fixture gets: nothing in this
   /// feature fetches or draws a logo for an asset that is not in here
   /// (`spec/asset-metadata-v0.md` section 5).
-  final NightjarAssetAcceptance nightjarAcceptedAssets;
+  final NyctisAssetAcceptance nyctisAcceptedAssets;
   final String explorerUrlTemplate;
   final ThemeMode themeMode;
   final bool privacyModeEnabled;
@@ -103,12 +103,12 @@ class AppBootstrapState {
   final AppBootstrapFailureKind? failureKind;
   final String? failureMessage;
 
-  /// Nightjar settings read at startup, or the network's built-in defaults
+  /// Nyctis settings read at startup, or the network's built-in defaults
   /// when a caller supplied none. Defaults leave the feature disabled, so a
-  /// fixture that says nothing about Nightjar gets it switched off rather
+  /// fixture that says nothing about Nyctis gets it switched off rather
   /// than pointed at a channel.
-  NightjarConfig get nightjarConfig =>
-      _nightjarConfig ?? defaultNightjarConfig(network);
+  NyctisConfig get nyctisConfig =>
+      _nyctisConfig ?? defaultNyctisConfig(network);
 
   bool get hasWallet => initialAccountState.hasAccounts;
   bool get requiresUnlock => hasWallet && !isUnlocked;
@@ -120,7 +120,7 @@ class AppBootstrapState {
     initialSyncSnapshot: AppSyncSnapshot.empty,
     network: kZcashDefaultNetworkName,
     rpcEndpointConfig: defaultRpcEndpointConfig(kZcashDefaultNetworkName),
-    nightjarConfig: defaultNightjarConfig(kZcashDefaultNetworkName),
+    nyctisConfig: defaultNyctisConfig(kZcashDefaultNetworkName),
     themeMode: ThemeMode.system,
     privacyModeEnabled: false,
     isPasswordConfigured: false,
@@ -137,7 +137,7 @@ class AppBootstrapState {
     initialSyncSnapshot: AppSyncSnapshot.empty,
     network: kZcashDefaultNetworkName,
     rpcEndpointConfig: defaultRpcEndpointConfig(kZcashDefaultNetworkName),
-    nightjarConfig: defaultNightjarConfig(kZcashDefaultNetworkName),
+    nyctisConfig: defaultNyctisConfig(kZcashDefaultNetworkName),
     themeMode: ThemeMode.system,
     privacyModeEnabled: false,
     isPasswordConfigured: false,
@@ -268,8 +268,13 @@ Future<AppBootstrapState> loadAppBootstrap() async {
     );
     final rpcEndpointConfig = await _readRpcEndpointConfig(storage, network);
     final explorerUrlTemplate = await _readExplorerUrlTemplate(storage);
-    final nightjarConfig = await _readNightjarConfig(storage, network);
-    final nightjarAcceptedAssets = await _readNightjarAcceptedAssets(storage);
+    // A build without VIZOR_NYCTIS_ENABLED reads nothing Nyctis at all.
+    final nyctisConfig = kNyctisFeatureAvailable
+        ? await _readNyctisConfig(storage, network)
+        : defaultNyctisConfig(network);
+    final nyctisAcceptedAssets = kNyctisFeatureAvailable
+        ? await _readNyctisAcceptedAssets(storage)
+        : const NyctisAssetAcceptance.empty();
     final themeMode = await _readThemeMode(storage);
     final privacyModeEnabled = await _readPrivacyModeEnabled(storage);
     final swapEnabledOverrideCachedForRelease =
@@ -419,8 +424,8 @@ Future<AppBootstrapState> loadAppBootstrap() async {
       initialSyncSnapshot: initialSyncSnapshot,
       network: network,
       rpcEndpointConfig: rpcEndpointConfig,
-      nightjarConfig: nightjarConfig,
-      nightjarAcceptedAssets: nightjarAcceptedAssets,
+      nyctisConfig: nyctisConfig,
+      nyctisAcceptedAssets: nyctisAcceptedAssets,
       explorerUrlTemplate: explorerUrlTemplate,
       themeMode: themeMode,
       privacyModeEnabled: privacyModeEnabled,
@@ -552,35 +557,36 @@ Future<RpcEndpointConfig> _readRpcEndpointConfig(
   }
 }
 
-/// Reads the stored Nightjar settings, folded over the network's defaults.
+/// Reads the stored Nyctis settings, folded over the network's defaults.
 ///
 /// Mirrors [_readExplorerUrlTemplate]: a stored value that no longer parses is
 /// dropped back to the default so a bad indexer URL cannot block startup, but
 /// secure storage being unavailable at all still blocks it.
-Future<NightjarConfig> _readNightjarConfig(
+Future<NyctisConfig> _readNyctisConfig(
   AppSecureStore storage,
   String network,
 ) async {
   try {
-    return resolveStoredNightjarConfig(
+    return resolveStoredNyctisConfig(
       networkName: zcashNetworkFromName(network).name,
-      storedIndexerUrl: await storage.readString(kNightjarIndexerUrlKey),
-      storedChannelUivk: await storage.readString(kNightjarChannelUivkKey),
+      storedIndexerUrl: await storage.readString(kNyctisIndexerUrlKey),
+      storedChannelUivk: await storage.readString(kNyctisChannelUivkKey),
       storedChannelAddress: await storage.readString(
-        kNightjarChannelAddressKey,
+        kNyctisChannelAddressKey,
       ),
-      storedBirthday: await storage.readString(kNightjarBirthdayKey),
-      storedEnabled: await storage.readString(kNightjarEnabledKey),
-      storedProvingKeyDir: await storage.readString(kNightjarProvingKeyDirKey),
+      storedBirthday: await storage.readString(kNyctisBirthdayKey),
+      storedEnabled: await storage.readString(kNyctisEnabledKey),
+      storedProvingKeyDir: await storage.readString(kNyctisProvingKeyDirKey),
+      storedVkPin: await storage.readString(kNyctisVkPinKey),
     );
   } on SecureStorageUnavailableException {
     rethrow;
   } on FormatException catch (e) {
-    log('bootstrap: ignoring invalid Nightjar settings: $e');
-    return defaultNightjarConfig(network);
+    log('bootstrap: ignoring invalid Nyctis settings: $e');
+    return defaultNyctisConfig(network);
   } catch (e) {
-    log('bootstrap: failed to read Nightjar settings: $e');
-    return defaultNightjarConfig(network);
+    log('bootstrap: failed to read Nyctis settings: $e');
+    return defaultNyctisConfig(network);
   }
 }
 
@@ -591,18 +597,18 @@ Future<NightjarConfig> _readNightjarConfig(
 /// guessing wrong means drawing an issuer-chosen picture for an asset the user
 /// never accepted. Secure storage being unavailable at all still blocks
 /// startup, like every other setting here.
-Future<NightjarAssetAcceptance> _readNightjarAcceptedAssets(
+Future<NyctisAssetAcceptance> _readNyctisAcceptedAssets(
   AppSecureStore storage,
 ) async {
   try {
-    return NightjarAssetAcceptance.decode(
-      await storage.readString(kNightjarAcceptedAssetsKey),
+    return NyctisAssetAcceptance.decode(
+      await storage.readString(kNyctisAcceptedAssetsKey),
     );
   } on SecureStorageUnavailableException {
     rethrow;
   } catch (e) {
-    log('bootstrap: failed to read Nightjar accepted assets: $e');
-    return const NightjarAssetAcceptance.empty();
+    log('bootstrap: failed to read Nyctis accepted assets: $e');
+    return const NyctisAssetAcceptance.empty();
   }
 }
 

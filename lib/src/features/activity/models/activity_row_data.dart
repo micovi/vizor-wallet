@@ -17,7 +17,7 @@ import 'package:flutter/widgets.dart';
 /// the label on its supporting line whenever it draws the image.
 ///
 /// Acceptance (section 5 again) is *not* enforced here and must not be.
-/// `nightjarAssetLogosProvider` is the only source of these bytes and it
+/// `nyctisAssetLogosProvider` is the only source of these bytes and it
 /// yields entries for accepted assets only; an unaccepted asset therefore has
 /// no bytes, [ActivityRowData.leadingImage] stays null, and the row falls back
 /// to its icon. A second way to get bytes into a row would be a second way to

@@ -191,8 +191,9 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           giftCardUsageProvider('card').overrideWith(
-            (ref) async =>
-                const GiftCardUsage(status: GiftCardUsageStatus.unused),
+            (ref) async => const GiftCardUsage(
+              status: GiftCardUsageStatus.unused,
+            ),
           ),
         ],
       );

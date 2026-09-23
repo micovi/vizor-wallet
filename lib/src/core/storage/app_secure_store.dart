@@ -37,20 +37,24 @@ const kPaymentLinkClaimsInFlightCountKey =
     'zcash_gift_card_claims_in_flight_v1';
 const kZcashExplorerUrlKey = 'zcash_explorer_url';
 
-/// Nightjar settings. Plain (locked-readable) so the feature can render its
+/// Nyctis settings. Plain (locked-readable) so the feature can render its
 /// configuration before the wallet is unlocked. Versioned because a stored
 /// key is a persistent compatibility surface: a later channel format gets a
 /// `_v2` key rather than a reinterpretation of these values.
-const kNightjarEnabledKey = 'zcash_nightjar_enabled_v1';
-const kNightjarIndexerUrlKey = 'zcash_nightjar_indexer_url_v1';
-const kNightjarChannelUivkKey = 'zcash_nightjar_channel_uivk_v1';
-const kNightjarChannelAddressKey = 'zcash_nightjar_channel_address_v1';
-const kNightjarBirthdayKey = 'zcash_nightjar_birthday_v1';
+const kNyctisEnabledKey = 'zcash_nyctis_enabled_v1';
+const kNyctisIndexerUrlKey = 'zcash_nyctis_indexer_url_v1';
+const kNyctisChannelUivkKey = 'zcash_nyctis_channel_uivk_v1';
+const kNyctisChannelAddressKey = 'zcash_nyctis_channel_address_v1';
+const kNyctisBirthdayKey = 'zcash_nyctis_birthday_v1';
+
+/// The channel's pinned verifying-key hash, when it differs from the built-in
+/// one. Plain for the same reason as the channel: reading needs it.
+const kNyctisVkPinKey = 'zcash_nyctis_vk_pin_v1';
 
 /// Folder holding `interpreter-v0.pk`, `.vk` and `.circuit`. Nothing serves
 /// the 83 MiB proving key over HTTP, so the path the user points at is the
 /// whole setting — and it is only needed to *send*, never to read.
-const kNightjarProvingKeyDirKey = 'zcash_nightjar_proving_key_dir_v1';
+const kNyctisProvingKeyDirKey = 'zcash_nyctis_proving_key_dir_v1';
 
 /// Assets whose issuer metadata the user has explicitly accepted, as a JSON
 /// list of `{id, name, symbol}`.
@@ -62,9 +66,9 @@ const kNightjarProvingKeyDirKey = 'zcash_nightjar_proving_key_dir_v1';
 /// *name and symbol* alongside is what lets the collision warning still fire
 /// for an asset accepted long ago and no longer in the channel view.
 ///
-/// Plain (locked-readable) like the other Nightjar settings: it decides
+/// Plain (locked-readable) like the other Nyctis settings: it decides
 /// decoration, holds no secret, and the assets screen renders before unlock.
-const kNightjarAcceptedAssetsKey = 'zcash_nightjar_accepted_assets_v1';
+const kNyctisAcceptedAssetsKey = 'zcash_nyctis_accepted_assets_v1';
 const _secureStoreSaltKey = 'zcash_secure_store_salt';
 const _passwordVerifierKey = 'zcash_password_verifier';
 const _passwordVerifierSaltKey = 'zcash_password_verifier_salt';

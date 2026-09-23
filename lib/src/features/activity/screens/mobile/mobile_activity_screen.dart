@@ -19,11 +19,11 @@ import '../../../../rust/api/sync.dart' as rust_sync;
 import '../../activity_feed_sections.dart';
 import '../../activity_row_mapper.dart';
 import '../../gift_card_activity_index.dart';
-import '../../../nightjar_assets/providers/nightjar_asset_metadata_provider.dart';
-import '../../../nightjar_assets/providers/nightjar_assets_view_provider.dart';
-import '../../nightjar_activity_provider.dart';
-import '../../nightjar_activity_row_mapper.dart';
-import '../nightjar_activity_detail_screen.dart';
+import '../../../nyctis_assets/providers/nyctis_asset_metadata_provider.dart';
+import '../../../nyctis_assets/providers/nyctis_assets_view_provider.dart';
+import '../../nyctis_activity_provider.dart';
+import '../../nyctis_activity_row_mapper.dart';
+import '../nyctis_activity_detail_screen.dart';
 import '../../../swap/models/swap_activity_navigation.dart';
 import '../../../swap/widgets/swap_activity_status_auto_refresh.dart';
 import '../../swap_activity_row_items_provider.dart';
@@ -262,16 +262,13 @@ class _MobileActivityScreenState extends ConsumerState<MobileActivityScreen> {
           );
     final swapReceiveTxByIntent = absorption.receiveTxByIntent;
 
-    // An empty list for every degraded Nightjar case — unconfigured, still
+    // An empty list for every degraded Nyctis case — unconfigured, still
     // loading, unreachable, unverified — so this feed never waits on it.
-    final nightjarItems = ref.watch(nightjarActivityItemsProvider);
+    final nyctisItems = ref.watch(nyctisActivityItemsProvider);
     // Built from the accepted set and nothing else, so an asset the user never
     // accepted has no bytes and its row keeps the generic icon
     // (`spec/asset-metadata-v0.md` section 5).
-    final nightjarLogos = ref.watch(nightjarAssetLogosProvider);
-    // Read, not watched: it is only wanted at the moment a row is tapped, and
-    // the rows themselves come from the synchronous items provider.
-    final nightjarView = ref.read(nightjarAssetsViewProvider).value;
+    final nyctisLogos = ref.watch(nyctisAssetLogosProvider);
 
     final entries = <ActivityEntry>[
       for (final tx in giftCardActivityIndex.withPendingClaims(transactions))
@@ -306,19 +303,24 @@ class _MobileActivityScreenState extends ConsumerState<MobileActivityScreen> {
             },
           ),
         ),
-      for (final item in nightjarItems)
-        nightjarActivityEntry(
+      for (final item in nyctisItems)
+        nyctisActivityEntry(
           context: context,
           item: item,
-          logos: nightjarLogos,
+          logos: nyctisLogos,
           privacyModeEnabled: privacyModeEnabled,
-          // No transaction receipt to open: a Nightjar message is channel
+          // No transaction receipt to open: a Nyctis message is channel
           // state, not a transaction this wallet ever saw. The asset screen
           // holds the rest of the story, and the message this row is about
           // rides along in the query string.
+          // The view is read only at the moment a row is tapped; the rows
+          // themselves come from the synchronous items provider.
           onTap: () => context.push(
-            nightjarActivityDetailRouteFor(item.msgId),
-            extra: nightjarActivityDetailArgsFor(item, view: nightjarView),
+            nyctisActivityDetailRouteFor(item.msgId),
+            extra: nyctisActivityDetailArgsFor(
+              item,
+              view: ref.read(nyctisAssetsViewProvider).value,
+            ),
           ),
         ),
     ];

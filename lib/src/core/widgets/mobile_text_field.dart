@@ -38,6 +38,8 @@ class MobileTextField extends StatefulWidget {
     this.height,
     this.radius,
     this.enabled = true,
+    this.semanticsLabel,
+    this.semanticsHint,
     super.key,
   });
 
@@ -87,6 +89,14 @@ class MobileTextField extends StatefulWidget {
 
   /// Whether the field and its outer tap target accept input.
   final bool enabled;
+
+  /// Accessible name of the field when its visible label is drawn outside
+  /// it. The collapsed decoration has no label of its own, so without this a
+  /// screen reader announces only "text field" and the hint.
+  final String? semanticsLabel;
+
+  /// Extra spoken context, such as the field's current validation error.
+  final String? semanticsHint;
 
   @override
   State<MobileTextField> createState() => _MobileTextFieldState();
@@ -156,6 +166,13 @@ class _MobileTextFieldState extends State<MobileTextField> {
     return (Offset.zero & renderObject.size).contains(localPosition);
   }
 
+  Widget _withSemantics(Widget field) {
+    final label = widget.semanticsLabel;
+    final hint = widget.semanticsHint;
+    if (label == null && hint == null) return field;
+    return Semantics(label: label, hint: hint, child: field);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -217,21 +234,23 @@ class _MobileTextFieldState extends State<MobileTextField> {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: KeyedSubtree(
                   key: _textFieldRegionKey,
-                  child: TextField(
-                    key: widget.fieldKey,
-                    controller: widget.controller,
-                    focusNode: widget.focusNode,
-                    enabled: widget.enabled,
-                    onChanged: widget.onChanged,
-                    onSubmitted: widget.onSubmitted,
-                    textInputAction: widget.textInputAction,
-                    keyboardType: widget.keyboardType,
-                    inputFormatters: widget.inputFormatters,
-                    style: textStyle,
-                    cursorColor: colors.text.accent,
-                    decoration: InputDecoration.collapsed(
-                      hintText: widget.hintText,
-                      hintStyle: hintStyle,
+                  child: _withSemantics(
+                    TextField(
+                      key: widget.fieldKey,
+                      controller: widget.controller,
+                      focusNode: widget.focusNode,
+                      enabled: widget.enabled,
+                      onChanged: widget.onChanged,
+                      onSubmitted: widget.onSubmitted,
+                      textInputAction: widget.textInputAction,
+                      keyboardType: widget.keyboardType,
+                      inputFormatters: widget.inputFormatters,
+                      style: textStyle,
+                      cursorColor: colors.text.accent,
+                      decoration: InputDecoration.collapsed(
+                        hintText: widget.hintText,
+                        hintStyle: hintStyle,
+                      ),
                     ),
                   ),
                 ),

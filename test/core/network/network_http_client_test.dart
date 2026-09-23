@@ -35,6 +35,111 @@ void main() {
     ]);
   });
 
+  group('maxBodyBytes', () {
+    NetworkHttpClient torClient(_RecordingTorBridge bridge) {
+      final client = NetworkHttpClient(
+        torDesired: () => true,
+        torBootstrapping: () => false,
+        torBridge: bridge,
+      );
+      addTearDown(() => client.close());
+      return client;
+    }
+
+    test('an uncapped request is sent exactly as before', () async {
+      final bridge = _RecordingTorBridge([
+        NetworkHttpResponse(statusCode: 200, bodyBytes: Uint8List(4096)),
+      ]);
+
+      final response = await torClient(bridge).request(
+        'GET',
+        Uri.parse('https://example.com/data'),
+        headers: const {'accept-encoding': 'gzip'},
+      );
+
+      expect(response.bodyBytes, hasLength(4096));
+      expect(bridge.requests.single.headers, {'accept-encoding': 'gzip'});
+    });
+
+    test(
+      'a capped request asks for identity and refuses an oversize body',
+      () async {
+        final bridge = _RecordingTorBridge([
+          NetworkHttpResponse(statusCode: 200, bodyBytes: Uint8List(4096)),
+        ]);
+
+        await expectLater(
+          torClient(bridge).request(
+            'GET',
+            Uri.parse('https://example.com/data'),
+            headers: const {'Accept-Encoding': 'gzip'},
+            maxBodyBytes: 1024,
+          ),
+          throwsA(
+            isA<NetworkHttpResponseTooLargeException>()
+                .having((e) => e.maxBodyBytes, 'maxBodyBytes', 1024)
+                .having((e) => e.receivedBytes, 'receivedBytes', 4096),
+          ),
+        );
+        expect(bridge.requests.single.headers, {'accept-encoding': 'identity'});
+      },
+    );
+
+    test('a capped request refuses a compressed body', () async {
+      final bridge = _RecordingTorBridge([
+        NetworkHttpResponse(
+          statusCode: 200,
+          bodyBytes: Uint8List(10),
+          headers: const {
+            'content-encoding': ['br'],
+          },
+        ),
+      ]);
+
+      await expectLater(
+        torClient(bridge).request(
+          'GET',
+          Uri.parse('https://example.com/data'),
+          maxBodyBytes: 1024,
+        ),
+        throwsA(isA<NetworkHttpCompressedResponseException>()),
+      );
+    });
+
+    test('the cap applies to a redirect hop too', () async {
+      final bridge = _RecordingTorBridge([
+        NetworkHttpResponse(
+          statusCode: 302,
+          bodyBytes: Uint8List(4096),
+          headers: const {
+            'location': ['/next'],
+          },
+        ),
+      ]);
+
+      await expectLater(
+        torClient(bridge).request(
+          'GET',
+          Uri.parse('https://example.com/data'),
+          maxBodyBytes: 1024,
+        ),
+        throwsA(isA<NetworkHttpResponseTooLargeException>()),
+      );
+      expect(bridge.requests, hasLength(1));
+    });
+
+    test('rejects a negative cap', () {
+      expect(
+        () => torClient(_RecordingTorBridge(const [])).request(
+          'GET',
+          Uri.parse('https://example.com/data'),
+          maxBodyBytes: -1,
+        ),
+        throwsArgumentError,
+      );
+    });
+  });
+
   test('Tor mode passes the caller deadline into the Rust request', () async {
     final bridge = _RecordingTorBridge([
       NetworkHttpResponse(statusCode: 200, bodyBytes: Uint8List(0)),

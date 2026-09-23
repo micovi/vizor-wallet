@@ -210,7 +210,7 @@ class NyctisProvingKeyStatus {
   /// The folder as resolved, or `''` when none is set.
   final String dir;
 
-  /// Circuit fingerprint, e.g. `constraints=136119;instances=30`. A
+  /// Circuit fingerprint, e.g. `constraints=136263;instances=32`. A
   /// diagnostic: it says which circuit shape the keys were made for, not
   /// whose ceremony made them — which is why [vkHash] exists.
   final String? circuit;

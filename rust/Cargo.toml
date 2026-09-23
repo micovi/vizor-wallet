@@ -96,7 +96,7 @@ tendermint-light-client-verifier = "0.40.4"
 # Nyctis needs (fetching blocks, decrypting memos, sending a transaction) is
 # done with this wallet's own stack instead.
 #
-# These are path dependencies into the Nyctis repo three levels up, so this
+# These are path dependencies into the Nyctis repo two levels up, so this
 # directory is not a standalone checkout: `cargo build` here needs
 # `../../nyctis/crates/` to exist.
 [dependencies.nyctis-codec]

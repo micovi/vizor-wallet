@@ -99,8 +99,9 @@ impl Message {
 /// is suppressed by being given an id that is already in the set.
 ///
 /// The reassembler computes this hash itself and will not complete a message that fails it, so an
-/// honest source cannot produce a mismatch — all 350 messages on the devnet channel recompute
-/// exactly. A mismatch is therefore never a message to skip past; it is proof that the thing
+/// honest source cannot produce a mismatch — every message of the recorded fixture channel
+/// (`rust/tests/fixtures/nyctis/devnet-channel.json`) recomputes exactly, as did all 67 the devnet
+/// indexer served on 23 September 2026. A mismatch is therefore never a message to skip past; it is proof that the thing
 /// answering `/api/messages` is not running the protocol, and continuing would produce a root
 /// that looks authoritative. Hence an error for the whole replay rather than a per-message
 /// ignore: dropping just the bad message would hand the attacker the suppression they were after
@@ -891,7 +892,7 @@ mod tests {
     /// **Attack 2, reproduced and refused: one applied message suppresses another.**
     ///
     /// Give message B the `msg_id` of message A and the state machine's replay-protection set
-    /// swallows B — `applied` drops 7 → 6, the root changes, and the only trace is a single line
+    /// swallows B — `applied` drops by one, the root changes, and the only trace is a single line
     /// in `ignored_reasons` reading "message already applied". Every message served is still
     /// individually valid and the *set* is complete, so comparing message lists against a second
     /// indexer does not catch it. Only rebinding the id to the body does.

@@ -175,8 +175,9 @@ Future<NyProvingKey> nyctisCheckProvingKey({required String keysDir}) =>
 
 /// Turn "pay `amount` base units of `asset_id` to `recipient`" into the memos that carry it.
 ///
-/// **This function does not broadcast, and it does not touch the network.** It returns memo
-/// bytes. Putting them on chain is the caller's next step and it is this wallet's ordinary send
+/// **This function does not broadcast.** It returns memo bytes; its only network access is the
+/// replay fetching, for a message that claims ZEC, the carrying transaction from this wallet's own
+/// lightwalletd. Putting them on chain is the caller's next step and it is this wallet's ordinary send
 /// path: one `RawSendOutput` per entry of `NyPayPlan.memos`, every one addressed to the
 /// *channel's* unified address (not the Nyctis recipient — a Nyctis address has no Zcash
 /// receiver), every one carrying `NyPayPlan.memo_value_zatoshi`, all of them in the single call
@@ -194,7 +195,8 @@ Future<NyProvingKey> nyctisCheckProvingKey({required String keysDir}) =>
 /// wrong-circuit folder is refused before the replay, and a folder whose key set is not the one
 /// the channel verifies with is refused after it.
 ///
-/// Costs: the replay is seconds, the proof about 1.3 s and ~600 MB of peak memory. Call it off
+/// Costs: the replay is seconds, the proof about 1.2 s and ~590 MiB of peak memory (circuit v0.4,
+/// M4 Pro; v0.5 not re-benchmarked). Call it off
 /// the UI isolate and show progress. The proving key is read and dropped inside this call and is
 /// never cached, so that peak is transient rather than a permanent floor.
 ///
@@ -709,7 +711,7 @@ class NyPayPlan {
 
 /// What a settings screen needs to know about a proving-key folder.
 ///
-/// Nyctis's verifying key is 1 784 bytes and arrives over HTTP; its **proving** key is ~83 MiB
+/// Nyctis's verifying key is 1,880 bytes and arrives over HTTP; its **proving** key is ~83 MiB
 /// and arrives from nowhere — nothing serves it and nothing should. This PoC therefore takes a
 /// folder path from settings, and this struct is what lets that screen say "sending is
 /// unavailable, and here is why" instead of failing at the moment a user presses Send.
@@ -717,7 +719,7 @@ class NyProvingKey {
   /// The folder, as resolved.
   final String dir;
 
-  /// The circuit fingerprint, e.g. `constraints=136119;instances=30`. A diagnostic: it says
+  /// The circuit fingerprint, e.g. `constraints=136263;instances=32`. A diagnostic: it says
   /// which circuit shape the keys were made for, not whose ceremony made them.
   final String circuit;
 

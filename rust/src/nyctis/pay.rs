@@ -1,14 +1,16 @@
-//! Building a Nyctis payment: the half of the PoC that `docs/NYCTIS-POC.md` records as
-//! missing.
+//! Building a Nyctis payment. `docs/NYCTIS-POC.md` ("Sending") describes the flow in the app that
+//! calls it.
 //!
-//! Reading a channel needs a 1 784-byte verifying key and about 3 ms per proof. *Making* a
-//! payment needs the ~83 MiB proving key, about 1.3 s of CPU and ~600 MB of peak memory for one
-//! proof. That asymmetry is the whole shape of this module: everything cheap is done first and
-//! everything expensive is done once, at the end, after every reason to refuse has already been
-//! found.
+//! Reading a channel needs a 1,880-byte verifying key and about 3 ms per proof. *Making* a
+//! payment needs the ~83 MiB proving key, about 1.2 s of CPU and ~590 MiB of peak memory for one
+//! proof (circuit v0.4 on an M4 Pro laptop; the current circuit v0.5 is not re-benchmarked). That
+//! asymmetry is the whole shape of this module: everything cheap is done first and everything
+//! expensive is done once, at the end, after every reason to refuse has already been found.
 //!
-//! **Nothing here touches the network and nothing here broadcasts.** [`build_pay`] returns memo
-//! bytes. Putting them on chain is this wallet's ordinary send path —
+//! **Nothing here broadcasts.** [`build_pay`] returns memo bytes. Its only network access is the
+//! replay's: for a message that claims ZEC it may fetch the carrying transaction from this
+//! wallet's own lightwalletd (`replay.rs`, `carrier.rs`), never from the indexer. Putting the
+//! memos on chain is this wallet's ordinary send path —
 //! `wallet::sync::send::propose_send_raw` with one [`RawSendOutput`] per memo, all addressed to
 //! the channel's unified address, followed by `execute_proposal`. The 1-8 memos **must ride one
 //! transaction**: a reader reassembles a message only from fragments that share a txid, so a
@@ -69,7 +71,7 @@ pub struct ProvingKeyInfo {
     /// The directory, as given.
     pub dir: String,
     /// The circuit fingerprint the sidecar manifest records and this build agrees with, e.g.
-    /// `constraints=136119;instances=30`. A **diagnostic**: it says which circuit shape the key
+    /// `constraints=136263;instances=32`. A **diagnostic**: it says which circuit shape the key
     /// was made for and nothing about whose ceremony made it.
     pub circuit: String,
     /// `BLAKE2b-256` of the compressed verifying key beside the proving key.

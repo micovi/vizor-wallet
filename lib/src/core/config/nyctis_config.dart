@@ -38,8 +38,10 @@ const kNyctisRegtestIndexerUrl = 'http://127.0.0.1:8787';
 /// the channel pair and the verifying-key pin, so re-pointing the wallet is a
 /// re-run of the build rather than a source change.
 ///
-/// The defaults below are the devnet as of 2026-09-23; they are kept so that a
-/// plain `flutter run` still starts somewhere real.
+/// The defaults below are the recorded fixture channel
+/// (`rust/tests/fixtures/nyctis/devnet-channel.json`, re-recorded 2026-09-23),
+/// kept so that a plain `flutter run` still starts somewhere real; the live
+/// devnet channel comes from the build script's defines.
 const kNyctisRegtestBirthday = int.fromEnvironment(
   'NYCTIS_REGTEST_BIRTHDAY',
   defaultValue: 2,

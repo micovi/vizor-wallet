@@ -13,8 +13,9 @@
 # So: do not edit these flags to fix something else. If they must change, expect
 # to recreate the devnet wallet, and say so before doing it.
 #
-# Prerequisites: the Nyctis devnet running (infra/README.md), the indexer on
-# 8787, and a signing identity in the login keychain.
+# Prerequisites: the Nyctis devnet running (infra/README.md), including the
+# lightwalletd on 19067 the wallet syncs through, the indexer on 8787, and a
+# signing identity in the login keychain.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

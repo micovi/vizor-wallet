@@ -19,15 +19,18 @@ be reported here, not upstream, unless they reproduce on an unmodified Vizor.
 ## What this fork adds
 
 All of it sits behind a build-time switch, `--dart-define=VIZOR_NYCTIS_ENABLED=true`, off by
-default: without it the app behaves exactly like upstream (no Nyctis routes, reads or rows).
+default: without it the app behaves exactly like upstream (no Nyctis routes, reads or rows). A
+build with the switch still fetches no channel until the user turns Nyctis on in Settings →
+Nyctis, which is also off by default.
 
 - **Reading a Nyctis channel.** The wallet fetches messages from a Nyctis indexer, recomputes every
   message id, verifies every Groth16 proof and replays the channel itself, so the indexer supplies
   data, not trust. The read path uses a viewing key derived once per unlock and kept in memory
   only; it never takes the seed.
 - **Holding and paying Nyctis assets.** Balances, collections (with the cap bound into the
-  collection id), metadata documents shown only after the user accepts them, and payments built as
-  proven transitions carried in a raw shielded memo.
+  collection id), metadata documents fetched and shown only after the user accepts them, and
+  payments built as proven transitions carried in raw shielded memos (one to eight per payment,
+  all in one Zcash transaction to the channel).
 - The protocol crates are path dependencies on the Nyctis repository beside this one
   (`../nyctis/crates/nyctis-*`, see `rust/Cargo.toml`); `docs/NYCTIS-POC.md` describes the design,
   the devnet and the limits. No mainnet channel is configured.

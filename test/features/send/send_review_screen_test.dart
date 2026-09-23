@@ -110,38 +110,6 @@ void main() {
     });
   }
 
-  testWidgets('Ledger review with a newline cannot request signing', (
-    tester,
-  ) async {
-    var signingCalls = 0;
-    await _setDesktopViewport(tester);
-    await tester.pumpWidget(
-      _harness(
-        _reviewArgs(addressType: 'unified', memo: 'first\nsecond'),
-        bootstrap: _bootstrap(
-          isHardware: true,
-          hardwareSignerKind: HardwareSignerKind.ledger,
-        ),
-        ledgerSigner: (_) async {
-          signingCalls++;
-          return [9, 1];
-        },
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Confirm with Ledger'));
-    await tester.pumpAndSettle();
-    expect(signingCalls, 0);
-    expect(rustApi.createPcztCalls, 0);
-    expect(find.byType(LedgerSigningModal), findsNothing);
-    expect(
-      find.text(
-        "Ledger can't sign non-English text yet",
-      ),
-      findsOneWidget,
-    );
-  });
-
   testWidgets('a whitespace-only memo keeps its Message row, with a '
       'placeholder', (tester) async {
     // An edited ZIP-321 request can carry a memo made only of whitespace, and
@@ -856,37 +824,38 @@ void main() {
     expect(find.textContaining('previous transaction'), findsNothing);
   });
 
-  testWidgets('verify modal shows own-account header without tx count', (
-    tester,
-  ) async {
-    rustApi
-      ..unifiedAddress = _longAddress
-      ..previousTransactionCount = 4;
-    await _setDesktopViewport(tester);
-    await tester.pumpWidget(
-      _harness(
-        _reviewArgs(addressType: 'unified'),
-        addressBookRepository: _FakeAddressBookRepository(),
-      ),
-    );
-    await tester.pumpAndSettle();
+  testWidgets(
+    'verify modal labels a legacy own-account address without tx count',
+    (tester) async {
+      rustApi
+        ..legacyAddresses = [_longAddress]
+        ..previousTransactionCount = 4;
+      await _setDesktopViewport(tester);
+      await tester.pumpWidget(
+        _harness(
+          _reviewArgs(addressType: 'unified'),
+          addressBookRepository: _FakeAddressBookRepository(),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Show full address'));
-    await tester.pumpAndSettle();
-    await _flushRealAsync(tester);
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Show full address'));
+      await tester.pumpAndSettle();
+      await _flushRealAsync(tester);
+      await tester.pumpAndSettle();
 
-    expect(find.byType(VerifyAddressModal), findsOneWidget);
-    expect(find.text('Unknown shielded address'), findsNothing);
-    expect(
-      find.descendant(
-        of: find.byType(VerifyAddressModal),
-        matching: find.text('Account 1'),
-      ),
-      findsOneWidget,
-    );
-    expect(find.textContaining('previous transaction'), findsNothing);
-  });
+      expect(find.byType(VerifyAddressModal), findsOneWidget);
+      expect(find.text('Unknown shielded address'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(VerifyAddressModal),
+          matching: find.text('Account 1'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('previous transaction'), findsNothing);
+    },
+  );
 
   testWidgets(
     'transparent own-account address resolves to the account header',
@@ -1386,6 +1355,39 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Try again'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Ledger memo refused by an older app asks for an update and a retry',
+    (tester) async {
+      var signerCalls = 0;
+      await _setDesktopViewport(tester);
+      await tester.pumpWidget(
+        _harness(
+          _reviewArgs(addressType: 'unified'),
+          bootstrap: _bootstrap(
+            isHardware: true,
+            hardwareSignerKind: HardwareSignerKind.ledger,
+          ),
+          ledgerSigner: (_) async {
+            signerCalls++;
+            throw StateError(ledgerMemoHashUnsupportedError);
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Confirm with Ledger'));
+      await _flushRealAsync(tester);
+
+      expect(find.text('Ledger app update required'), findsOneWidget);
+      expect(find.text(ledgerMemoHashUnsupportedError), findsOneWidget);
+
+      // After updating the app, a retry reads the new version.
+      await tester.tap(find.text('Try again'));
+      await _flushRealAsync(tester);
+      expect(signerCalls, 2);
     },
   );
 
@@ -2944,6 +2946,7 @@ class _RustApiFake implements RustLibApi {
   Completer<void>? discardCompleter;
   Object? discardError;
   String unifiedAddress = 'u1ownaccountaddressnotmatchingrecipient';
+  List<String> legacyAddresses = [];
   String transparentAddress = 't1ownaccountaddressnotmatchingrecipient';
 
   void reset() {
@@ -2965,6 +2968,7 @@ class _RustApiFake implements RustLibApi {
     discardCompleter = null;
     discardError = null;
     unifiedAddress = 'u1ownaccountaddressnotmatchingrecipient';
+    legacyAddresses = [];
     transparentAddress = 't1ownaccountaddressnotmatchingrecipient';
   }
 
@@ -3005,6 +3009,20 @@ class _RustApiFake implements RustLibApi {
   }) async {
     return previousTransactionCount;
   }
+
+  @override
+  Future<List<String>> crateApiWalletGetReceiveAddressAliases({
+    required String dbPath,
+    required String network,
+    required String accountUuid,
+  }) async => [
+    ...legacyAddresses,
+    await crateApiWalletGetUnifiedAddress(
+      dbPath: dbPath,
+      network: network,
+      accountUuid: accountUuid,
+    ),
+  ];
 
   @override
   Future<String> crateApiWalletGetUnifiedAddress({

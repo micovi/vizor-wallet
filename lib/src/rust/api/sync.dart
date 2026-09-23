@@ -2749,15 +2749,21 @@ class TransactionDetailOutput {
   final String? address;
   final BigInt amountZatoshi;
   final String pool;
+  final bool usesOrchardReceiver;
 
   const TransactionDetailOutput({
     this.address,
     required this.amountZatoshi,
     required this.pool,
+    required this.usesOrchardReceiver,
   });
 
   @override
-  int get hashCode => address.hashCode ^ amountZatoshi.hashCode ^ pool.hashCode;
+  int get hashCode =>
+      address.hashCode ^
+      amountZatoshi.hashCode ^
+      pool.hashCode ^
+      usesOrchardReceiver.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -2766,7 +2772,8 @@ class TransactionDetailOutput {
           runtimeType == other.runtimeType &&
           address == other.address &&
           amountZatoshi == other.amountZatoshi &&
-          pool == other.pool;
+          pool == other.pool &&
+          usesOrchardReceiver == other.usesOrchardReceiver;
 }
 
 class TransactionInfo {

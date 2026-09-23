@@ -2535,6 +2535,7 @@ pub struct TransactionDetailOutput {
     pub address: Option<String>,
     pub amount_zatoshi: u64,
     pub pool: String,
+    pub uses_orchard_receiver: bool,
 }
 
 pub fn get_transaction_history(
@@ -2652,6 +2653,7 @@ pub fn get_transaction_detail(
                     address: output.address,
                     amount_zatoshi: output.amount_zatoshi,
                     pool: output.pool,
+                    uses_orchard_receiver: output.uses_orchard_receiver,
                 })
                 .collect(),
         })

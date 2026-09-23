@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'src/app_bootstrap.dart';
 import 'src/core/lifecycle/signing_shutdown_host.dart';
+import 'src/core/lifecycle/app_shutdown_signal.dart';
 import 'src/core/config/swap_feature_config.dart';
 import 'src/core/config/network_config.dart';
 import 'src/core/config/nyctis_config.dart' show kNyctisFeatureAvailable;
@@ -298,6 +299,11 @@ Future<void> runZcashWalletApp() async {
     SigningShutdownHost(
       desktop: isDesktopLayoutPlatform,
       coordinator: SigningShutdownCoordinator(
+        onExitStarted: () {
+          appShutdownSignal.begin();
+          rust_sync.cancelFullSync();
+          rust_sync.stopMempoolObserver();
+        },
         releaseReservations: rust_sync.shutdownSigningReservations,
         onError: (error, _) =>
             log('Shutdown reservation cleanup deferred: $error'),
@@ -2271,6 +2277,9 @@ class _WindowsUpdatePromptHostState
                   ).animate(animation);
                   return FadeTransition(
                     opacity: animation,
+                    // Keep semantics attached through zero-opacity frames
+                    // when a dismissed update prompt is shown again.
+                    alwaysIncludeSemantics: true,
                     child: SlideTransition(position: position, child: child),
                   );
                 },

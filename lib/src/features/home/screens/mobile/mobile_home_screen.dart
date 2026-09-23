@@ -1944,7 +1944,7 @@ class _AnimatedMobileTransparentBalanceStripState
       key: const ValueKey('mobile_home_transparent_balance_strip'),
       child: SizeTransition(
         sizeFactor: _sizeFactor,
-        axisAlignment: -1,
+        alignment: AlignmentDirectional.topStart,
         child: FadeTransition(
           opacity: _opacity,
           child: SlideTransition(

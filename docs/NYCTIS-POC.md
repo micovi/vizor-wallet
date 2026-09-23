@@ -1,8 +1,8 @@
 # Nyctis in Vizor — proof of concept
 
-A PoC that lets this wallet **hold** Nyctis assets on the regtest devnet: list what it owns,
-verify it for itself, and show its Nyctis receive address. Paying an asset to another Nyctis
-address is not implemented — see "What this PoC does and does not do" below.
+A PoC that lets this wallet **hold and pay** Nyctis assets on the regtest devnet: list what it
+owns, verify it for itself, show its Nyctis receive address, and pay an asset to another Nyctis
+address with a proven transition — see "Sending" and "What this PoC does and does not do" below.
 
 Nyctis is a client-verified overlay on Zcash. Its messages ride inside ordinary
 Ironwood shielded memos addressed to a public *channel*, and every participant
@@ -91,6 +91,12 @@ ivk  = Fr(BLAKE2b-512("nyctis.key.v0.ivk"  ‖ seed))
 address = bech32m(hrp, 0x00 ‖ ak ‖ nkc ‖ pk_enc)     hrp = nyreg | nytest | ny
 ```
 
+The seed never reaches Dart and the read path never sees it. On unlock, `nyctis_viewing_key`
+reads the stored secret once, derives the account and returns only its **viewing key**
+(`ak ‖ nk ‖ ivk`, 96 bytes) and the receive address; the wallet keeps that key in memory, hands it
+to every replay, and zeroes it when the wallet locks. It cannot sign. Only paying needs the spend
+key, and `nyctis_build_pay` reads the stored secret for that one call and drops it.
+
 Two keys do two different jobs, and the PoC keeps them apart:
 
 - the **channel** UIVK is public and says *where to look*;
@@ -103,11 +109,13 @@ Two keys do two different jobs, and the PoC keeps them apart:
 Dart   NyctisIndexerClient ── /api/status /api/vk /api/messages?body=1
           │                                        (data availability only)
           ▼
-FRB    nyctisReplay(messages, vk, seed, …) ──► NyView { assets, notes, roots, vk_hash }
+FRB    nyctisViewingKey(secret) ──► NyViewingKey      (once per unlock, memory only)
+          │
+FRB    nyctisReplay(messages, vk, vkPin, viewingKey, …) ──► NyView { assets, notes, roots, vk_hash }
           │                     rebind every msg_id, verify every proof, replay state,
           │                     decrypt with ivk
           ▼
-FRB    nyctisBuildPay(…) ──► memos: List<Uint8List>     (Groth16 prove, framing)
+FRB    nyctisBuildPay(secret, …) ──► memos: List<Uint8List>     (Groth16 prove, framing)
           │
           ▼
 Rust   proposeSendRaw(outputs with raw memo bytes) ──► existing execute/broadcast
@@ -140,16 +148,16 @@ and ~600 MB of peak memory on a laptop (2.5 s on an iPhone 16 Pro, measured on a
 Nothing serves that key over HTTP, and nothing should — it is not secret, but it is large and it
 is only needed by someone who intends to spend.
 
-**Sending has no UI.** Both layers below it exist. The transport is `propose_send_raw` and
-`build_send_request_raw`, which carry arbitrary 512-byte memos through this wallet's own proposal
-and broadcast path, plus `get_transaction_raw_memos` to read them back without the UTF-8 narrowing
-that silently drops every binary memo. Above them, `nyctis_build_pay` (`rust/src/nyctis/pay.rs`)
-turns "pay N units of asset A to ny-address R" into those memos: it replays the channel through the
-same verified path the read side uses, selects inputs honouring the policy each note is actually
-openable under, builds the recipient and change outputs, proves and signs the transition, and frames
-the body into 1-8 memos of exactly 512 bytes. It returns them; it does not broadcast, and it never
-touches the network. What is absent is the screen that calls both — and nothing in the app calls
-either function yet.
+**The transport.** `propose_send_raw` and `build_send_request_raw` carry arbitrary 512-byte memos
+through this wallet's own proposal and broadcast path, and `get_transaction_raw_memos` reads them
+back without the UTF-8 narrowing that silently drops every binary memo. Above them,
+`nyctis_build_pay` (`rust/src/nyctis/pay.rs`) turns "pay N units of asset A to ny-address R" into
+those memos: it replays the channel through the same verified path the read side uses, selects
+inputs honouring the policy each note is actually openable under, builds the recipient and change
+outputs, proves and signs the transition, and frames the body into 1-8 memos of exactly 512 bytes.
+It returns them; it does not broadcast, and it never touches the network. The app's send pipeline
+(`lib/src/features/nyctis_assets/services/nyctis_send_flow.dart`) is what calls both — see
+"Sending" below.
 
 All the memos of one payment must ride **one** transaction: a reader reassembles a message only from
 fragments sharing a txid, so a payment whose memos were split across two sends is undecodable and
@@ -161,7 +169,8 @@ something other than the asset being paid.
 The proving key is what makes this expensive, and the shape this PoC assumes is a **file path in
 settings** pointing at the folder holding `interpreter-v0.pk`, `.vk` and `.circuit`
 (`.devnet/keys` on the devnet), with sending unavailable and visibly so until it is set.
-`nyctis_check_proving_key` is what a settings screen validates that path with: it reads the 1.8 KiB
+It is set in **Settings → Nyctis → Proving key folder**, and `nyctis_check_proving_key` is what
+validates it: it reads the 1.8 KiB
 verifying key and the one-line manifest and only `stat`s the 83 MiB proving key, and it returns the
 folder's `vk_hash` so the screen can compare it with `NyView.vk_hash` — a key set from another
 ceremony shares the same `circuit` fingerprint and produces proofs every verifier on the channel
@@ -170,6 +179,29 @@ rejects, which would otherwise be discovered after the user had paid the Zcash f
 is read and dropped inside the call rather than cached, so its ~83 MiB and the ~600 MB peak of the
 proof are transient rather than a permanent floor. A shipping wallet would download the key once and
 cache it; that is a packaging decision, not a protocol one.
+
+## Sending
+
+**Nyctis → an asset → Send.** The flow has three screens (`screens/nyctis_send_screen.dart`,
+`nyctis_send_review_screen.dart`, `nyctis_send_status_screen.dart`):
+
+1. **Compose**: recipient `ny…` address and amount, in the asset's own decimals (a decimal comma
+   is read as a decimal point).
+2. **Review**: the plan is built and proved here. The screen states what the payment costs in ZEC —
+   each memo is a shielded output to the *channel's* address carrying
+   `kNyctisMemoValueZatoshi`, plus the fee; the recipient of the asset receives no ZEC. A plan is
+   anchored at `tip − 10` and ages out of the anchor window, so an expired plan cannot be sent:
+   its only action is **Rebuild payment**.
+3. **Sending → receipt**: one `proposeSendRaw` call carries every memo of the payment in one
+   transaction. While it is live there is no back link, system back is refused and Done is
+   disabled; the receipt names the message, the carrying transaction and the notes on each side.
+
+Send is disabled, with the reason beside it, before any proof is started
+(`providers/nyctis_send_readiness_provider.dart`): a hardware account (it cannot sign a Nyctis
+transition), a missing or mismatched proving key (fixed in Nyctis settings), a payment of the same
+asset still settling (`providers/nyctis_in_flight_send_provider.dart` — until it is final, the
+notes it spent still look unspent to the replay, so a second payment could pick them again), and
+too little ZEC to carry even the smallest message.
 
 ## What this PoC does and does not do
 
@@ -189,8 +221,10 @@ alone and is unchanged by any of this. What stays out of reach is who was paid �
 of a message are ciphertexts addressed to keys this wallet has not got, so `created_outputs` says
 one exists and nothing says what is in it.
 
-**It does not:** send — there is no UI for it. The Rust half is there and tested
-(`nyctis_build_pay`); nothing calls it. See "Proving" above.
+**It sends**, as described in "Sending": a payment of one asset to one Nyctis address, proved on
+the device with the proving key from settings. **It does not** download that key (it must be put
+on disk and chosen in settings), sign with a hardware account, or build the other programs the
+protocol can express (offers, sales for ZEC, timelocks): only a plain payment.
 
 **It cannot notice** an indexer that withholds a message. Everything else it is handed is checked:
 the channel id against the configured UIVK, each `msg_id` recomputed from its own body, every

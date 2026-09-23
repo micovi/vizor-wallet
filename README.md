@@ -2,6 +2,11 @@
 
 # Vizor
 
+> **This is a fork.** `micovi/vizor-wallet` is Vizor by Chainapsis, kept up to date with
+> [chainapsis/vizor-wallet](https://github.com/chainapsis/vizor-wallet), plus support for
+> [Nyctis](FORK.md#what-this-fork-adds) assets on the `nyctis-poc` branch. It is not an official
+> Vizor release and is not endorsed by Chainapsis. See [FORK.md](FORK.md) and [NOTICE](NOTICE).
+
 Vizor is a self-custody Zcash wallet for shielded ZEC, with a polished desktop
 experience built around clarity, privacy, and ease of use. It is for users who
 want to create, receive, shield, and send ZEC without giving a hosted wallet

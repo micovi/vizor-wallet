@@ -1,0 +1,13 @@
+Vizor (fork for Nyctis)
+
+This product is a modified version of Vizor, a self-custody Zcash wallet
+developed by Chainapsis and released under the Apache License, Version 2.0.
+Upstream source: https://github.com/chainapsis/vizor-wallet
+
+Modifications by micovi (https://github.com/micovi), 2026: support for Nyctis
+assets and channels, as listed in FORK.md. Files changed from upstream can be
+identified from this repository's history against the upstream main branch.
+
+The Apache License, Version 2.0 applies to this product as a whole; see LICENSE.
+"Vizor", "Keplr" and "Chainapsis" are names of their respective owners and are
+used here only to identify the origin of the code.

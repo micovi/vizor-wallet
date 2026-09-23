@@ -315,21 +315,20 @@ final nyctisCollectionArtworkWarmupProvider =
 /// [nyctisCollectionArtworkProvider] — every member of a collection reaches
 /// the same document, so the answer must not depend on which one arrived
 /// first.
-final nyctisCollectionDocumentMaxSupplyProvider =
-    Provider.family<int?, String>((ref, collectionId) {
-      final collection = ref.watch(nyctisCollectionProvider(collectionId));
-      if (collection == null) return null;
+final nyctisCollectionDocumentMaxSupplyProvider = Provider.family<int?, String>(
+  (ref, collectionId) {
+    final collection = ref.watch(nyctisCollectionProvider(collectionId));
+    if (collection == null) return null;
 
-      final acceptance = ref.watch(nyctisAssetAcceptanceProvider);
-      for (final member in collection.members) {
-        if (!acceptance.isAccepted(member.assetId)) continue;
-        final fetch = ref.watch(
-          nyctisAssetArtworkFetchProvider(member.assetId),
-        );
-        return fetch.asData?.value?.memberView?.collection.maxSupply;
-      }
-      return null;
-    });
+    final acceptance = ref.watch(nyctisAssetAcceptanceProvider);
+    for (final member in collection.members) {
+      if (!acceptance.isAccepted(member.assetId)) continue;
+      final fetch = ref.watch(nyctisAssetArtworkFetchProvider(member.assetId));
+      return fetch.asData?.value?.memberView?.collection.maxSupply;
+    }
+    return null;
+  },
+);
 
 /// Whether [collection] is one this warm-up applies to at all.
 ///

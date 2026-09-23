@@ -111,9 +111,7 @@ String nyctisReviewZecCostText(
 }
 
 /// What the payment is, in the asset's own units.
-List<NyctisAssetFactData> buildNyctisPaymentFacts(
-  NyctisSendReviewArgs args,
-) {
+List<NyctisAssetFactData> buildNyctisPaymentFacts(NyctisSendReviewArgs args) {
   final symbol = args.assetSymbol.trim();
   final suffix = symbol.isEmpty ? '' : ' $symbol';
   return [
@@ -121,9 +119,7 @@ List<NyctisAssetFactData> buildNyctisPaymentFacts(
       label: 'Asset',
       value: args.assetName.trim().isNotEmpty
           ? args.assetName.trim()
-          : (symbol.isNotEmpty
-                ? symbol
-                : truncateNyctisAssetId(args.assetId)),
+          : (symbol.isNotEmpty ? symbol : truncateNyctisAssetId(args.assetId)),
       copyText: args.assetId,
     ),
     NyctisAssetFactData(
@@ -190,9 +186,7 @@ List<NyctisAssetFactData> buildNyctisZecCostFacts(
 }
 
 /// What the proof is anchored to, and what it cost to make.
-List<NyctisAssetFactData> buildNyctisProofFacts(
-  NyctisSendReviewArgs args,
-) {
+List<NyctisAssetFactData> buildNyctisProofFacts(NyctisSendReviewArgs args) {
   return [
     NyctisAssetFactData(
       label: 'Message id',
@@ -345,8 +339,7 @@ class NyctisSendReviewBody extends ConsumerStatefulWidget {
       _NyctisSendReviewBodyState();
 }
 
-class _NyctisSendReviewBodyState
-    extends ConsumerState<NyctisSendReviewBody> {
+class _NyctisSendReviewBodyState extends ConsumerState<NyctisSendReviewBody> {
   /// The plan on screen. Starts as the one the composer handed over and is
   /// replaced in place by Rebuild — the alternative is sending the user back
   /// to re-type an amount they have already confirmed once.
@@ -577,9 +570,7 @@ class _NyctisSendReviewBodyState
             key: const ValueKey('nyctis_review_freshness'),
             text: freshnessText,
             width: kNyctisCardWidth,
-            tone: expired
-                ? NyctisMessageTone.error
-                : NyctisMessageTone.warning,
+            tone: expired ? NyctisMessageTone.error : NyctisMessageTone.warning,
           ),
           const SizedBox(height: AppSpacing.md),
         ],
@@ -609,11 +600,7 @@ class _NyctisSendReviewBodyState
         NyctisFactsCard(
           key: const ValueKey('nyctis_review_zec_cost'),
           title: 'What this costs in ZEC',
-          facts: buildNyctisZecCostFacts(
-            args,
-            quote: quote,
-            quoting: _quoting,
-          ),
+          facts: buildNyctisZecCostFacts(args, quote: quote, quoting: _quoting),
           footnote: nyctisReviewZecCostText(
             args,
             feeZatoshi: quote?.feeZatoshi,

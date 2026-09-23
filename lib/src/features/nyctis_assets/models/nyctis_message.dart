@@ -86,9 +86,7 @@ class NyctisMessage {
       txid: nyctisString(json, 'txid'),
       fragments: nyctisIntOr(json, 'fragments', 0),
       bodyLen: nyctisIntOr(json, 'body_len', 0),
-      outcome: NyctisMessageOutcome.parse(
-        nyctisStringOrNull(json, 'outcome'),
-      ),
+      outcome: NyctisMessageOutcome.parse(nyctisStringOrNull(json, 'outcome')),
       reason: nyctisStringOrNull(json, 'reason'),
       detail: detail == null ? null : nyctisObject(detail, 'message detail'),
       body: nyctisHexBytesOrNull(json, 'body'),

@@ -597,11 +597,7 @@ class NyctisCollectionMetadata {
       if (start + kNyctisDigestBytes > table.length) return null;
       return base64Url
           .encode(
-            Uint8List.sublistView(
-              table,
-              start,
-              start + kNyctisDigestBytes,
-            ),
+            Uint8List.sublistView(table, start, start + kNyctisDigestBytes),
           )
           .replaceAll('=', '');
     }
@@ -810,9 +806,7 @@ class NyctisCollectionMetadata {
         kNyctisItemAttributeMaxChars,
       );
       if (trait == null || attributeValue == null) continue;
-      attributes.add(
-        NyctisItemAttribute(trait: trait, value: attributeValue),
-      );
+      attributes.add(NyctisItemAttribute(trait: trait, value: attributeValue));
     }
     return List.unmodifiable(attributes);
   }
@@ -860,9 +854,8 @@ class NyctisCollectionMetadata {
 class NyctisItemImageResult {
   const NyctisItemImageResult.resolved(Uri this.uri) : rejection = null;
 
-  const NyctisItemImageResult.rejected(
-    NyctisItemImageRejection this.rejection,
-  ) : uri = null;
+  const NyctisItemImageResult.rejected(NyctisItemImageRejection this.rejection)
+    : uri = null;
 
   final Uri? uri;
   final NyctisItemImageRejection? rejection;

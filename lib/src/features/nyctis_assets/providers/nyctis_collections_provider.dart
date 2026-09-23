@@ -28,12 +28,11 @@ final nyctisAssetsListingProvider = Provider<NyctisAssetsListing>((ref) {
 });
 
 /// One collection by id, or null when the current view has no members for it.
-final nyctisCollectionProvider =
-    Provider.family<NyctisCollectionData?, String>((ref, collectionId) {
-      return ref
-          .watch(nyctisAssetsListingProvider)
-          .collectionById(collectionId);
-    });
+final nyctisCollectionProvider = Provider.family<NyctisCollectionData?, String>(
+  (ref, collectionId) {
+    return ref.watch(nyctisAssetsListingProvider).collectionById(collectionId);
+  },
+);
 
 /// The `asset_id`s that are drawn inside a collection rather than as a row.
 ///
@@ -48,8 +47,9 @@ final nyctisGroupedMemberIdsProvider = Provider<Set<String>>((ref) {
 ///
 /// The collection screen needs a member's full record and reaching it through
 /// [nyctisAssetsListingProvider] would mean a linear scan per tile.
-final nyctisAssetByIdProvider =
-    Provider.family<NyctisAssetDetailData?, String>((ref, assetId) {
-      final view = resolveNyctisView(ref.watch(nyctisAssetsViewProvider));
-      return view?.assetById(assetId);
-    });
+final nyctisAssetByIdProvider = Provider.family<NyctisAssetDetailData?, String>(
+  (ref, assetId) {
+    final view = resolveNyctisView(ref.watch(nyctisAssetsViewProvider));
+    return view?.assetById(assetId);
+  },
+);

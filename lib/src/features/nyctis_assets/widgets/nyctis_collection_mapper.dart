@@ -241,9 +241,7 @@ List<NyctisAssetDetailData> nyctisUnacceptedMembers({
 /// nothing makes them: each `uri` is signed per asset, and a user agreeing to
 /// talk to one host should not thereby be agreeing to talk to a second they
 /// were never shown.
-List<String> nyctisCollectionFetchOrigins(
-  List<NyctisAssetDetailData> members,
-) {
+List<String> nyctisCollectionFetchOrigins(List<NyctisAssetDetailData> members) {
   final origins = <String>[];
   for (final member in members) {
     final uri = member.metadataUri?.trim();
@@ -563,26 +561,22 @@ const String kNyctisArtworkRefusedTileText = 'Refused';
 const String kNyctisArtworkUnpinnedBadgeText = 'Unpinned';
 
 /// What the empty frame of a tile says, per state.
-String? nyctisArtworkTileText(NyctisArtworkStatus status) =>
-    switch (status) {
-      NyctisArtworkStatus.notAccepted => kNyctisArtworkNotAcceptedTileText,
-      NyctisArtworkStatus.pending => kNyctisArtworkPendingTileText,
-      NyctisArtworkStatus.refused => kNyctisArtworkRefusedTileText,
-      // A drawn picture needs no empty-frame copy; what it needs is
-      // [nyctisArtworkProvenanceText], and on a tile the unpinned badge.
-      NyctisArtworkStatus.verified ||
-      NyctisArtworkStatus.unpinned => null,
-    };
+String? nyctisArtworkTileText(NyctisArtworkStatus status) => switch (status) {
+  NyctisArtworkStatus.notAccepted => kNyctisArtworkNotAcceptedTileText,
+  NyctisArtworkStatus.pending => kNyctisArtworkPendingTileText,
+  NyctisArtworkStatus.refused => kNyctisArtworkRefusedTileText,
+  // A drawn picture needs no empty-frame copy; what it needs is
+  // [nyctisArtworkProvenanceText], and on a tile the unpinned badge.
+  NyctisArtworkStatus.verified || NyctisArtworkStatus.unpinned => null,
+};
 
 /// The same, as a sentence, for a single piece's own screen.
-String? nyctisArtworkDetailText(NyctisArtworkStatus status) =>
-    switch (status) {
-      NyctisArtworkStatus.notAccepted => kNyctisUniqueArtworkNotFetchedText,
-      NyctisArtworkStatus.pending => kNyctisUniqueArtworkPendingText,
-      NyctisArtworkStatus.refused => kNyctisUniqueArtworkRefusedText,
-      NyctisArtworkStatus.verified ||
-      NyctisArtworkStatus.unpinned => null,
-    };
+String? nyctisArtworkDetailText(NyctisArtworkStatus status) => switch (status) {
+  NyctisArtworkStatus.notAccepted => kNyctisUniqueArtworkNotFetchedText,
+  NyctisArtworkStatus.pending => kNyctisUniqueArtworkPendingText,
+  NyctisArtworkStatus.refused => kNyctisUniqueArtworkRefusedText,
+  NyctisArtworkStatus.verified || NyctisArtworkStatus.unpinned => null,
+};
 
 /// Where the artwork came from, and whether anything the issuer signed fixes
 /// these exact bytes.
@@ -763,11 +757,10 @@ String nyctisCollectionTileSemanticsLabel({
 }
 
 /// The artwork frame's state as words, for the image's accessible name.
-String nyctisArtworkSpokenState(NyctisArtworkStatus status) =>
-    switch (status) {
-      NyctisArtworkStatus.notAccepted => 'artwork not shown',
-      NyctisArtworkStatus.pending => 'artwork loading',
-      NyctisArtworkStatus.refused => 'artwork refused',
-      NyctisArtworkStatus.verified => 'artwork shown',
-      NyctisArtworkStatus.unpinned => 'artwork shown, unpinned',
-    };
+String nyctisArtworkSpokenState(NyctisArtworkStatus status) => switch (status) {
+  NyctisArtworkStatus.notAccepted => 'artwork not shown',
+  NyctisArtworkStatus.pending => 'artwork loading',
+  NyctisArtworkStatus.refused => 'artwork refused',
+  NyctisArtworkStatus.verified => 'artwork shown',
+  NyctisArtworkStatus.unpinned => 'artwork shown, unpinned',
+};

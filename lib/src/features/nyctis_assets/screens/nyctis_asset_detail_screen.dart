@@ -20,7 +20,7 @@ import '../../../core/widgets/app_icon.dart';
 import '../../../core/widgets/mobile/mobile_surface_card.dart';
 import '../../../core/widgets/review_wrap_card.dart';
 import '../providers/nyctis_assets_view_provider.dart';
-import '../providers/nyctis_proving_key_provider.dart';
+import '../providers/nyctis_send_readiness_provider.dart';
 import '../widgets/nyctis_asset_metadata_section.dart';
 import '../widgets/nyctis_collection_sections.dart';
 import '../widgets/nyctis_asset_row_data.dart';
@@ -80,9 +80,7 @@ class NyctisAssetDetailPane extends ConsumerWidget {
             metadataSection: NyctisAssetMetadataSection(asset: asset),
             onSend: () => context.push(nyctisSendRouteFor(assetId)),
             onReceive: () => context.push(kNyctisReceiveRoute),
-            sendDisabledReason: nyctisSendUnavailableReason(
-              ref.watch(nyctisProvingKeyProvider),
-            ),
+            sendBlock: ref.watch(nyctisSendBlockProvider(assetId)),
           ),
         ),
       ),
@@ -106,7 +104,7 @@ class NyctisAssetDetailBody extends StatelessWidget {
     this.showTitle = true,
     this.onSend,
     this.onReceive,
-    this.sendDisabledReason,
+    this.sendBlock,
     super.key,
   });
 
@@ -148,11 +146,13 @@ class NyctisAssetDetailBody extends StatelessWidget {
   /// Opens the receive screen. Null hides the button.
   final VoidCallback? onReceive;
 
-  /// Why sending is unavailable, when it is. Rendered beside a disabled
-  /// button rather than hiding it: a Send that is simply absent reads as a
-  /// feature this wallet does not have, and the actual reason — no proving
-  /// key, or the wrong one — is fixable in settings in a minute.
-  final String? sendDisabledReason;
+  /// Why sending is unavailable, when it is — the same gate the composer
+  /// reads (`nyctisSendBlockProvider`): a hardware account, a missing or
+  /// wrong proving key, a payment of this asset still settling, too little
+  /// ZEC. Rendered beside a disabled button rather than hiding it: a Send
+  /// that is simply absent reads as a feature this wallet does not have, and
+  /// every one of these reasons is either fixable or temporary.
+  final NyctisSendBlock? sendBlock;
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +240,7 @@ class NyctisAssetDetailBody extends StatelessWidget {
                     AppIcons.arrowUpward,
                     size: AppIconSize.medium,
                   ),
-                  onPressed: sendDisabledReason == null ? onSend : null,
+                  onPressed: sendBlock == null ? onSend : null,
                   child: const Text(kNyctisSendTitle),
                 ),
               if (onReceive != null)
@@ -262,12 +262,10 @@ class NyctisAssetDetailBody extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
         ],
-        if (canOfferSend && sendDisabledReason != null) ...[
-          NyctisMessageCard(
+        if (canOfferSend && sendBlock != null) ...[
+          NyctisSendBlockNotice(
             key: const ValueKey('nyctis_asset_detail_send_unavailable'),
-            text: sendDisabledReason!,
-            width: kNyctisCardWidth,
-            tone: NyctisMessageTone.warning,
+            block: sendBlock!,
           ),
           const SizedBox(height: AppSpacing.md),
         ],
@@ -290,10 +288,7 @@ class NyctisAssetDetailBody extends StatelessWidget {
           title: 'Supply',
           facts: supplyFacts.isEmpty
               ? const [
-                  NyctisAssetFactData(
-                    label: 'Issued supply',
-                    value: 'Private',
-                  ),
+                  NyctisAssetFactData(label: 'Issued supply', value: 'Private'),
                 ]
               : supplyFacts,
           footnote: nyctisSupplyFootnote(asset),
@@ -356,8 +351,7 @@ class NyctisBalanceHero extends StatelessWidget {
     return Semantics(
       key: const ValueKey('nyctis_asset_detail_balance'),
       container: true,
-      label:
-          '$kNyctisYourBalanceLabel, $amount${hasSymbol ? ' $symbol' : ''}',
+      label: '$kNyctisYourBalanceLabel, $amount${hasSymbol ? ' $symbol' : ''}',
       excludeSemantics: true,
       child: Column(
         mainAxisSize: MainAxisSize.min,

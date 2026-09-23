@@ -87,8 +87,7 @@ const String kNyctisStatusNothingSentText =
 String nyctisSendPhaseText(NyctisSendPhase phase) {
   return switch (phase) {
     NyctisSendPhase.proposing => 'Choosing ZEC inputs for the memos…',
-    NyctisSendPhase.broadcasting =>
-      'Signing and broadcasting one transaction…',
+    NyctisSendPhase.broadcasting => 'Signing and broadcasting one transaction…',
   };
 }
 
@@ -229,8 +228,7 @@ class NyctisSendStatusBody extends ConsumerStatefulWidget {
       _NyctisSendStatusBodyState();
 }
 
-class _NyctisSendStatusBodyState
-    extends ConsumerState<NyctisSendStatusBody> {
+class _NyctisSendStatusBodyState extends ConsumerState<NyctisSendStatusBody> {
   _NyctisStatusPhase _phase = _NyctisStatusPhase.sending;
   NyctisSendPhase _step = NyctisSendPhase.proposing;
   String? _txid;
@@ -280,9 +278,7 @@ class _NyctisSendStatusBodyState
       onPhase: (step) {
         if (!mounted) return;
         setState(() => _step = step);
-        unawaited(
-          announceForAccessibility(context, nyctisSendPhaseText(step)),
-        );
+        unawaited(announceForAccessibility(context, nyctisSendPhaseText(step)));
       },
       // Leaving the screen mid-flight releases the proposal rather than
       // leaving this wallet's ZEC inputs locked until the proposal expires.
@@ -336,8 +332,7 @@ class _NyctisSendStatusBodyState
         '$kNyctisStatusSentTitle. It counts once it is final.',
       _NyctisStatusPhase.pendingBroadcast =>
         '$kNyctisStatusPendingTitle. ${_statusMessage ?? ''}',
-      _NyctisStatusPhase.failed =>
-        '$kNyctisStatusFailedTitle. ${_error ?? ''}',
+      _NyctisStatusPhase.failed => '$kNyctisStatusFailedTitle. ${_error ?? ''}',
     };
   }
 

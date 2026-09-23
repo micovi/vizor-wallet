@@ -84,9 +84,8 @@ const _noPayZecSources = rust_nyctis.NyZecSources(
 class NyctisPayBridge {
   const NyctisPayBridge();
 
-  Future<rust_nyctis.NyProvingKey> checkProvingKey({
-    required String keysDir,
-  }) => rust_nyctis.nyctisCheckProvingKey(keysDir: keysDir);
+  Future<rust_nyctis.NyProvingKey> checkProvingKey({required String keysDir}) =>
+      rust_nyctis.nyctisCheckProvingKey(keysDir: keysDir);
 
   Future<rust_nyctis.NyPayPlan> buildPay({
     required String network,
@@ -596,12 +595,11 @@ class NyctisSendReviewArgs {
       ),
   ];
 
-  NyctisPlanFreshness freshnessAt(int currentChainTip) =>
-      nyctisPlanFreshness(
-        anchorHeight: anchorHeight,
-        chainTip: currentChainTip > 0 ? currentChainTip : chainTip,
-        anchorWindow: anchorWindow,
-      );
+  NyctisPlanFreshness freshnessAt(int currentChainTip) => nyctisPlanFreshness(
+    anchorHeight: anchorHeight,
+    chainTip: currentChainTip > 0 ? currentChainTip : chainTip,
+    anchorWindow: anchorWindow,
+  );
 
   String? freshnessTextAt(int currentChainTip) => nyctisPlanFreshnessText(
     anchorHeight: anchorHeight,

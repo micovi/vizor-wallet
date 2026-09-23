@@ -176,9 +176,7 @@ class NyctisAssetMetadata {
       // Section 4.1 and 4.4: reject rather than guess at the members, and a
       // malformed `schema` is an unrecognized major rather than a parse
       // failure to surface.
-      throw NyctisMetadataFormatException(
-        'unknown schema "${json['schema']}"',
-      );
+      throw NyctisMetadataFormatException('unknown schema "${json['schema']}"');
     }
     return NyctisAssetMetadata(
       description: _description(json['description']),
@@ -194,13 +192,10 @@ class NyctisAssetMetadata {
     if (cleaned.isEmpty) return null;
     final runes = cleaned.runes.toList();
     if (runes.length <= kNyctisMetadataMaxDescriptionChars) return cleaned;
-    return String.fromCharCodes(
-      runes.take(kNyctisMetadataMaxDescriptionChars),
-    );
+    return String.fromCharCodes(runes.take(kNyctisMetadataMaxDescriptionChars));
   }
 
-  static NyctisAssetLogoRef? _logo(Object? value) =>
-      nyctisAssetLogoRef(value);
+  static NyctisAssetLogoRef? _logo(Object? value) => nyctisAssetLogoRef(value);
 }
 
 /// The `logo` object of section 4.2, parsed.
@@ -316,9 +311,7 @@ Map<String, Object?> nyctisDecodeDocument(List<int> bytes) {
     throw NyctisMetadataFormatException('not JSON: ${error.message}');
   }
   if (decoded is! Map<String, Object?>) {
-    throw const NyctisMetadataFormatException(
-      'top level is not a JSON object',
-    );
+    throw const NyctisMetadataFormatException('top level is not a JSON object');
   }
   return decoded;
 }

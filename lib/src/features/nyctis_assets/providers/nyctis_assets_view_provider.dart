@@ -59,9 +59,7 @@ final nyctisViewLoaderProvider = Provider<NyctisViewLoader>(
 /// changed the configuration and invalidated nothing, so this future kept
 /// handing back its first answer, "Nyctis is not set up yet", until the app
 /// was restarted.
-final nyctisAssetsViewProvider = FutureProvider<NyctisViewData>((
-  ref,
-) async {
+final nyctisAssetsViewProvider = FutureProvider<NyctisViewData>((ref) async {
   // Registering the dependency is the point; the value is not used here and a
   // failure to produce one is not this provider's to report. `loadNyctisViewFor`
   // already turns an unreadable configuration into a rendered state, and a

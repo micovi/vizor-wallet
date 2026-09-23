@@ -191,9 +191,8 @@ class NyctisCollectionMemberView {
 
 /// A fetch that produced a document, or the reason it produced none.
 class NyctisMetadataFetchOutcome {
-  const NyctisMetadataFetchOutcome.fetched(
-    NyctisAssetMetadataView this.view,
-  ) : reason = null;
+  const NyctisMetadataFetchOutcome.fetched(NyctisAssetMetadataView this.view)
+    : reason = null;
 
   const NyctisMetadataFetchOutcome.abandoned(
     NyctisMetadataAbandonReason this.reason,
@@ -215,9 +214,8 @@ class NyctisMetadataFetchOutcome {
 /// collection member point at either one depending on how large the collection
 /// is. The `schema` member decides, and it decides after the fetch.
 class NyctisArtworkFetchOutcome {
-  const NyctisArtworkFetchOutcome.asset(
-    NyctisAssetMetadataView this.assetView,
-  ) : memberView = null,
+  const NyctisArtworkFetchOutcome.asset(NyctisAssetMetadataView this.assetView)
+    : memberView = null,
       reason = null;
 
   const NyctisArtworkFetchOutcome.collectionMember(
@@ -779,9 +777,7 @@ class NyctisAssetMetadataFetcher {
     // `asset-collection-v0.md` lets a collection member point at either shape.
     if (_declaresCollectionSchema(bytes)) {
       try {
-        return _Document.collection(
-          NyctisCollectionMetadata.parseBytes(bytes),
-        );
+        return _Document.collection(NyctisCollectionMetadata.parseBytes(bytes));
       } on NyctisMetadataFormatException {
         return const _Document.abandoned(
           NyctisMetadataAbandonReason.documentRefused,
@@ -845,9 +841,7 @@ class NyctisAssetMetadataFetcher {
       // section 3.3, which is the same MUST twice: verify it, and discard a
       // mismatching image **without retrying**. Nothing below this line tries
       // another source, and nothing above it may.
-      return const _Image.abandoned(
-        NyctisMetadataAbandonReason.digestMismatch,
-      );
+      return const _Image.abandoned(NyctisMetadataAbandonReason.digestMismatch);
     }
     // Section 4.2: the format comes from the bytes. `mime` was never parsed,
     // so there is nothing here that could have been believed instead.

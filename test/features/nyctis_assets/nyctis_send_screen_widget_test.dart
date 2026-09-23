@@ -494,6 +494,80 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
+    // The detail screen reads the same gate as the composer, so every reason
+    // that would block Review blocks Send here first, with the same words.
+    Future<void> expectDetailSendBlocked(WidgetTester tester) async {
+      expect(
+        find.byKey(const ValueKey('nyctis_asset_detail_send_unavailable')),
+        findsOneWidget,
+      );
+      expect(
+        appButtonWithKey(tester, 'nyctis_asset_detail_send_button').onPressed,
+        isNull,
+      );
+    }
+
+    testWidgets('disables Send for a hardware account, before the composer', (
+      tester,
+    ) async {
+      await pumpNyctisSend(
+        tester,
+        const NyctisAssetDetailPane(assetId: kHarnessAssetId),
+        hardware: true,
+      );
+
+      await expectDetailSendBlocked(tester);
+      expect(find.text(kNyctisHardwareAccountText), findsOneWidget);
+    });
+
+    testWidgets('disables Send while a payment of this asset settles', (
+      tester,
+    ) async {
+      await pumpNyctisSend(
+        tester,
+        const NyctisAssetDetailPane(assetId: kHarnessAssetId),
+        inFlight: MemoryNyctisInFlightSendStore([_inFlight()]),
+      );
+      await tester.pumpAndSettle();
+
+      await expectDetailSendBlocked(tester);
+      expect(find.textContaining('is not final yet'), findsOneWidget);
+    });
+
+    testWidgets('disables Send without enough ZEC to carry a message', (
+      tester,
+    ) async {
+      await pumpNyctisSend(
+        tester,
+        const NyctisAssetDetailPane(assetId: kHarnessAssetId),
+        spendableZatoshi: BigInt.from(15000),
+      );
+
+      await expectDetailSendBlocked(tester);
+      expect(
+        find.text(nyctisZecShortfallText(BigInt.from(15000))!),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a missing key still offers the way to settings', (
+      tester,
+    ) async {
+      await pumpNyctisSend(
+        tester,
+        const NyctisAssetDetailPane(assetId: kHarnessAssetId),
+        provingKey: const NyctisProvingKeyStatus(
+          state: NyctisProvingKeyState.notSet,
+          message: kNyctisProvingKeyNotSetText,
+        ),
+      );
+
+      expect(
+        find.byKey(const ValueKey('nyctis_send_open_settings')),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('an empty holding is not offered a Send button', (
       tester,
     ) async {

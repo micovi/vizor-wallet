@@ -106,30 +106,32 @@ final nyctisAssetMetadataProvider =
 /// delegated: it is the rule the whole feature hangs on, and a second copy of
 /// it on a path to a picture is cheaper than the day somebody simplifies the
 /// first one.
-final nyctisAssetArtworkProvider =
-    Provider.family<NyctisArtworkData, String>((ref, assetId) {
-      final accepted = ref.watch(
-        nyctisAssetAcceptanceProvider.select(
-          (acceptance) => acceptance.isAccepted(assetId),
-        ),
-      );
-      if (!accepted) return const NyctisArtworkData.notAccepted();
+final nyctisAssetArtworkProvider = Provider.family<NyctisArtworkData, String>((
+  ref,
+  assetId,
+) {
+  final accepted = ref.watch(
+    nyctisAssetAcceptanceProvider.select(
+      (acceptance) => acceptance.isAccepted(assetId),
+    ),
+  );
+  if (!accepted) return const NyctisArtworkData.notAccepted();
 
-      final async = ref.watch(nyctisAssetArtworkFetchProvider(assetId));
-      return async.when(
-        // An error out of the fetch provider is not the same as a refusal by
-        // it: the fetcher answers every failure with an abandonment, so
-        // reaching here means the *view* threw. Pending is the honest state —
-        // nothing was asked of any host.
-        error: (_, _) => const NyctisArtworkData.pending(),
-        loading: () => const NyctisArtworkData.pending(),
-        data: (outcome) => outcome == null
-            // Accepted, but there is nothing to fetch: no `uri`, or the view
-            // does not carry this asset. Not a refusal by a host.
-            ? const NyctisArtworkData.pending()
-            : NyctisArtworkData.fromOutcome(outcome),
-      );
-    });
+  final async = ref.watch(nyctisAssetArtworkFetchProvider(assetId));
+  return async.when(
+    // An error out of the fetch provider is not the same as a refusal by
+    // it: the fetcher answers every failure with an abandonment, so
+    // reaching here means the *view* threw. Pending is the honest state —
+    // nothing was asked of any host.
+    error: (_, _) => const NyctisArtworkData.pending(),
+    loading: () => const NyctisArtworkData.pending(),
+    data: (outcome) => outcome == null
+        // Accepted, but there is nothing to fetch: no `uri`, or the view
+        // does not carry this asset. Not a refusal by a host.
+        ? const NyctisArtworkData.pending()
+        : NyctisArtworkData.fromOutcome(outcome),
+  );
+});
 
 /// Artwork bytes for one accepted asset, or null.
 ///

@@ -123,14 +123,11 @@ class NyctisAssetsFeed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final message =
-        errorText ?? (isLoading ? kNyctisAssetsLoadingText : null);
+    final message = errorText ?? (isLoading ? kNyctisAssetsLoadingText : null);
     final isEmpty = sections.isEmpty && collections.isEmpty;
     if (message != null && isEmpty) {
       return NyctisMessageCard(
-        key: errorText == null
-            ? const ValueKey('nyctis_assets_loading')
-            : null,
+        key: errorText == null ? const ValueKey('nyctis_assets_loading') : null,
         text: message,
         detail: errorText != null ? errorDetail : null,
         width: cardWidth,
@@ -517,8 +514,7 @@ class _NyctisListRow extends StatelessWidget {
             const SizedBox(width: AppSpacing.xs),
             ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth:
-                    constraints.maxWidth * kNyctisRowAmountMaxFraction,
+                maxWidth: constraints.maxWidth * kNyctisRowAmountMaxFraction,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -637,7 +633,8 @@ class NyctisCollectionRow extends StatelessWidget {
       amount: row.ownedText,
       amountCaption: row.ownedLabel,
       onTap: row.onTap,
-      semanticsLabel: row.semanticsLabel ?? nyctisCollectionRowFallbackLabel(row),
+      semanticsLabel:
+          row.semanticsLabel ?? nyctisCollectionRowFallbackLabel(row),
       semanticsHint: kNyctisOpenCollectionHint,
     );
   }

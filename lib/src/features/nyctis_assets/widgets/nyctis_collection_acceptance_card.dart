@@ -123,8 +123,7 @@ NyctisCollectionAcceptanceData buildNyctisCollectionAcceptanceData({
   required NyctisCollectionData collection,
   required NyctisAssetAcceptance acceptance,
   int? warmupMaxBytes,
-  NyctisCollectionWarmupPhase warmupPhase =
-      NyctisCollectionWarmupPhase.idle,
+  NyctisCollectionWarmupPhase warmupPhase = NyctisCollectionWarmupPhase.idle,
   int warmupFetched = 0,
   bool warmupComplete = true,
 }) {

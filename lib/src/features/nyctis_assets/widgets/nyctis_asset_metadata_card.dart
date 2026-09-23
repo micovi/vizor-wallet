@@ -281,11 +281,7 @@ class NyctisAssetMetadataCard extends StatelessWidget {
           uri: link.uri,
         ),
       if (view.isEmpty)
-        _body(
-          context,
-          kNyctisMetadataEmptyText,
-          key: 'nyctis_metadata_empty',
-        ),
+        _body(context, kNyctisMetadataEmptyText, key: 'nyctis_metadata_empty'),
       // Beside the logo, where it matters: the picture is now on screen.
       _body(context, kNyctisMetadataNotEvidenceText),
       _forgetButton(),

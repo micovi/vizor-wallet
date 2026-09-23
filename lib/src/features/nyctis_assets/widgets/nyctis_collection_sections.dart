@@ -125,10 +125,7 @@ class NyctisCollectionAcceptanceSection extends ConsumerWidget {
 /// Nothing it fetches is drawn without acceptance: every pixel still goes
 /// through [nyctisAssetArtworkProvider], which gates on it.
 class NyctisCollectionArtworkWarmup extends ConsumerWidget {
-  const NyctisCollectionArtworkWarmup({
-    required this.collectionId,
-    super.key,
-  });
+  const NyctisCollectionArtworkWarmup({required this.collectionId, super.key});
 
   final String collectionId;
 

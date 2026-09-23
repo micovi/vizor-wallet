@@ -34,10 +34,7 @@ class NyctisAssetsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const AppDesktopShell(
       sidebar: AppMainSidebar(),
-      pane: AppDesktopPane(
-        padding: EdgeInsets.zero,
-        child: NyctisAssetsPane(),
-      ),
+      pane: AppDesktopPane(padding: EdgeInsets.zero, child: NyctisAssetsPane()),
     );
   }
 }
@@ -110,9 +107,7 @@ class NyctisAssetsPane extends ConsumerWidget {
                 collectionsTitle: kNyctisCollectionsSectionTitle,
                 isLoading: view == null,
                 errorText: view == null ? null : nyctisListErrorText(view),
-                errorDetail: view == null
-                    ? null
-                    : nyctisListErrorDetail(view),
+                errorDetail: view == null ? null : nyctisListErrorDetail(view),
                 errorTone: view == null
                     ? NyctisMessageTone.error
                     : nyctisListErrorTone(view),

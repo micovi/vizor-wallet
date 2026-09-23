@@ -4,9 +4,9 @@
 /// Every reason here is known before a proof is started, so none of them may
 /// wait until after Review: a hardware account, a missing or wrong proving
 /// key, a payment of the same asset still settling, and too little ZEC to
-/// carry even the smallest message. The composer reads this, so its Send is
-/// disabled with the reason beside it. (The asset detail's Send button checks
-/// only the proving key; the composer catches the rest.)
+/// carry even the smallest message. The asset detail screen and the composer
+/// both read this, so Send is disabled — with the reason beside it — in the
+/// same places for the same causes.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -113,10 +113,7 @@ final nyctisSendBlockProvider = Provider.family<NyctisSendBlock?, String>((
   if (sync != null && sync.hasBalanceData) {
     final shortfall = nyctisZecShortfallText(sync.spendableBalance);
     if (shortfall != null) {
-      return NyctisSendBlock(
-        kind: NyctisSendBlockKind.zec,
-        text: shortfall,
-      );
+      return NyctisSendBlock(kind: NyctisSendBlockKind.zec, text: shortfall);
     }
   }
   return null;

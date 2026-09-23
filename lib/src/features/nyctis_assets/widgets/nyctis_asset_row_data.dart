@@ -55,10 +55,7 @@ enum NyctisViewStatus {
 /// The wallet's own Nyctis identity — derived from the seed it already
 /// holds, so it needs no separate backup.
 class NyctisIdentityData {
-  const NyctisIdentityData({
-    required this.address,
-    required this.networkLabel,
-  });
+  const NyctisIdentityData({required this.address, required this.networkLabel});
 
   /// bech32m Nyctis address (`nyreg…` / `nytest…` / `ny…`).
   final String address;

@@ -181,8 +181,7 @@ class NyctisGuardedAcceptButton extends StatefulWidget {
       _NyctisGuardedAcceptButtonState();
 }
 
-class _NyctisGuardedAcceptButtonState
-    extends State<NyctisGuardedAcceptButton> {
+class _NyctisGuardedAcceptButtonState extends State<NyctisGuardedAcceptButton> {
   bool _confirming = false;
 
   @override

@@ -264,9 +264,7 @@ class _NyctisSendBodyState extends ConsumerState<NyctisSendBody> {
     setState(() => _phase = phase);
     if (wasBuilding != _isBuilding) widget.onBusyChanged?.call(_isBuilding);
     if (phase != null) {
-      unawaited(
-        announceForAccessibility(context, nyctisBuildPhaseText(phase)),
-      );
+      unawaited(announceForAccessibility(context, nyctisBuildPhaseText(phase)));
     }
   }
 
@@ -524,9 +522,7 @@ class _NyctisSendBodyState extends ConsumerState<NyctisSendBody> {
             minWidth: kNyctisSendButtonMinWidth,
             onPressed: canReview ? () => unawaited(_review(asset)) : null,
             child: Text(
-              _isBuilding
-                  ? kNyctisSendPreparingLabel
-                  : kNyctisSendReviewLabel,
+              _isBuilding ? kNyctisSendPreparingLabel : kNyctisSendReviewLabel,
             ),
           ),
         ),

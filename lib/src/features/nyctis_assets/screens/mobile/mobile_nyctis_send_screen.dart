@@ -18,8 +18,7 @@ class MobileNyctisSendScreen extends StatefulWidget {
   final String assetId;
 
   @override
-  State<MobileNyctisSendScreen> createState() =>
-      _MobileNyctisSendScreenState();
+  State<MobileNyctisSendScreen> createState() => _MobileNyctisSendScreenState();
 }
 
 class _MobileNyctisSendScreenState extends State<MobileNyctisSendScreen> {

@@ -106,9 +106,7 @@ const String kNyctisUniqueSupplyNote =
 /// what is public about this asset, and for a private one that is nothing.
 String nyctisSupplyFootnote(NyctisAssetDetailData asset) {
   if (asset.isUniqueItem) return kNyctisUniqueSupplyNote;
-  return asset.isPublic
-      ? kNyctisSupplyPrivacyNote
-      : kNyctisPrivateSupplyNote;
+  return asset.isPublic ? kNyctisSupplyPrivacyNote : kNyctisPrivateSupplyNote;
 }
 
 /// The one line the receive screen owes the user about where the address
@@ -139,8 +137,7 @@ String? nyctisListErrorText(NyctisViewData view) {
       view.statusMessage ?? kNyctisNotConfiguredText,
     NyctisViewStatus.unreachable =>
       view.statusMessage ?? kNyctisUnreachableText,
-    NyctisViewStatus.unverified =>
-      view.statusMessage ?? kNyctisUnverifiedText,
+    NyctisViewStatus.unverified => view.statusMessage ?? kNyctisUnverifiedText,
     NyctisViewStatus.stale =>
       view.assets.isEmpty ? (view.statusMessage ?? kNyctisStaleText) : null,
     NyctisViewStatus.ready => null,
@@ -423,8 +420,9 @@ List<NyctisAssetFactData> buildNyctisWalletHoldingFacts(
 const String kNyctisUncappedSupplyValue = 'Uncapped';
 
 /// `Made of 3 notes` — the heading of the grouped notes card.
-String nyctisNotesSummaryText(int count) =>
-    count == 1 ? 'Made of 1 note' : 'Made of ${formatGroupedInteger(count)} notes';
+String nyctisNotesSummaryText(int count) => count == 1
+    ? 'Made of 1 note'
+    : 'Made of ${formatGroupedInteger(count)} notes';
 
 /// The disclosure that lists them.
 const String kNyctisShowNotesTitle = 'Show notes';

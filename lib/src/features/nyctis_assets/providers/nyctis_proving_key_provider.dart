@@ -53,10 +53,7 @@ final nyctisProvingKeyProvider = FutureProvider<NyctisProvingKeyStatus>((
     channelVkHash = null;
   }
 
-  return checkNyctisProvingKey(
-    keysDir: keysDir,
-    channelVkHash: channelVkHash,
-  );
+  return checkNyctisProvingKey(keysDir: keysDir, channelVkHash: channelVkHash);
 });
 
 /// The reason sending is unavailable, or null when it is available.
@@ -67,9 +64,7 @@ final nyctisProvingKeyProvider = FutureProvider<NyctisProvingKeyStatus>((
 /// cost of being wrong for that moment is one navigation — the composer makes
 /// the same check and refuses there, and `nyctisBuildPay` makes it a third
 /// time before it loads the key.
-String? nyctisSendUnavailableReason(
-  AsyncValue<NyctisProvingKeyStatus> status,
-) {
+String? nyctisSendUnavailableReason(AsyncValue<NyctisProvingKeyStatus> status) {
   final value = status.value;
   if (value == null) return null;
   if (value.canSend) return null;

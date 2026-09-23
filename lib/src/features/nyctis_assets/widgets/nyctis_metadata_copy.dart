@@ -178,9 +178,9 @@ String? nyctisCollisionWarningText({
 }
 
 /// The already-accepted ids a collision warning points at, truncated.
-List<String> nyctisCollisionAssetIds(
-  List<NyctisNameCollision> collisions,
-) => [for (final collision in collisions) collision.existing.assetId];
+List<String> nyctisCollisionAssetIds(List<NyctisNameCollision> collisions) => [
+  for (final collision in collisions) collision.existing.assetId,
+];
 
 /// Display label for a `rel` this wallet recognizes.
 ///

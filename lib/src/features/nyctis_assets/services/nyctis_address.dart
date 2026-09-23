@@ -24,11 +24,7 @@ String nyctisAddressHrp(String networkName) {
 String nyctisAddressHint(String networkName) =>
     '${nyctisAddressHrp(networkName)}1…';
 
-const _nyctisHrps = {
-  'ny': 'Mainnet',
-  'nytest': 'Testnet',
-  'nyreg': 'Regtest',
-};
+const _nyctisHrps = {'ny': 'Mainnet', 'nytest': 'Testnet', 'nyreg': 'Regtest'};
 
 /// Zcash prefixes a user is likely to paste by mistake. Named, because "not a
 /// Nyctis address" sends them hunting for a typo that is not there.

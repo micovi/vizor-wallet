@@ -135,8 +135,7 @@ class NyctisInFlightSend {
     }
     final canonical = view.viewHeight;
     if (canonical == null) return false;
-    return canonical >=
-        BigInt.from(anchorHeight + kNyctisDefaultAnchorWindow);
+    return canonical >= BigInt.from(anchorHeight + kNyctisDefaultAnchorWindow);
   }
 }
 
@@ -210,16 +209,12 @@ final nyctisInFlightSendStoreProvider = Provider<NyctisInFlightSendStore>(
 
 /// The records, restored from the store on first read and pruned whenever a
 /// new view shows one settled.
-class NyctisInFlightSendsNotifier
-    extends Notifier<List<NyctisInFlightSend>> {
+class NyctisInFlightSendsNotifier extends Notifier<List<NyctisInFlightSend>> {
   bool _restored = false;
 
   @override
   List<NyctisInFlightSend> build() {
-    ref.listen<AsyncValue<NyctisViewData>>(nyctisAssetsViewProvider, (
-      _,
-      next,
-    ) {
+    ref.listen<AsyncValue<NyctisViewData>>(nyctisAssetsViewProvider, (_, next) {
       final view = next.value;
       if (view != null) pruneSettled(view);
     });

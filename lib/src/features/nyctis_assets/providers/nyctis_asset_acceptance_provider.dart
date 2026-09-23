@@ -59,8 +59,7 @@ final nyctisAcceptanceStoreProvider = Provider<NyctisAcceptanceStore>(
   (ref) => const SecureNyctisAcceptanceStore(),
 );
 
-class NyctisAssetAcceptanceNotifier
-    extends Notifier<NyctisAssetAcceptance> {
+class NyctisAssetAcceptanceNotifier extends Notifier<NyctisAssetAcceptance> {
   @override
   NyctisAssetAcceptance build() {
     try {

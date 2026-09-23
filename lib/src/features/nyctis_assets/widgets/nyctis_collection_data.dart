@@ -173,9 +173,7 @@ class NyctisAssetsListing {
 /// A collection with a mix of unique and fungible members groups the unique
 /// ones and leaves the fungible ones as rows. That is not a fudge: the
 /// fungible member is still a balance and still has to render as one.
-NyctisAssetsListing groupNyctisCollections(
-  List<NyctisAssetDetailData> assets,
-) {
+NyctisAssetsListing groupNyctisCollections(List<NyctisAssetDetailData> assets) {
   final byCollection = <String, List<NyctisAssetDetailData>>{};
   for (final asset in assets) {
     if (!asset.isUniqueItem) continue;

@@ -8,7 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/layout/mobile/mobile_top_nav.dart';
 import '../../providers/nyctis_assets_view_provider.dart';
-import '../../providers/nyctis_proving_key_provider.dart';
+import '../../providers/nyctis_send_readiness_provider.dart';
 import '../../widgets/nyctis_asset_metadata_section.dart';
 import '../../widgets/nyctis_collection_sections.dart';
 import '../../widgets/nyctis_asset_row_data.dart';
@@ -46,9 +46,7 @@ class MobileNyctisAssetDetailScreen extends ConsumerWidget {
             showTitle: false,
             onSend: () => context.push(nyctisSendRouteFor(assetId)),
             onReceive: () => context.push(kNyctisReceiveRoute),
-            sendDisabledReason: nyctisSendUnavailableReason(
-              ref.watch(nyctisProvingKeyProvider),
-            ),
+            sendBlock: ref.watch(nyctisSendBlockProvider(assetId)),
           ),
         ],
       ),

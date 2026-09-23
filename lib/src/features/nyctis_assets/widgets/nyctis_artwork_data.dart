@@ -173,9 +173,7 @@ class NyctisArtworkData {
       // An asset document that parsed but carried no usable logo. The fetcher
       // does not keep a per-logo reason on the asset path, and `noImage` is
       // the honest summary: there was nothing to draw.
-      (outcome.assetView != null
-          ? NyctisMetadataAbandonReason.noImage
-          : null);
+      (outcome.assetView != null ? NyctisMetadataAbandonReason.noImage : null);
 }
 
 /// Where a collection's picture came from.
@@ -251,4 +249,3 @@ class NyctisCollectionArtworkData {
 
   bool get isDerived => source == NyctisCollectionArtworkSource.derived;
 }
-

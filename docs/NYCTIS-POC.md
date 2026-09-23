@@ -254,16 +254,14 @@ the balance is above zero. The flow has three screens (`screens/nyctis_send_scre
    channel applies the payment only once that transaction is 10 blocks deep. **Try again** is
    offered only when nothing was broadcast and the plan has not expired.
 
-The composer's **Review payment** is disabled, with the reason beside it, before any proof is
-started (`providers/nyctis_send_readiness_provider.dart`): a hardware account (a Nyctis payment is
+The same gate disables both the asset detail screen's **Send Nyctis asset** and the composer's
+**Review payment**, with the reason beside the button, before any proof is started (`providers/nyctis_send_readiness_provider.dart`): a hardware account (a Nyctis payment is
 proved from the seed, which a hardware account keeps on the device), a missing or mismatched
 proving key (the only reason with an **Open Nyctis settings** action), a payment of the same
 asset still settling (`providers/nyctis_in_flight_send_provider.dart` — until it is final, the
 notes it spent still look unspent to the replay, so a second payment could pick them again), and
 too little spendable ZEC to carry even the smallest message (20 000 zatoshi: one memo's
 10 000 plus the 10 000 ZIP 317 minimum fee, a lower bound; the review then quotes the real figure).
-The asset detail screen's **Send Nyctis asset** button checks only the proving key; the other
-three reasons appear once the composer is open.
 
 ## What this PoC does and does not do
 

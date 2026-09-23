@@ -99,14 +99,10 @@ class NyctisPointerResult {
 NyctisPointerResult readNyctisMetadataUri(String? raw) {
   final trimmed = (raw ?? '').trim();
   if (trimmed.isEmpty) {
-    return const NyctisPointerResult.rejected(
-      NyctisPointerRejection.absent,
-    );
+    return const NyctisPointerResult.rejected(NyctisPointerRejection.absent);
   }
   if (trimmed.length > kNyctisUriMaxBytes) {
-    return const NyctisPointerResult.rejected(
-      NyctisPointerRejection.malformed,
-    );
+    return const NyctisPointerResult.rejected(NyctisPointerRejection.malformed);
   }
   for (final unit in trimmed.codeUnits) {
     if (unit < 0x21 || unit > 0x7E) {
@@ -118,9 +114,7 @@ NyctisPointerResult readNyctisMetadataUri(String? raw) {
 
   final uri = Uri.tryParse(trimmed);
   if (uri == null || !uri.hasScheme) {
-    return const NyctisPointerResult.rejected(
-      NyctisPointerRejection.malformed,
-    );
+    return const NyctisPointerResult.rejected(NyctisPointerRejection.malformed);
   }
   switch (uri.scheme.toLowerCase()) {
     case 'https':
@@ -139,9 +133,7 @@ NyctisPointerResult readNyctisMetadataUri(String? raw) {
       );
   }
   if (uri.host.isEmpty || uri.userInfo.isNotEmpty) {
-    return const NyctisPointerResult.rejected(
-      NyctisPointerRejection.malformed,
-    );
+    return const NyctisPointerResult.rejected(NyctisPointerRejection.malformed);
   }
 
   String? digest;
